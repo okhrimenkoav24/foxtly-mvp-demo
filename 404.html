@@ -448,10 +448,10 @@
   <div class="box">
     <div class="emoji">👋</div>
     <h3>Hi, I'm your Foxtly AI</h3>
-    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. Want a 60-second tour?</p>
+    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. First, I have a few quick questions about your business so I can build your strategy and recommendations.</p>
     <div class="row">
       <button class="btn" onclick="skipTour()">Skip for now</button>
-      <button class="btn primary" onclick="startTourSteps()">Show me around</button>
+      <button class="btn primary" onclick="startOnboardingFromWelcome()">Let's get started</button>
     </div>
   </div>
 </div>
@@ -474,23 +474,23 @@
    ========================================================= */
 
 const PROTO_SCREENS = [
-  {group:'Marketing & Auth', items:[
-    {id:'landing', label:'01 · Landing & Pricing', mode:'auth'},
-    {id:'signup', label:'02 · Sign up / Verify email', mode:'auth'},
-    {id:'onboarding', label:'05 · Onboarding questionnaire', mode:'auth'},
-  ]},
   {group:'Workspace', items:[
-    {id:'decision-center', label:'03 · Decision Center', mode:'app'},
-    {id:'knowledge-base', label:'06 · Knowledge Base', mode:'app'},
-    {id:'integrations', label:'07 · Integrations', mode:'app'},
-    {id:'campaign-strategy', label:'08 · Campaign Strategy', mode:'app'},
-    {id:'creative-studio', label:'09 · Creative Studio', mode:'app'},
-    {id:'approvals', label:'10 · Approval Queue', mode:'app'},
-    {id:'settings', label:'11 · Notification Settings', mode:'app'},
-    {id:'campaigns', label:'12 · Performance Dashboard', mode:'app'},
-    {id:'leads', label:'13 · Leads & CRM', mode:'app'},
-    {id:'reports', label:'14 · Reports', mode:'app'},
-    {id:'billing', label:'15 · Billing & Subscription', mode:'app'},
+    {id:'decision-center', label:'01 · Decision Center (start here)', mode:'app'},
+    {id:'onboarding', label:'02 · Onboarding questionnaire', mode:'auth'},
+    {id:'knowledge-base', label:'03 · Knowledge Base', mode:'app'},
+    {id:'integrations', label:'04 · Integrations', mode:'app'},
+    {id:'campaign-strategy', label:'05 · Campaign Strategy', mode:'app'},
+    {id:'creative-studio', label:'06 · Creative Studio', mode:'app'},
+    {id:'approvals', label:'07 · Approval Queue', mode:'app'},
+    {id:'settings', label:'08 · Notification Settings', mode:'app'},
+    {id:'campaigns', label:'09 · Performance Dashboard', mode:'app'},
+    {id:'leads', label:'10 · Leads & CRM', mode:'app'},
+    {id:'reports', label:'11 · Reports', mode:'app'},
+    {id:'billing', label:'12 · Billing & Subscription', mode:'app'},
+  ]},
+  {group:'Marketing & Auth (optional)', items:[
+    {id:'landing', label:'Landing & Pricing', mode:'auth'},
+    {id:'signup', label:'Sign up / Verify email', mode:'auth'},
   ]},
 ];
 
@@ -572,7 +572,8 @@ const state = {
 // site is deployed at a domain root, a GitHub Pages project path
 // (https://user.github.io/repo-name/...), or opened locally via file://.
 const ROUTE_MAP = {
-  '': { type:'auth', id:'landing' },
+  '': { type:'view', id:'decision-center' },
+  'landing': { type:'auth', id:'landing' },
   'signup': { type:'auth', id:'signup' },
   'verify-email': { type:'auth', id:'verify-email' },
   'onboarding': { type:'auth', id:'onboarding' },
@@ -2419,6 +2420,10 @@ function skipTour(){
   document.getElementById('tour-overlay').classList.remove('open');
   state.tour.active = false;
 }
+function startOnboardingFromWelcome(){
+  document.getElementById('tour-modal').classList.remove('open');
+  navigateAuth('onboarding');
+}
 function startTourSteps(){
   document.getElementById('tour-modal').classList.remove('open');
   state.tour.active = true;
@@ -3066,7 +3071,7 @@ function renderObFinal(){
       <div class="emoji">🎉</div>
       <h1>Thanks, ${ob.businessName || 'there'}!</h1>
       <p>I'm putting this together with market research to build your strategy. This usually takes a few minutes — I'll let you know in the Decision Center as soon as it's ready.</p>
-      <button class="btn primary" onclick="finishOnboarding()">Go to Knowledge Base</button>
+      <button class="btn primary" onclick="finishOnboarding()">Go to Decision Center</button>
     </div>
   </div>
   `;
@@ -3075,9 +3080,9 @@ function finishOnboarding(){
   if(state.onboarding.businessName){
     state.businessProfile.name = state.onboarding.businessName;
   }
-  navigateTo('knowledge-base');
-  showToast("Welcome to Foxtly! Your AI strategist is getting started. ✦");
-  setTimeout(openWelcomeTourModal, 600);
+  navigateTo('decision-center');
+  showToast("Thanks! I'm building your strategy now — I'll let you know here as soon as it's ready. ✦");
+  setTimeout(replayTour, 600);
 }
 </script>
 
