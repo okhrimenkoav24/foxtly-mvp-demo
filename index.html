@@ -2573,7 +2573,7 @@ function renderTourStep(){
 <script>
 state.onboarding = {
   step: 1,
-  businessName: state.businessProfile ? state.businessProfile.name : "Mike's Plumbing",
+  businessName: (state.businessProfile && state.businessProfile.name) ? state.businessProfile.name : "Mike's Plumbing",
   industry: 'Plumbing',
   industryOther: '',
   teamSize: '2-5',
