@@ -448,10 +448,10 @@
   <div class="box">
     <div class="emoji">👋</div>
     <h3>Hi, I'm your Foxtly AI</h3>
-    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. First, I have a few quick questions about your business so I can build your strategy and recommendations.</p>
+    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. Let me show you around so you know where everything is.</p>
     <div class="row">
       <button class="btn" onclick="skipTour()">Skip for now</button>
-      <button class="btn primary" onclick="startOnboardingFromWelcome()">Let's get started</button>
+      <button class="btn primary" onclick="startTourSteps()">Show me around</button>
     </div>
   </div>
 </div>
@@ -2406,10 +2406,10 @@ function getAIResponse(text){
 // ---------- Product Tour ----------
 const TOUR_STEPS = [
   { target:'[data-tour="action-queue"]', title:'✦ Your Action Queue', body:"This is where I propose changes — like adjusting budgets or pausing underperforming ads. Nothing happens automatically: you review and approve or reject each one." },
-  { target:'[data-tour="ai-fab"]', title:'✦ Your AI Assistant', body:"Click here anytime to ask me about your campaigns, leads, or strategy. I'm always available." },
   { target:'[data-tour="nav-approvals"]', title:'☑ Approval Queue', body:"Every change I want to make — big or small — shows up here first, with an explanation and reversibility level. Nothing happens without your OK." },
   { target:'[data-tour="nav-knowledge-base"]', title:'◐ Knowledge Base', body:"This is everything I know about your business: your profile, market research, and the strategy I'm using to run your ads." },
   { target:'[data-tour="nav-integrations"]', title:'⎆ Integrations', body:"Connect your ad accounts and CRM here so I can manage campaigns and sync your leads automatically." },
+  { target:'[data-tour="ai-fab"]', title:'✦ Your AI Assistant', body:"And I'm always right here in the corner — click anytime to ask about your campaigns, leads, or strategy." },
 ];
 
 function openWelcomeTourModal(){
@@ -2419,10 +2419,6 @@ function skipTour(){
   document.getElementById('tour-modal').classList.remove('open');
   document.getElementById('tour-overlay').classList.remove('open');
   state.tour.active = false;
-}
-function startOnboardingFromWelcome(){
-  document.getElementById('tour-modal').classList.remove('open');
-  navigateAuth('onboarding');
 }
 function startTourSteps(){
   document.getElementById('tour-modal').classList.remove('open');
@@ -2447,10 +2443,31 @@ function nextTourStep(){
   if(state.tour.step >= TOUR_STEPS.length){
     document.getElementById('tour-overlay').classList.remove('open');
     state.tour.active = false;
-    showToast("Tour complete — you're all set! ✦");
+    setTimeout(showQuestionnairePrompt, 3000);
     return;
   }
   renderTourStep();
+}
+function showQuestionnairePrompt(){
+  const box = document.querySelector('#tour-modal .box');
+  box.innerHTML = `
+    <div class="emoji">📋</div>
+    <h3>One more thing</h3>
+    <p>Want to answer a few quick questions about your business? It helps me build a more accurate strategy and recommendations for your ads.</p>
+    <div class="row">
+      <button class="btn" onclick="declineQuestionnairePrompt()">Maybe later</button>
+      <button class="btn primary" onclick="startQuestionnaire()">Start questionnaire</button>
+    </div>
+  `;
+  document.getElementById('tour-modal').classList.add('open');
+}
+function declineQuestionnairePrompt(){
+  document.getElementById('tour-modal').classList.remove('open');
+}
+function startQuestionnaire(){
+  document.getElementById('tour-modal').classList.remove('open');
+  state.onboarding.step = 1;
+  navigateAuth('onboarding');
 }
 function renderTourStep(){
   const step = TOUR_STEPS[state.tour.step];
@@ -2803,8 +2820,8 @@ function signupWithGoogle(){
   setTimeout(()=>{
     state.signup.loading = false;
     if(state.signup.businessName) state.onboarding.businessName = state.signup.businessName;
-    state.onboarding.step = 1;
-    navigateAuth('onboarding');
+    navigateTo('decision-center');
+    setTimeout(openWelcomeTourModal, 600);
   }, 900);
 }
 function signupWithEmail(){
@@ -2841,8 +2858,8 @@ AUTH_VIEWS['verify-email'] = function(){
 };
 function verifyEmailContinue(){
   if(state.signup.businessName) state.onboarding.businessName = state.signup.businessName;
-  state.onboarding.step = 1;
-  navigateAuth('onboarding');
+  navigateTo('decision-center');
+  setTimeout(openWelcomeTourModal, 600);
 }
 
 /* ---------------- 05. ONBOARDING QUESTIONNAIRE ---------------- */
@@ -3082,7 +3099,6 @@ function finishOnboarding(){
   }
   navigateTo('decision-center');
   showToast("Thanks! I'm building your strategy now — I'll let you know here as soon as it's ready. ✦");
-  setTimeout(replayTour, 600);
 }
 </script>
 
