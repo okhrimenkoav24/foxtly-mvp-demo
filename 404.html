@@ -77,6 +77,18 @@
   .nav-item .ic{ width:18px; text-align:center; font-size:15px; flex-shrink:0; }
   .nav-item:hover{ background: var(--card-bg); color: var(--text); }
   .nav-item.active{ background: var(--orange-dim); color: var(--orange); font-weight:600; }
+  .nav-arrow{ margin-left:auto; font-size:10px; opacity:0.6; transition:transform .15s; }
+  .nav-item:not(.active) .nav-arrow{ transform: rotate(180deg); }
+  .nav-subitems{ display:none; flex-direction:column; }
+  .nav-item.active + .nav-subitems{ display:flex; }
+  .nav-subitem{
+    display:flex; align-items:center; gap:10px;
+    padding:7px 10px 7px 38px; border-radius:8px;
+    color: var(--text-muted); text-decoration:none; font-size:13px;
+    cursor:pointer; border:none; background:none; width:100%; text-align:left;
+  }
+  .nav-subitem:hover{ background: var(--card-bg); color: var(--text); }
+  .nav-subitem.active{ color: var(--orange); font-weight:600; }
   .nav-badge{
     margin-left:auto; background:var(--red); color:#1a0a0a; font-size:10px; font-weight:800;
     border-radius:99px; min-width:18px; height:18px; display:flex; align-items:center; justify-content:center;
@@ -379,7 +391,12 @@
     <div class="nav-group-label">Workspace</div>
     <button class="nav-item" data-view="decision-center" data-tour="nav-decision-center" onclick="navigateTo('decision-center')"><span class="ic">▣</span> Decision Center</button>
     <button class="nav-item" data-view="knowledge-base" data-tour="nav-knowledge-base" onclick="navigateTo('knowledge-base')"><span class="ic">◐</span> Knowledge Base</button>
-    <button class="nav-item" data-view="advertising" onclick="navigateTo('advertising')"><span class="ic">▤</span> Advertising</button>
+    <button class="nav-item" data-view="advertising" onclick="navigateTo('advertising')"><span class="ic">▤</span> Advertising <span class="nav-arrow">▲</span></button>
+    <div class="nav-subitems">
+      <button class="nav-subitem" data-subtab="campaigns" onclick="setAdvertisingTab('campaigns')">Campaigns</button>
+      <button class="nav-subitem" data-subtab="analytics" onclick="setAdvertisingTab('analytics')">Analytics</button>
+      <button class="nav-subitem" data-subtab="creatives" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
+    </div>
     <button class="nav-item" data-view="approvals" data-tour="nav-approvals"  onclick="navigateTo('approvals')"><span class="ic">☑</span> Approvals <span class="nav-badge" id="approvals-badge">3</span></button>
     <button class="nav-item" data-view="leads" onclick="navigateTo('leads')"><span class="ic">◎</span> Leads</button>
     <button class="nav-item" data-view="reports" onclick="navigateTo('reports')"><span class="ic">▥</span> Reports</button>
@@ -651,6 +668,9 @@ function navigateTo(viewId, opts){
   document.getElementById('auth-root').classList.remove('open');
   document.querySelectorAll('.nav-item').forEach(el=>{
     el.classList.toggle('active', el.dataset.view===viewId);
+  });
+  document.querySelectorAll('.nav-subitem').forEach(el=>{
+    el.classList.toggle('active', viewId==='advertising' && el.dataset.subtab===state.advertisingTab);
   });
   const root = document.getElementById('view-root');
   const renderer = VIEWS[viewId];
