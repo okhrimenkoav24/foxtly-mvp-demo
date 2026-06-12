@@ -146,17 +146,25 @@
   .link-btn.muted{ color: var(--text-secondary); }
 
   /* ============ CARDS / SECTIONS ============ */
-  .section{ margin-bottom:28px; }
-  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
-  .section-head h2{ font-size:16px; font-weight:700; }
-  .section-head p{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .section{ margin-bottom:32px; }
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .section-head h2{ font-size:21px; font-weight:700; letter-spacing:-0.2px; }
+  .section-head p{ font-size:12.5px; color:var(--text-secondary); margin-top:4px; }
   .card{ background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
   .card.tight{ padding:14px 16px; }
+  .card-narrow{ max-width:520px; }
+
+  .dash-top{ display:grid; grid-template-columns: 1fr 340px; gap:14px; margin-bottom:28px; align-items:stretch; }
+  .dash-top .kpi-grid{ grid-template-columns:repeat(2,1fr); margin-bottom:0; }
+  .insight-card{ display:flex; flex-direction:column; }
+  .insight-card p{ flex:1; }
 
   .kpi-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:28px; }
   .kpi-card{ background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+  .kpi-card.empty{ border-style:dashed; border-color:var(--border-light); }
   .kpi-label{ font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; font-weight:600; }
   .kpi-value{ font-size:24px; font-weight:700; }
+  .kpi-value.muted{ color:var(--text-muted); }
   .kpi-delta{ font-size:12px; margin-top:6px; display:flex; align-items:center; gap:4px;}
   .kpi-delta.up{ color:var(--green); }
   .kpi-delta.down{ color:var(--green); }
@@ -348,7 +356,7 @@
   .two-col-rev{ display:grid; grid-template-columns: 1fr 320px; gap:20px; align-items:start; }
   @media (max-width: 1000px){
     .kpi-grid, .grid-3, .field-row{ grid-template-columns:repeat(2,1fr); }
-    .two-col, .two-col-rev{ grid-template-columns:1fr; }
+    .two-col, .two-col-rev, .dash-top{ grid-template-columns:1fr; }
   }
 
   /* highlight-able element marker */
@@ -497,6 +505,7 @@ const PROTO_SCREENS = [
 // ---------- Demo state ----------
 const state = {
   currentView: 'decision-center',
+  kpiEmptyDemo: false,
   setupProgress: { profile:true, meta:true, google:false, firstCampaign:false },
   pendingActions: [
     { id:'pa1', type:'urgent', icon:'⚠', title:"AI recommends pausing \"Spring Promo\" creative",
@@ -732,13 +741,20 @@ const REVERS_LABEL = {
 VIEWS['decision-center'] = function(){
   const pending = state.pendingActions.filter(a=>a.status!=='done' && a.status!=='rejected');
   const progressItems = [
-    {key:'profile', label:'Complete business profile', view:'knowledge-base'},
-    {key:'meta', label:'Connect Meta Ads account', view:'integrations'},
-    {key:'google', label:'Connect Google Ads account', view:'integrations'},
-    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-strategy'},
+    {key:'profile', label:'Complete business profile', view:'knowledge-base', cta:'Edit profile'},
+    {key:'meta', label:'Connect Meta Ads account', view:'integrations', cta:'Connect'},
+    {key:'google', label:'Connect Google Ads account', view:'integrations', cta:'Connect'},
+    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-strategy', cta:'Start'},
   ];
   const done = progressItems.filter(i=>state.setupProgress[i.key]).length;
   const pct = Math.round(done/progressItems.length*100);
+
+  const kpis = [
+    { label:'Spend', value: state.period==='7d'?'$1,940':'$284', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div>` },
+    { label:'Leads', value: state.period==='7d'?'74':'12', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'18%':'9%'} vs prior period</div>` },
+    { label:'Avg. cost per lead', value: state.period==='7d'?'$26.20':'$23.70', deltaHTML: `<div class="kpi-delta down">↓ ${state.period==='7d'?'6%':'11%'} vs prior period</div>` },
+    { label:'Active campaigns', value: '2', deltaHTML: `<div class="kpi-delta"><span class="neutral">No change</span></div>` },
+  ];
 
   return `
     <div class="topbar">
@@ -747,6 +763,7 @@ VIEWS['decision-center'] = function(){
         <div class="greeting">Here's what's happening with your ads today.</div>
       </div>
       <div class="topbar-right">
+        <button class="link-btn muted small" onclick="toggleKpiEmptyDemo()">${state.kpiEmptyDemo ? '← Back to live data' : 'Preview: no data yet'}</button>
         <div class="period-toggle">
           <button class="${state.period!=='7d'?'active':''}" onclick="setPeriod('today')">Today</button>
           <button class="${state.period==='7d'?'active':''}" onclick="setPeriod('7d')">7 days</button>
@@ -755,11 +772,27 @@ VIEWS['decision-center'] = function(){
       </div>
     </div>
 
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value">${state.period==='7d'?'$1,940':'$284'}</div><div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div></div>
-      <div class="kpi-card"><div class="kpi-label">Leads</div><div class="kpi-value">${state.period==='7d'?'74':'12'}</div><div class="kpi-delta up">↑ ${state.period==='7d'?'18%':'9%'} vs prior period</div></div>
-      <div class="kpi-card"><div class="kpi-label">Avg. cost per lead</div><div class="kpi-value">${state.period==='7d'?'$26.20':'$23.70'}</div><div class="kpi-delta down">↓ ${state.period==='7d'?'6%':'11%'} vs prior period</div></div>
-      <div class="kpi-card"><div class="kpi-label">Active campaigns</div><div class="kpi-value">2</div><div class="kpi-delta"><span class="neutral">No change</span></div></div>
+    <div class="dash-top">
+      <div class="kpi-grid">
+        ${state.kpiEmptyDemo ? kpis.map(k=>`
+          <div class="kpi-card empty">
+            <div class="kpi-label">${k.label}</div>
+            <div class="kpi-value muted">—</div>
+            <div class="kpi-delta"><span class="neutral">No data yet</span></div>
+          </div>
+        `).join('') : kpis.map(k=>`
+          <div class="kpi-card">
+            <div class="kpi-label">${k.label}</div>
+            <div class="kpi-value">${k.value}</div>
+            ${k.deltaHTML}
+          </div>
+        `).join('')}
+      </div>
+      <div class="card insight-card">
+        <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
+        <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target. "Spring Promo" hasn't generated a lead in 48 hours and is likely worth pausing or refreshing the creative.</p>
+        <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
+      </div>
     </div>
 
     <div class="section" data-tour="action-queue">
@@ -798,26 +831,33 @@ VIEWS['decision-center'] = function(){
       </div>
     </div>
 
-    <div class="two-col">
-      <div class="card">
-        <h2 class="mb-12">Setup progress</h2>
-        <div class="progress-track mb-12"><div class="progress-fill" style="width:${pct}%"></div></div>
-        <div class="small muted mb-12">${done} of ${progressItems.length} steps complete</div>
-        ${progressItems.map(i=>`
-          <label class="checkbox-row mb-8" style="cursor:pointer;">
-            <input type="checkbox" ${state.setupProgress[i.key]?'checked':''} onchange="toggleSetupItem('${i.key}')">
-            <span style="${state.setupProgress[i.key]?'text-decoration:line-through;color:var(--text-muted);':''}">${i.label}</span>
-          </label>
-        `).join('')}
+    <div class="section">
+      <div class="section-head">
+        <div><h2>Setup progress</h2><p>${done} of ${progressItems.length} steps complete</p></div>
       </div>
-      <div class="card">
-        <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
-        <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target. "Spring Promo" hasn't generated a lead in 48 hours and is likely worth pausing or refreshing the creative.</p>
-        <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
+      <div class="card card-narrow">
+        <div class="progress-track mb-12"><div class="progress-fill" style="width:${pct}%"></div></div>
+        ${progressItems.map(i=>{
+          const isDone = state.setupProgress[i.key];
+          return `
+          <div class="flex items-center justify-between gap-12 mb-8">
+            <label class="checkbox-row" style="cursor:pointer; flex:1;">
+              <input type="checkbox" ${isDone?'checked':''} onchange="toggleSetupItem('${i.key}')">
+              <span style="${isDone?'text-decoration:line-through;color:var(--text-muted);':''}">${i.label}</span>
+            </label>
+            ${!isDone ? `<button class="btn small" onclick="navigateTo('${i.view}')">${i.cta}</button>` : ''}
+          </div>
+          `;
+        }).join('')}
       </div>
     </div>
   `;
 };
+
+function toggleKpiEmptyDemo(){
+  state.kpiEmptyDemo = !state.kpiEmptyDemo;
+  navigateTo('decision-center');
+}
 
 function renderActionCard(a){
   if(a.status==='applying'){
