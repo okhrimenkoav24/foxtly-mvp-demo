@@ -379,7 +379,7 @@
     <div class="nav-group-label">Workspace</div>
     <button class="nav-item" data-view="decision-center" data-tour="nav-decision-center" onclick="navigateTo('decision-center')"><span class="ic">▣</span> Decision Center</button>
     <button class="nav-item" data-view="knowledge-base" data-tour="nav-knowledge-base" onclick="navigateTo('knowledge-base')"><span class="ic">◐</span> Knowledge Base</button>
-    <button class="nav-item" data-view="campaigns" onclick="navigateTo('campaigns')"><span class="ic">▤</span> Campaigns</button>
+    <button class="nav-item" data-view="advertising" onclick="navigateTo('advertising')"><span class="ic">▤</span> Advertising</button>
     <button class="nav-item" data-view="approvals" data-tour="nav-approvals"  onclick="navigateTo('approvals')"><span class="ic">☑</span> Approvals <span class="nav-badge" id="approvals-badge">3</span></button>
     <button class="nav-item" data-view="leads" onclick="navigateTo('leads')"><span class="ic">◎</span> Leads</button>
     <button class="nav-item" data-view="reports" onclick="navigateTo('reports')"><span class="ic">▥</span> Reports</button>
@@ -491,7 +491,7 @@ const PROTO_SCREENS = [
     {id:'creative-studio', label:'06 · Creative Studio', mode:'app'},
     {id:'approvals', label:'07 · Approval Queue', mode:'app'},
     {id:'settings', label:'08 · Notification Settings', mode:'app'},
-    {id:'campaigns', label:'09 · Performance Dashboard', mode:'app'},
+    {id:'advertising', label:'09 · Advertising (Campaigns / Analytics / Creatives)', mode:'app'},
     {id:'leads', label:'10 · Leads & CRM', mode:'app'},
     {id:'reports', label:'11 · Reports', mode:'app'},
     {id:'billing', label:'12 · Billing & Subscription', mode:'app'},
@@ -594,7 +594,8 @@ const ROUTE_MAP = {
   'approvals': { type:'view', id:'approvals' },
   'settings': { type:'view', id:'settings' },
   'billing': { type:'view', id:'billing' },
-  'campaigns': { type:'view', id:'campaigns' },
+  'campaigns': { type:'view', id:'advertising' },
+  'advertising': { type:'view', id:'advertising' },
   'leads': { type:'view', id:'leads' },
   'reports': { type:'view', id:'reports' },
 };
@@ -810,20 +811,20 @@ VIEWS['decision-center'] = function(){
     <div class="section">
       <div class="section-head">
         <div><h2>Your campaigns</h2><p>2 active campaigns across Meta Ads</p></div>
-        <button class="btn" onclick="navigateTo('campaigns')">View all</button>
+        <button class="btn" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">View all</button>
       </div>
       <div class="grid-3">
-        <div class="card" style="cursor:pointer" onclick="navigateTo('campaigns')">
+        <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
           <div class="flex justify-between items-center mb-12"><strong>Free Estimate — Plumbing</strong><span class="badge green">Active</span></div>
           <div class="small muted mb-8">Meta Ads · Lead generation</div>
           <div class="flex justify-between small"><span>Spend: <strong>$168</strong></span><span>Leads: <strong>9</strong></span><span>CPL: <strong>$18.70</strong></span></div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="navigateTo('campaigns')">
+        <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
           <div class="flex justify-between items-center mb-12"><strong>Same-Day Service</strong><span class="badge green">Active</span></div>
           <div class="small muted mb-8">Meta Ads · Lead generation</div>
           <div class="flex justify-between small"><span>Spend: <strong>$76</strong></span><span>Leads: <strong>3</strong></span><span>CPL: <strong>$25.30</strong></span></div>
         </div>
-        <div class="card" style="cursor:pointer; opacity:0.7;" onclick="navigateTo('campaigns')">
+        <div class="card" style="cursor:pointer; opacity:0.7;" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
           <div class="flex justify-between items-center mb-12"><strong>Spring Promo</strong><span class="badge yellow">Paused</span></div>
           <div class="small muted mb-8">Meta Ads · Lead generation</div>
           <div class="flex justify-between small"><span>Spend: <strong>$40</strong></span><span>Leads: <strong>0</strong></span><span>CPL: <strong>—</strong></span></div>
@@ -1833,6 +1834,7 @@ state.campaignsPeriod = 'today';
 state.campaignsView = 'list';
 state.selectedCampaign = null;
 state.campaignTab = 'creatives';
+state.advertisingTab = 'campaigns';
 
 const CAMPAIGNS = [
   { id:'c1', name:'Free Estimate — Plumbing', platform:'Meta', status:'Active', spend:168, leads:9, cpl:18.70, change:-11, anomaly:false,
@@ -1856,12 +1858,20 @@ const CAMPAIGNS = [
     aiComment:"This creative spent $40 with 0 leads in 48 hours. I've proposed pausing it — see Approval Queue." },
 ];
 
-VIEWS['campaigns'] = function(){
-  if(state.campaignsView==='detail' && state.selectedCampaign){
-    return renderCampaignDetail(CAMPAIGNS.find(c=>c.id===state.selectedCampaign));
-  }
-  return renderCampaignsList();
+VIEWS['advertising'] = function(){
+  return `
+    <div class="tabs">
+      <button class="tab ${state.advertisingTab==='campaigns'?'active':''}" onclick="setAdvertisingTab('campaigns')">Campaigns</button>
+      <button class="tab ${state.advertisingTab==='analytics'?'active':''}" onclick="setAdvertisingTab('analytics')">Analytics</button>
+      <button class="tab ${state.advertisingTab==='creatives'?'active':''}" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
+    </div>
+    ${state.advertisingTab==='analytics' ? renderAdvertisingAnalytics()
+      : state.advertisingTab==='creatives' ? renderAdvertisingCreatives()
+      : (state.campaignsView==='detail' && state.selectedCampaign) ? renderCampaignDetail(CAMPAIGNS.find(c=>c.id===state.selectedCampaign))
+      : renderCampaignsList()}
+  `;
 };
+function setAdvertisingTab(t){ state.advertisingTab = t; navigateTo('advertising'); }
 
 function renderCampaignsList(){
   return `
@@ -1893,15 +1903,15 @@ function renderCampaignsList(){
     </div>
   `;
 }
-function setCampaignsPeriod(p){ state.campaignsPeriod = p; navigateTo('campaigns'); }
-function openCampaignDetail(id){ state.selectedCampaign = id; state.campaignsView = 'detail'; state.campaignTab = 'creatives'; navigateTo('campaigns'); }
+function setCampaignsPeriod(p){ state.campaignsPeriod = p; navigateTo('advertising'); }
+function openCampaignDetail(id){ state.selectedCampaign = id; state.campaignsView = 'detail'; state.campaignTab = 'creatives'; navigateTo('advertising'); }
 
 function renderCampaignDetail(c){
   const pendingForCampaign = state.pendingActions.find(a=>a.status==='proposed' && a.title.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()));
   return `
     <div class="topbar">
       <div>
-        <button class="link-btn muted small mb-8" onclick="state.campaignsView='list'; navigateTo('campaigns')">← Back to campaigns</button>
+        <button class="link-btn muted small mb-8" onclick="state.campaignsView='list'; navigateTo('advertising')">← Back to campaigns</button>
         <h1>${c.name} <span class="badge ${c.status==='Active'?'green':'yellow'}" style="vertical-align:middle;">${c.status}</span></h1>
       </div>
       <div class="topbar-right">
@@ -1977,7 +1987,7 @@ function renderCampaignDetail(c){
     </div>
   `;
 }
-function setCampaignTab(t){ state.campaignTab = t; navigateTo('campaigns'); }
+function setCampaignTab(t){ state.campaignTab = t; navigateTo('advertising'); }
 
 function renderLineChart(){
   const spendPts = [22,28,24,30,26,20,18];
@@ -1997,6 +2007,101 @@ function renderLineChart(){
     <span><span style="display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:2px;margin-right:4px;"></span>Spend</span>
     <span><span style="display:inline-block;width:10px;height:10px;background:var(--blue);border-radius:2px;margin-right:4px;"></span>Leads</span>
   </div>`;
+}
+
+function renderAdvertisingAnalytics(){
+  const metaKpis = [
+    { label:'Spend', value: state.period==='7d'?'$1,940':'$284', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div>` },
+    { label:'Leads', value: state.period==='7d'?'74':'12', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'18%':'9%'} vs prior period</div>` },
+    { label:'Avg. cost per lead', value: state.period==='7d'?'$26.20':'$23.70', deltaHTML: `<div class="kpi-delta down">↓ ${state.period==='7d'?'6%':'11%'} vs prior period</div>` },
+    { label:'CTR', value: '2.1%', deltaHTML: `<div class="kpi-delta"><span class="neutral">No change</span></div>` },
+  ];
+  return `
+    <div class="topbar">
+      <div>
+        <h1>Advertising analytics</h1>
+        <div class="greeting">Performance across your connected ad platforms.</div>
+      </div>
+      <div class="topbar-right">
+        <div class="period-toggle">
+          <button class="${state.period!=='7d'?'active':''}" onclick="setAnalyticsPeriod('today')">Today</button>
+          <button class="${state.period==='7d'?'active':''}" onclick="setAnalyticsPeriod('7d')">7 days</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div><h2>Meta Ads</h2><p>${state.integrations.meta.account}</p></div>
+        <span class="badge green">Connected</span>
+      </div>
+      <div class="kpi-grid">
+        ${metaKpis.map(k=>`
+          <div class="kpi-card">
+            <div class="kpi-label">${k.label}</div>
+            <div class="kpi-value">${k.value}</div>
+            ${k.deltaHTML}
+          </div>
+        `).join('')}
+      </div>
+      <div class="card mt-16">
+        <h2 class="mb-12">Spend & leads (last 7 days)</h2>
+        ${renderLineChart()}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div><h2>Google Ads</h2><p>Account not yet connected</p></div>
+        <span class="badge yellow">Not connected</span>
+      </div>
+      <div class="kpi-grid">
+        ${['Spend','Leads','Avg. cost per lead','CTR'].map(label=>`
+          <div class="kpi-card empty">
+            <div class="kpi-label">${label}</div>
+            <div class="kpi-value muted">—</div>
+            <div class="kpi-delta"><span class="neutral">No data yet</span></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card mt-16" style="text-align:center;">
+        <p class="small muted mb-12">Google Ads is in progress — once your account is connected, performance will show up here automatically.</p>
+        <button class="btn" onclick="navigateTo('integrations')">Go to Integrations</button>
+      </div>
+    </div>
+  `;
+}
+function setAnalyticsPeriod(p){ state.period = p; navigateTo('advertising'); }
+
+function renderAdvertisingCreatives(){
+  const allCreatives = CAMPAIGNS.flatMap(c => c.creatives.map((cr,i) => ({...cr, campaign:c.name, platform:c.platform, gradient: CREATIVE_GRADIENTS[(c.id.charCodeAt(1)+i) % CREATIVE_GRADIENTS.length]})));
+  return `
+    <div class="topbar">
+      <div>
+        <h1>Ad creatives</h1>
+        <div class="greeting">${allCreatives.length} creatives across ${CAMPAIGNS.length} campaigns</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn primary" onclick="navigateTo('creative-studio')">+ New creative</button>
+      </div>
+    </div>
+    <div class="grid-3">
+      ${allCreatives.map(cr=>`
+        <div class="card">
+          <div style="height:120px; border-radius:8px; background:${cr.gradient}; margin-bottom:12px; display:flex; align-items:flex-end; justify-content:flex-end; padding:10px;">
+            ${cr.badge ? `<span class="badge ${cr.badge==='Top performer'?'green':'red'}">${cr.badge}</span>` : ''}
+          </div>
+          <div style="font-weight:600; margin-bottom:4px;">${cr.name}</div>
+          <div class="small muted mb-12">${cr.campaign} · ${cr.platform} Ads</div>
+          <div class="flex justify-between small">
+            <span>Spend: <strong>$${cr.spend}</strong></span>
+            <span>Leads: <strong>${cr.leads}</strong></span>
+            <span>CPL: <strong>${cr.cpl?'$'+cr.cpl.toFixed(2):'—'}</strong></span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function requestCampaignAction(id, kind){
@@ -2274,7 +2379,7 @@ VIEWS['reports'] = function(){
         <thead><tr><th>Campaign</th><th>Platform</th><th>Spend</th><th>Leads</th><th>CPL</th><th>Trend</th></tr></thead>
         <tbody>
           ${[...CAMPAIGNS].sort((a,b)=>b.spend-a.spend).map(c=>`
-            <tr onclick="state.selectedCampaign='${c.id}'; state.campaignsView='detail'; state.campaignTab='creatives'; navigateTo('campaigns')" style="cursor:pointer;">
+            <tr onclick="state.selectedCampaign='${c.id}'; state.campaignsView='detail'; state.campaignTab='creatives'; state.advertisingTab='campaigns'; navigateTo('advertising')" style="cursor:pointer;">
               <td><strong>${c.name}</strong></td>
               <td>${c.platform}</td>
               <td>$${c.spend}</td>
