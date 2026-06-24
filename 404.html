@@ -1539,7 +1539,7 @@ VIEWS['creative-studio'] = function(){
               <div style="font-size:13px; font-weight:500; margin-bottom:6px;">Brand color</div>
               <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                 <input type="text" id="brandHexInput" value="${state.creatives.branding.color}" maxlength="7" placeholder="#f0883e" onchange="setBrandColor(this.value)" onclick="event.stopPropagation()" style="width:76px; font-size:12px; font-family:monospace; background:var(--card-bg-3); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:var(--text);" title="Enter HEX code">
-                <span class="small muted" style="font-size:10px;">или выбрать:</span>
+                <span class="small muted" style="font-size:10px;">or choose:</span>
                 ${BRAND_COLORS.map(c => `<div onclick="event.stopPropagation(); setBrandColor('${c}')" style="width:20px; height:20px; border-radius:4px; background:${c}; cursor:pointer; border:2px solid ${ c===state.creatives.branding.color ? 'rgba(255,255,255,0.8)' : 'transparent' }; flex-shrink:0; transition:border-color 0.15s;" title="${c}"></div>`).join('')}
               </div>
             </div>
@@ -1551,7 +1551,7 @@ VIEWS['creative-studio'] = function(){
 
     <!-- ── STEP 3: AD COPY ── -->
     <div class="section mb-16">
-      <div class="section-head"><h2>3 · Ad Copy</h2><span class="small muted">Текст, который показывается вместе с вашими креативами в Meta</span></div>
+      <div class="section-head"><h2>3 · Ad Copy</h2><span class="small muted">Text that appears alongside your creatives in Meta</span></div>
       <div class="card tight" style="padding:16px;">
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:start;">
 
@@ -1562,7 +1562,7 @@ VIEWS['creative-studio'] = function(){
                 <span style="background:var(--orange); color:#000; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">1</span>
                 Primary text <span class="small muted" style="font-weight:400;">(max 125)</span>
               </label>
-              <div class="small muted" style="margin-bottom:6px; font-size:11px;">Главный текст объявления — показывается над изображением. Здесь нужно зацепить внимание.</div>
+              <div class="small muted" style="margin-bottom:6px; font-size:11px;">Main ad text — appears above the image in the feed. This is your hook.</div>
               <textarea style="resize:none; height:60px; font-family:inherit; font-size:13px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); width:100%; line-height:1.5; box-sizing:border-box;" maxlength="125" placeholder="e.g. We fix leaks fast — call for a free estimate today!" onchange="state.adCopy.primaryText=this.value">${state.adCopy.primaryText||''}</textarea>
             </div>
             <div class="field" style="margin-bottom:0;">
@@ -1570,7 +1570,7 @@ VIEWS['creative-studio'] = function(){
                 <span style="background:#3b82f6; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">2</span>
                 Headline <span class="small muted" style="font-weight:400;">(max 40)</span>
               </label>
-              <div class="small muted" style="margin-bottom:6px; font-size:11px;">Жирный заголовок под изображением. Коротко и конкретно.</div>
+              <div class="small muted" style="margin-bottom:6px; font-size:11px;">Bold title shown below the image. Keep it short and punchy.</div>
               <input type="text" maxlength="40" value="${state.adCopy.headline||''}" placeholder="e.g. Free Plumbing Estimate" onchange="state.adCopy.headline=this.value">
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -1579,7 +1579,7 @@ VIEWS['creative-studio'] = function(){
                   <span style="background:#10b981; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">3</span>
                   CTA Button
                 </label>
-                <div class="small muted" style="margin-bottom:6px; font-size:11px;">Кнопка действия — что должен сделать пользователь.</div>
+                <div class="small muted" style="margin-bottom:6px; font-size:11px;">Action button — what you want people to do.</div>
                 <select onchange="state.adCopy.cta=this.value">
                   <option value="Get Quote" ${(state.adCopy.cta||'Get Quote')==='Get Quote'?'selected':''}>Get Quote</option>
                   <option value="Learn More" ${state.adCopy.cta==='Learn More'?'selected':''}>Learn More</option>
@@ -1594,7 +1594,7 @@ VIEWS['creative-studio'] = function(){
                   <span style="background:#6b7280; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">4</span>
                   Destination URL
                 </label>
-                <div class="small muted" style="margin-bottom:6px; font-size:11px;">Куда попадёт пользователь после клика по объявлению.</div>
+                <div class="small muted" style="margin-bottom:6px; font-size:11px;">Where people land after clicking your ad.</div>
                 <input type="text" value="${state.adCopy.url||''}" placeholder="https://yourbusiness.com" onchange="state.adCopy.url=this.value" style="width:100%; box-sizing:border-box;">
               </div>
             </div>
@@ -1602,7 +1602,7 @@ VIEWS['creative-studio'] = function(){
 
           <!-- RIGHT: Meta ad mockup -->
           <div style="width:240px; flex-shrink:0;">
-            <div class="small muted" style="font-size:10px; letter-spacing:0.5px; text-align:center; margin-bottom:10px; text-transform:uppercase;">Как это выглядит в Meta Feed</div>
+            <div class="small muted" style="font-size:10px; letter-spacing:0.5px; text-align:center; margin-bottom:10px; text-transform:uppercase;">How it looks in Meta Feed</div>
             <div style="background:#fff; border-radius:10px; overflow:hidden; border:1px solid rgba(0,0,0,0.12); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
               <!-- Post header -->
               <div style="padding:10px 12px 8px; display:flex; align-items:center; gap:8px;">
