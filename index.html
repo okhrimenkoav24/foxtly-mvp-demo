@@ -1531,12 +1531,16 @@ VIEWS['creative-studio'] = function(){
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:10px; flex:1;">
-            <div style="width:34px; height:34px; border-radius:6px; background:${state.creatives.branding.color}; border:2px solid var(--border-light); flex-shrink:0;"></div>
+            <div style="position:relative; width:44px; height:44px; border-radius:8px; overflow:hidden; flex-shrink:0; cursor:pointer; border:2px solid var(--border-light);" title="Click to open color picker">
+              <div id="brandColorSwatch" style="width:100%; height:100%; background:${state.creatives.branding.color};"></div>
+              <input type="color" value="${state.creatives.branding.color}" oninput="updateBrandColorPreview(this.value)" onchange="setBrandColor(this.value)" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0;">
+            </div>
             <div>
-              <div style="font-size:13px; font-weight:500; margin-bottom:5px;">Brand color</div>
+              <div style="font-size:13px; font-weight:500; margin-bottom:6px;">Brand color</div>
               <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-                <input type="text" value="${state.creatives.branding.color}" maxlength="7" placeholder="#f0883e" onchange="setBrandColor(this.value)" onclick="event.stopPropagation()" style="width:76px; font-size:12px; font-family:monospace; background:var(--card-bg-3); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:var(--text);">
-                ${BRAND_COLORS.map(c => `<div onclick="event.stopPropagation(); setBrandColor('${c}')" style="width:18px; height:18px; border-radius:3px; background:${c}; cursor:pointer; border:2px solid ${ c===state.creatives.branding.color ? 'rgba(255,255,255,0.7)' : 'transparent' }; flex-shrink:0;"></div>`).join('')}
+                <input type="text" id="brandHexInput" value="${state.creatives.branding.color}" maxlength="7" placeholder="#f0883e" onchange="setBrandColor(this.value)" onclick="event.stopPropagation()" style="width:76px; font-size:12px; font-family:monospace; background:var(--card-bg-3); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:var(--text);" title="Enter HEX code">
+                <span class="small muted" style="font-size:10px;">или выбрать:</span>
+                ${BRAND_COLORS.map(c => `<div onclick="event.stopPropagation(); setBrandColor('${c}')" style="width:20px; height:20px; border-radius:4px; background:${c}; cursor:pointer; border:2px solid ${ c===state.creatives.branding.color ? 'rgba(255,255,255,0.8)' : 'transparent' }; flex-shrink:0; transition:border-color 0.15s;" title="${c}"></div>`).join('')}
               </div>
             </div>
           </div>
@@ -1547,32 +1551,97 @@ VIEWS['creative-studio'] = function(){
 
     <!-- ── STEP 3: AD COPY ── -->
     <div class="section mb-16">
-      <div class="section-head"><h2>3 · Ad Copy</h2><span class="small muted">Text shown alongside your creatives in Meta</span></div>
+      <div class="section-head"><h2>3 · Ad Copy</h2><span class="small muted">Текст, который показывается вместе с вашими креативами в Meta</span></div>
       <div class="card tight" style="padding:16px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
-            <label class="field-label">Primary text <span class="small muted" style="font-weight:400;">(max 125 chars)</span></label>
-            <textarea style="resize:none; height:64px; font-family:inherit; font-size:13px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); width:100%; line-height:1.5; box-sizing:border-box;" maxlength="125" placeholder="e.g. We fix leaks fast — call for a free estimate today!" onchange="state.adCopy.primaryText=this.value">${state.adCopy.primaryText||''}</textarea>
+        <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:start;">
+
+          <!-- LEFT: fields -->
+          <div style="display:flex; flex-direction:column; gap:14px; min-width:0;">
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                <span style="background:var(--orange); color:#000; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">1</span>
+                Primary text <span class="small muted" style="font-weight:400;">(max 125)</span>
+              </label>
+              <div class="small muted" style="margin-bottom:6px; font-size:11px;">Главный текст объявления — показывается над изображением. Здесь нужно зацепить внимание.</div>
+              <textarea style="resize:none; height:60px; font-family:inherit; font-size:13px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); width:100%; line-height:1.5; box-sizing:border-box;" maxlength="125" placeholder="e.g. We fix leaks fast — call for a free estimate today!" onchange="state.adCopy.primaryText=this.value">${state.adCopy.primaryText||''}</textarea>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                <span style="background:#3b82f6; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">2</span>
+                Headline <span class="small muted" style="font-weight:400;">(max 40)</span>
+              </label>
+              <div class="small muted" style="margin-bottom:6px; font-size:11px;">Жирный заголовок под изображением. Коротко и конкретно.</div>
+              <input type="text" maxlength="40" value="${state.adCopy.headline||''}" placeholder="e.g. Free Plumbing Estimate" onchange="state.adCopy.headline=this.value">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="field" style="margin-bottom:0;">
+                <label class="field-label" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                  <span style="background:#10b981; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">3</span>
+                  CTA Button
+                </label>
+                <div class="small muted" style="margin-bottom:6px; font-size:11px;">Кнопка действия — что должен сделать пользователь.</div>
+                <select onchange="state.adCopy.cta=this.value">
+                  <option value="Get Quote" ${(state.adCopy.cta||'Get Quote')==='Get Quote'?'selected':''}>Get Quote</option>
+                  <option value="Learn More" ${state.adCopy.cta==='Learn More'?'selected':''}>Learn More</option>
+                  <option value="Contact Us" ${state.adCopy.cta==='Contact Us'?'selected':''}>Contact Us</option>
+                  <option value="Book Now" ${state.adCopy.cta==='Book Now'?'selected':''}>Book Now</option>
+                  <option value="Sign Up" ${state.adCopy.cta==='Sign Up'?'selected':''}>Sign Up</option>
+                  <option value="Call Now" ${state.adCopy.cta==='Call Now'?'selected':''}>Call Now</option>
+                </select>
+              </div>
+              <div class="field" style="margin-bottom:0;">
+                <label class="field-label" style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                  <span style="background:#6b7280; color:#fff; font-size:9px; font-weight:800; width:16px; height:16px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">4</span>
+                  Destination URL
+                </label>
+                <div class="small muted" style="margin-bottom:6px; font-size:11px;">Куда попадёт пользователь после клика по объявлению.</div>
+                <input type="text" value="${state.adCopy.url||''}" placeholder="https://yourbusiness.com" onchange="state.adCopy.url=this.value" style="width:100%; box-sizing:border-box;">
+              </div>
+            </div>
           </div>
-          <div class="field" style="margin-bottom:0;">
-            <label class="field-label">Headline <span class="small muted" style="font-weight:400;">(max 40)</span></label>
-            <input type="text" maxlength="40" value="${state.adCopy.headline||''}" placeholder="e.g. Free Plumbing Estimate" onchange="state.adCopy.headline=this.value">
+
+          <!-- RIGHT: Meta ad mockup -->
+          <div style="width:240px; flex-shrink:0;">
+            <div class="small muted" style="font-size:10px; letter-spacing:0.5px; text-align:center; margin-bottom:10px; text-transform:uppercase;">Как это выглядит в Meta Feed</div>
+            <div style="background:#fff; border-radius:10px; overflow:hidden; border:1px solid rgba(0,0,0,0.12); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+              <!-- Post header -->
+              <div style="padding:10px 12px 8px; display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; border-radius:50%; background:#f0883e; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:13px; flex-shrink:0;">M</div>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-weight:700; font-size:12px; color:#1c1e21; line-height:1.3;">Mike's Plumbing</div>
+                  <div style="font-size:10px; color:#65676b;">Sponsored · 🌐</div>
+                </div>
+                <div style="font-size:16px; color:#65676b; font-weight:700; letter-spacing:1px; line-height:1;">···</div>
+              </div>
+              <!-- ① Primary text -->
+              <div style="padding:0 12px 10px; display:flex; gap:6px; align-items:flex-start;">
+                <span style="background:var(--orange); color:#000; font-size:9px; font-weight:800; width:15px; height:15px; border-radius:2px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;">1</span>
+                <div style="font-size:12px; color:#1c1e21; line-height:1.5;">We fix leaks fast — call for a free estimate today!</div>
+              </div>
+              <!-- Image -->
+              <div style="height:78px; background:linear-gradient(135deg,#f0883e 0%,#fbbf24 100%); display:flex; align-items:center; justify-content:center; position:relative;">
+                <span style="font-size:10px; color:rgba(255,255,255,0.8);">Your creative</span>
+              </div>
+              <!-- ② ③ ④ bottom strip -->
+              <div style="background:#f0f2f5; padding:8px 10px; display:flex; align-items:center; gap:6px;">
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px;">
+                    <span style="background:#3b82f6; color:#fff; font-size:9px; font-weight:800; width:15px; height:15px; border-radius:2px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">2</span>
+                    <span style="font-size:12px; font-weight:700; color:#1c1e21; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Free Plumbing Estimate</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="background:#6b7280; color:#fff; font-size:9px; font-weight:800; width:15px; height:15px; border-radius:2px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">4</span>
+                    <span style="font-size:10px; color:#65676b; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">MIKESPLUMBING.COM</span>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+                  <span style="background:#10b981; color:#fff; font-size:9px; font-weight:800; width:15px; height:15px; border-radius:2px; display:inline-flex; align-items:center; justify-content:center;">3</span>
+                  <div style="background:#e4e6eb; color:#1c1e21; font-size:11px; font-weight:600; padding:5px 9px; border-radius:4px; white-space:nowrap;">Get Quote</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="field" style="margin-bottom:0;">
-            <label class="field-label">CTA Button</label>
-            <select onchange="state.adCopy.cta=this.value">
-              <option value="Get Quote" ${(state.adCopy.cta||'Get Quote')==='Get Quote'?'selected':''}>Get Quote</option>
-              <option value="Learn More" ${state.adCopy.cta==='Learn More'?'selected':''}>Learn More</option>
-              <option value="Contact Us" ${state.adCopy.cta==='Contact Us'?'selected':''}>Contact Us</option>
-              <option value="Book Now" ${state.adCopy.cta==='Book Now'?'selected':''}>Book Now</option>
-              <option value="Sign Up" ${state.adCopy.cta==='Sign Up'?'selected':''}>Sign Up</option>
-              <option value="Call Now" ${state.adCopy.cta==='Call Now'?'selected':''}>Call Now</option>
-            </select>
-          </div>
-          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
-            <label class="field-label">Destination URL</label>
-            <input type="text" value="${state.adCopy.url||''}" placeholder="https://yourbusiness.com/landing-page" onchange="state.adCopy.url=this.value" style="width:100%; box-sizing:border-box;">
-          </div>
+
         </div>
       </div>
     </div>
@@ -1825,6 +1894,12 @@ function setBrandColor(hex){
     state.creatives.branding.color = clean;
     navigateTo('creative-studio');
   }
+}
+function updateBrandColorPreview(hex){
+  const swatch = document.getElementById('brandColorSwatch');
+  const hexInput = document.getElementById('brandHexInput');
+  if(swatch) swatch.style.background = hex;
+  if(hexInput) hexInput.value = hex;
 }
 function simulateHiggsfieldTemplate(){
   state.higgsfieldTemplate = !state.higgsfieldTemplate;
