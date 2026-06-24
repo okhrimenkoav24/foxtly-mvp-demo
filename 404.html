@@ -1445,6 +1445,7 @@ state.higgsfieldScene = '';
 state.higgsfieldTemplate = false;
 state.creatives.placements = ['feed_square', 'stories'];
 state.creatives.branding = { color: '#f0883e', hasLogo: false };
+state.adCopy = { primaryText: 'We fix leaks fast — call for a free estimate today!', headline: 'Free Plumbing Estimate', cta: 'Get Quote', url: 'https://mikesplumbing.com/estimate' };
 
 // ---- Placement & format definitions ----
 const PLACEMENT_DEFS = {
@@ -1455,6 +1456,13 @@ const PLACEMENT_DEFS = {
 const CREATIVE_GRADIENTS = ['linear-gradient(135deg,#f0883e,#fbbf24)','linear-gradient(135deg,#60a5fa,#a78bfa)','linear-gradient(135deg,#34d399,#60a5fa)','linear-gradient(135deg,#f87171,#fbbf24)','linear-gradient(135deg,#a78bfa,#f87171)','linear-gradient(135deg,#fbbf24,#34d399)'];
 const BRAND_COLORS = ['#f0883e','#3b82f6','#10b981','#8b5cf6','#ef4444','#f59e0b'];
 let brandColorIdx = 0;
+
+function getPlacementSvg(key){
+  if(key==='feed_square') return '<svg width="54" height="76" viewBox="0 0 54 76" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="52" height="74" rx="8" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><circle cx="9" cy="11" r="3.5" fill="rgba(255,255,255,0.25)"/><rect x="15" y="9" width="14" height="2" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="15" y="13" width="9" height="1.5" rx="0.75" fill="rgba(255,255,255,0.12)"/><rect x="3" y="19" width="48" height="48" rx="2" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><path d="M14 47 L22 37 L29 44 L36 35 L49 47" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linejoin="round" fill="none"/><rect x="3" y="70" width="8" height="2" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="14" y="70" width="8" height="2" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="25" y="70" width="8" height="2" rx="1" fill="rgba(255,255,255,0.2)"/></svg>';
+  if(key==='feed_portrait') return '<svg width="46" height="76" viewBox="0 0 46 76" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="44" height="74" rx="8" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><circle cx="8" cy="10" r="3" fill="rgba(255,255,255,0.25)"/><rect x="13" y="8.5" width="12" height="2" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="3" y="18" width="40" height="50" rx="2" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><path d="M11 52 L17 42 L23 48 L30 38 L40 52" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linejoin="round" fill="none"/><rect x="3" y="71" width="8" height="2" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="14" y="71" width="8" height="2" rx="1" fill="rgba(255,255,255,0.2)"/></svg>';
+  if(key==='stories') return '<svg width="36" height="76" viewBox="0 0 36 76" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="34" height="74" rx="8" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/><rect x="2" y="2" width="32" height="72" rx="7" fill="rgba(255,255,255,0.06)"/><rect x="2" y="2" width="32" height="11" rx="7" fill="rgba(239,100,80,0.22)"/><rect x="2" y="63" width="32" height="13" rx="0" fill="rgba(239,100,80,0.22)"/><rect x="2" y="67" width="32" height="7" rx="7" fill="rgba(239,100,80,0.22)"/><rect x="4" y="5" width="10" height="1.5" rx="0.75" fill="rgba(255,255,255,0.4)"/><rect x="16" y="5" width="8" height="1.5" rx="0.75" fill="rgba(255,255,255,0.15)"/><rect x="26" y="5" width="6" height="1.5" rx="0.75" fill="rgba(255,255,255,0.15)"/><circle cx="9" cy="10" r="2.5" fill="rgba(255,255,255,0.3)"/><rect x="13" y="9" width="10" height="1.5" rx="0.75" fill="rgba(255,255,255,0.2)"/><path d="M8 44 L13 36 L18 42 L24 33 L31 44" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linejoin="round" fill="none"/><rect x="9" y="64" width="18" height="5" rx="2.5" fill="rgba(255,255,255,0.22)"/></svg>';
+  return '';
+}
 
 VIEWS['creative-studio'] = function(){
   const all = [...state.creatives.uploaded, ...state.creatives.generated].filter(c=>c.selected);
@@ -1488,24 +1496,21 @@ VIEWS['creative-studio'] = function(){
         ${Object.entries(PLACEMENT_DEFS).map(([key,p])=>{
           const sel = placements.includes(key);
           const covered = coveredRatios.includes(p.ratio) && all.some(c=>c.aspectRatio===p.ratio);
-          const rw = p.ratio==='1:1'?28:p.ratio==='4:5'?22:13;
-          return `<div class="card tight" onclick="togglePlacement('${key}')" style="padding:14px; cursor:pointer; border-color:${sel?'var(--orange)':'var(--border)'}; transition:border-color 0.15s;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-              <div>
-                <div style="font-weight:600; font-size:13px; margin-bottom:2px;">${p.label}</div>
-                <div class="small muted">${p.desc}</div>
-              </div>
-              <div style="width:18px; height:18px; border-radius:4px; border:2px solid ${sel?'var(--orange)':'var(--border-light)'}; background:${sel?'var(--orange)':'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-left:8px;">
+            return `<div class="card tight" onclick="togglePlacement('${key}')" style="padding:14px; cursor:pointer; border-color:${sel?'var(--orange)':'var(--border)'}; transition:border-color 0.15s;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-weight:600; font-size:13px;">${p.label}</div>
+              <div style="width:18px; height:18px; border-radius:4px; border:2px solid ${sel?'var(--orange)':'var(--border-light)'}; background:${sel?'var(--orange)':'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 ${sel?'<span style="color:#000;font-size:10px;font-weight:900;line-height:1;">✓</span>':''}
               </div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-              <div style="width:${rw}px; height:28px; border-radius:3px; border:1.5px solid var(--border-light); background:var(--card-bg-2); flex-shrink:0;"></div>
-              <div class="small muted">${p.w}×${p.h}px · JPG PNG MP4</div>
+            <div class="small muted" style="margin-bottom:12px;">${p.desc}</div>
+            <div style="display:flex; justify-content:center; align-items:flex-end; margin-bottom:12px; min-height:80px;">
+              ${getPlacementSvg(key)}
             </div>
+            <div class="small muted" style="margin-bottom:4px;">${p.w}×${p.h}px · JPG PNG MP4</div>
             ${sel && covered ? `<div class="small" style="color:var(--green);">✓ Covered</div>` : ''}
             ${sel && !covered && all.length>0 ? `<div class="small" style="color:var(--yellow);">⚠ No creative yet</div>` : ''}
-            ${sel ? `<div class="small muted" style="margin-top:4px; font-size:11px;">Safe zone: ${p.safe}</div>` : ''}
+            ${sel ? `<div class="small muted" style="font-size:11px; margin-top:4px;">Safe zone: ${p.safe}</div>` : ''}
           </div>`;
         }).join('')}
       </div>
@@ -1525,21 +1530,56 @@ VIEWS['creative-studio'] = function(){
               <div class="small muted">PNG with transparent background · max 5MB</div>
             </div>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div onclick="cycleBrandColor()" style="width:34px; height:34px; border-radius:6px; background:${state.creatives.branding.color}; cursor:pointer; border:2px solid var(--border-light); transition:background 0.2s;"></div>
+          <div style="display:flex; align-items:center; gap:10px; flex:1;">
+            <div style="width:34px; height:34px; border-radius:6px; background:${state.creatives.branding.color}; border:2px solid var(--border-light); flex-shrink:0;"></div>
             <div>
-              <div style="font-size:13px; font-weight:500;">Brand color</div>
-              <div class="small muted">${state.creatives.branding.color} · click to cycle</div>
+              <div style="font-size:13px; font-weight:500; margin-bottom:5px;">Brand color</div>
+              <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                <input type="text" value="${state.creatives.branding.color}" maxlength="7" placeholder="#f0883e" onchange="setBrandColor(this.value)" onclick="event.stopPropagation()" style="width:76px; font-size:12px; font-family:monospace; background:var(--card-bg-3); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:var(--text);">
+                ${BRAND_COLORS.map(c => `<div onclick="event.stopPropagation(); setBrandColor('${c}')" style="width:18px; height:18px; border-radius:3px; background:${c}; cursor:pointer; border:2px solid ${ c===state.creatives.branding.color ? 'rgba(255,255,255,0.7)' : 'transparent' }; flex-shrink:0;"></div>`).join('')}
+              </div>
             </div>
           </div>
-          <div class="small muted" style="margin-left:auto; max-width:200px; text-align:right;">Used for text overlays, borders, and CTA buttons on all creatives</div>
+          <div class="small muted" style="max-width:180px; text-align:right; flex-shrink:0;">Used for text overlays, borders, and CTA buttons on all creatives</div>
         </div>
       </div>
     </div>
 
-    <!-- ── STEP 3: ADD CREATIVES ── -->
+    <!-- ── STEP 3: AD COPY ── -->
     <div class="section mb-16">
-      <div class="section-head"><h2>3 · Add creatives</h2></div>
+      <div class="section-head"><h2>3 · Ad Copy</h2><span class="small muted">Text shown alongside your creatives in Meta</span></div>
+      <div class="card tight" style="padding:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
+            <label class="field-label">Primary text <span class="small muted" style="font-weight:400;">(max 125 chars)</span></label>
+            <textarea style="resize:none; height:64px; font-family:inherit; font-size:13px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); width:100%; line-height:1.5; box-sizing:border-box;" maxlength="125" placeholder="e.g. We fix leaks fast — call for a free estimate today!" onchange="state.adCopy.primaryText=this.value">${state.adCopy.primaryText||''}</textarea>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Headline <span class="small muted" style="font-weight:400;">(max 40)</span></label>
+            <input type="text" maxlength="40" value="${state.adCopy.headline||''}" placeholder="e.g. Free Plumbing Estimate" onchange="state.adCopy.headline=this.value">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">CTA Button</label>
+            <select onchange="state.adCopy.cta=this.value">
+              <option value="Get Quote" ${(state.adCopy.cta||'Get Quote')==='Get Quote'?'selected':''}>Get Quote</option>
+              <option value="Learn More" ${state.adCopy.cta==='Learn More'?'selected':''}>Learn More</option>
+              <option value="Contact Us" ${state.adCopy.cta==='Contact Us'?'selected':''}>Contact Us</option>
+              <option value="Book Now" ${state.adCopy.cta==='Book Now'?'selected':''}>Book Now</option>
+              <option value="Sign Up" ${state.adCopy.cta==='Sign Up'?'selected':''}>Sign Up</option>
+              <option value="Call Now" ${state.adCopy.cta==='Call Now'?'selected':''}>Call Now</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:0; grid-column:1/-1;">
+            <label class="field-label">Destination URL</label>
+            <input type="text" value="${state.adCopy.url||''}" placeholder="https://yourbusiness.com/landing-page" onchange="state.adCopy.url=this.value" style="width:100%; box-sizing:border-box;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: ADD CREATIVES ── -->
+    <div class="section mb-16">
+      <div class="section-head"><h2>4 · Add creatives</h2></div>
       <div class="tabs" style="margin-bottom:16px;">
         <button class="tab ${state.csTab==='upload'?'active':''}" onclick="setCsTab('upload')">📤 Upload your own</button>
         <button class="tab ${state.csTab==='ai'?'active':''}" onclick="setCsTab('ai')">✨ AI Images</button>
@@ -1728,6 +1768,12 @@ function renderCreativeTile(c, removable){
   const ratioH = {'1:1':'100%','4:5':'125%','9:16':'177.8%'}[c.aspectRatio] || '100%';
   const kindLabel = {'higgsfield':'🎬 Higgsfield','uploaded':'📤 Uploaded','generated':'✨ AI'}[c.kind] || c.kind;
   const brandColor = state.creatives.branding.color;
+  const coverageChips = Object.entries(PLACEMENT_DEFS)
+    .filter(([k]) => state.creatives.placements.includes(k))
+    .map(([k, p]) => {
+      const matches = c.aspectRatio === p.ratio;
+      return '<span style="font-size:9px; padding:2px 4px; border-radius:3px; background:' + (matches ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.04)') + '; color:' + (matches ? 'var(--green)' : 'var(--text-muted)') + '; border:1px solid ' + (matches ? 'rgba(52,211,153,0.3)' : 'var(--border)') + '; white-space:nowrap;">' + (matches ? '✓' : '–') + ' ' + p.label + '</span>';
+    }).join('');
   return `<div class="card tight" style="padding:8px;">
     <div style="position:relative; border-radius:8px; background:${c.gradient}; overflow:hidden; margin-bottom:8px;">
       <div style="padding-top:${ratioH};"></div>
@@ -1743,7 +1789,8 @@ function renderCreativeTile(c, removable){
       </div>
       ${c.kind==='generated' ? `<button onclick="regenerateSingle('${c.id}')" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.65); border:none; border-radius:4px; color:#fff; padding:3px 7px; font-size:10px; cursor:pointer; line-height:1.4;">↻</button>` : ''}
     </div>
-    <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px;">${kindLabel}</div>
+    <div style="font-size:10px; color:var(--text-muted); margin-bottom:5px;">${kindLabel}</div>
+    <div style="display:flex; gap:3px; flex-wrap:wrap; margin-bottom:7px;">${coverageChips}</div>
     <label class="checkbox-row" style="cursor:pointer; font-size:12px; gap:6px;">
       <input type="checkbox" ${c.selected?'checked':''} onchange="toggleCreative('${c.kind==='higgsfield'?'generated':c.kind}','${c.id}')">
       Use as ad
@@ -1772,6 +1819,13 @@ function cycleBrandColor(){
   state.creatives.branding.color = BRAND_COLORS[brandColorIdx];
   navigateTo('creative-studio');
 }
+function setBrandColor(hex){
+  const clean = hex.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(clean)){
+    state.creatives.branding.color = clean;
+    navigateTo('creative-studio');
+  }
+}
 function simulateHiggsfieldTemplate(){
   state.higgsfieldTemplate = !state.higgsfieldTemplate;
   navigateTo('creative-studio');
@@ -1785,16 +1839,29 @@ function simulateUpload(){
   const isVideo = state.csUploadType==='video';
   for(let i=0; i<ratios.length; i++){
     const id = 'u'+Date.now()+i;
+    const ratio = ratios[i];
+    // Validate: check if this ratio matches any selected placement
+    const matchedPlacement = placements.find(p=>PLACEMENT_DEFS[p]?.ratio===ratio);
     state.creatives.uploaded.push({
       id, kind:'uploaded', selected:true,
       mediaType: isVideo ? 'video' : 'image',
-      aspectRatio: ratios[i],
+      aspectRatio: ratio,
       hasBranding: state.creatives.branding.hasLogo,
-      gradient: CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)]
+      gradient: CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)],
+      validForPlacement: !!matchedPlacement
     });
   }
+  // Check if all selected placements are now covered
+  const allUploaded = [...state.creatives.uploaded, ...state.creatives.generated].filter(c=>c.selected);
+  const coveredRatios = new Set(allUploaded.map(c=>c.aspectRatio));
+  const uncovered = placements.filter(p=>!coveredRatios.has(PLACEMENT_DEFS[p]?.ratio));
   navigateTo('creative-studio');
-  showToast(`${ratios.length} ${state.csUploadType}${ratios.length>1?'s':''} uploaded.`, {success:true});
+  if(uncovered.length){
+    const names = uncovered.map(p=>PLACEMENT_DEFS[p].label).join(', ');
+    showToast(`${ratios.length} ${isVideo?'video':'image'}${ratios.length>1?'s':''} uploaded. Still need creatives for: ${names}`, {});
+  } else {
+    showToast(`${ratios.length} ${isVideo?'video':'image'}${ratios.length>1?'s':''} uploaded — all placements covered ✓`, {success:true});
+  }
 }
 function generateCreatives(){
   state.generating = true;
