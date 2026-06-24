@@ -77,6 +77,18 @@
   .nav-item .ic{ width:18px; text-align:center; font-size:15px; flex-shrink:0; }
   .nav-item:hover{ background: var(--card-bg); color: var(--text); }
   .nav-item.active{ background: var(--orange-dim); color: var(--orange); font-weight:600; }
+  .nav-arrow{ margin-left:auto; font-size:10px; opacity:0.6; transition:transform .15s; }
+  .nav-item:not(.active) .nav-arrow{ transform: rotate(180deg); }
+  .nav-subitems{ display:none; flex-direction:column; }
+  .nav-item.active + .nav-subitems{ display:flex; }
+  .nav-subitem{
+    display:flex; align-items:center; gap:10px;
+    padding:7px 10px 7px 38px; border-radius:8px;
+    color: var(--text-muted); text-decoration:none; font-size:13px;
+    cursor:pointer; border:none; background:none; width:100%; text-align:left;
+  }
+  .nav-subitem:hover{ background: var(--card-bg); color: var(--text); }
+  .nav-subitem.active{ color: var(--orange); font-weight:600; }
   .nav-badge{
     margin-left:auto; background:var(--red); color:#1a0a0a; font-size:10px; font-weight:800;
     border-radius:99px; min-width:18px; height:18px; display:flex; align-items:center; justify-content:center;
@@ -107,6 +119,21 @@
   .main-col{ flex:1; min-width:0; display:flex; flex-direction:column; }
   .main{ flex:1; padding:28px 36px 80px 36px; max-width:1240px; width:100%; margin:0 auto; }
   .main.wide{ max-width:1400px; }
+
+  /* ============ INTEGRATION NUDGE BANNER ============ */
+  .integration-nudge{
+    display:none; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background:var(--orange-dim); border:1px solid rgba(240,136,62,0.35);
+    border-radius:10px; padding:14px 18px;
+    max-width:1240px; width:calc(100% - 72px); margin:20px auto 0 auto;
+  }
+  .integration-nudge.show{ display:flex; }
+  .integration-nudge .msg{ display:flex; align-items:center; gap:12px; font-size:13.5px; line-height:1.4; }
+  .integration-nudge .msg .mark{
+    width:32px; height:32px; border-radius:8px; background:var(--orange-dim); color:var(--orange);
+    display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;
+    border:1px solid rgba(240,136,62,0.3);
+  }
 
   /* ============ TOP BAR ============ */
   .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; gap:16px; flex-wrap:wrap; }
@@ -146,17 +173,25 @@
   .link-btn.muted{ color: var(--text-secondary); }
 
   /* ============ CARDS / SECTIONS ============ */
-  .section{ margin-bottom:28px; }
-  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
-  .section-head h2{ font-size:16px; font-weight:700; }
-  .section-head p{ font-size:12.5px; color:var(--text-secondary); margin-top:3px; }
+  .section{ margin-bottom:32px; }
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  .section-head h2{ font-size:21px; font-weight:700; letter-spacing:-0.2px; }
+  .section-head p{ font-size:12.5px; color:var(--text-secondary); margin-top:4px; }
   .card{ background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
   .card.tight{ padding:14px 16px; }
+  .card-narrow{ max-width:520px; }
+
+  .dash-top{ display:grid; grid-template-columns: 1fr 340px; gap:14px; margin-bottom:28px; align-items:stretch; }
+  .dash-top .kpi-grid{ grid-template-columns:repeat(2,1fr); margin-bottom:0; }
+  .insight-card{ display:flex; flex-direction:column; }
+  .insight-card p{ flex:1; }
 
   .kpi-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:28px; }
   .kpi-card{ background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+  .kpi-card.empty{ border-style:dashed; border-color:var(--border-light); }
   .kpi-label{ font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; font-weight:600; }
   .kpi-value{ font-size:24px; font-weight:700; }
+  .kpi-value.muted{ color:var(--text-muted); }
   .kpi-delta{ font-size:12px; margin-top:6px; display:flex; align-items:center; gap:4px;}
   .kpi-delta.up{ color:var(--green); }
   .kpi-delta.down{ color:var(--green); }
@@ -282,9 +317,11 @@
   @keyframes toast-in{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
 
   /* ============ AI ASSISTANT ============ */
-  .ai-fab{ position:fixed; bottom:28px; right:32px; width:54px; height:54px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:24px; color:#1a1a1a; box-shadow:0 4px 16px rgba(240,136,62,0.35); cursor:pointer; z-index:150; border:none; }
+  @keyframes fab-shimmer{ 0%{background-position:0% 50%;box-shadow:0 4px 20px rgba(240,136,62,0.5)} 50%{background-position:100% 50%;box-shadow:0 4px 32px rgba(240,80,20,0.85),0 0 0 6px rgba(240,136,62,0.18)} 100%{background-position:0% 50%;box-shadow:0 4px 20px rgba(240,136,62,0.5)} }
+  @keyframes fab-pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.09)} }
+  .ai-fab{ position:fixed !important; bottom:28px; right:32px; width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg,#ff9a4a,#d94f0a,#ffb347,#e05010,#ff7020); background-size:400% 400%; animation:fab-shimmer 1.6s ease-in-out infinite, fab-pulse 1.6s ease-in-out infinite; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; box-shadow:0 4px 20px rgba(240,136,62,0.5); cursor:pointer; z-index:410; border:none; }
   .ai-fab .nudge{ position:absolute; top:0; right:0; width:13px; height:13px; border-radius:50%; background:var(--red); border:2px solid var(--bg); }
-  .ai-panel{ position:fixed; bottom:96px; right:32px; width:360px; max-height:520px; background:var(--card-bg); border:1px solid var(--border-light); border-radius:14px; display:none; flex-direction:column; z-index:150; box-shadow:0 12px 40px rgba(0,0,0,0.5); overflow:hidden; }
+  .ai-panel{ position:fixed; bottom:96px; right:32px; width:360px; max-height:520px; background:var(--card-bg); border:1px solid var(--border-light); border-radius:14px; display:none; flex-direction:column; z-index:410; box-shadow:0 12px 40px rgba(0,0,0,0.5); overflow:hidden; }
   .ai-panel.open{ display:flex; }
   .ai-panel-head{ padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
   .ai-panel-head .who{ display:flex; align-items:center; gap:10px; }
@@ -305,8 +342,8 @@
   /* ============ TOUR ============ */
   #tour-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; }
   #tour-overlay.open{ display:block; }
-  #tour-dim{ position:absolute; inset:0; background:rgba(4,4,8,0.65); }
-  #tour-spotlight{ position:absolute; border-radius:12px; box-shadow:0 0 0 4000px rgba(4,4,8,0.65); transition:all .35s ease; background:transparent; }
+  #tour-dim{ position:absolute; inset:0; background:rgba(4,4,8,0.4); }
+  #tour-spotlight{ position:absolute; border-radius:12px; box-shadow:0 0 0 4000px rgba(4,4,8,0.4); transition:all .35s ease; background:transparent; }
   #tour-tooltip{ position:absolute; background:var(--card-bg-3); border:1px solid var(--orange); border-radius:12px; padding:16px; width:300px; pointer-events:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5); transition:all .35s ease; }
   #tour-tooltip .tt-title{ font-weight:700; font-size:13.5px; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
   #tour-tooltip .tt-body{ font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:14px; }
@@ -348,7 +385,7 @@
   .two-col-rev{ display:grid; grid-template-columns: 1fr 320px; gap:20px; align-items:start; }
   @media (max-width: 1000px){
     .kpi-grid, .grid-3, .field-row{ grid-template-columns:repeat(2,1fr); }
-    .two-col, .two-col-rev{ grid-template-columns:1fr; }
+    .two-col, .two-col-rev, .dash-top{ grid-template-columns:1fr; }
   }
 
   /* highlight-able element marker */
@@ -369,12 +406,23 @@
     </div>
 
     <div class="nav-group-label">Workspace</div>
-    <button class="nav-item" data-view="decision-center" data-tour="nav-decision-center" onclick="navigateTo('decision-center')"><span class="ic">▣</span> Decision Center</button>
-    <button class="nav-item" data-view="knowledge-base" data-tour="nav-knowledge-base" onclick="navigateTo('knowledge-base')"><span class="ic">◐</span> Knowledge Base</button>
-    <button class="nav-item" data-view="campaigns" onclick="navigateTo('campaigns')"><span class="ic">▤</span> Campaigns</button>
+    <button class="nav-item" data-view="decision-center" data-tour="nav-decision-center" onclick="navigateTo('decision-center')"><span class="ic">▣</span> Dashboard</button>
+    <button class="nav-item" data-view="advertising" onclick="navigateTo('advertising')"><span class="ic">▤</span> Advertising <span class="nav-arrow">▲</span></button>
+    <div class="nav-subitems">
+      <button class="nav-subitem" data-subtab="campaigns" onclick="setAdvertisingTab('campaigns')">Campaigns</button>
+      <button class="nav-subitem" data-subtab="analytics" onclick="setAdvertisingTab('analytics')">Analytics</button>
+      <button class="nav-subitem" data-subtab="creatives" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
+    </div>
     <button class="nav-item" data-view="approvals" data-tour="nav-approvals"  onclick="navigateTo('approvals')"><span class="ic">☑</span> Approvals <span class="nav-badge" id="approvals-badge">3</span></button>
     <button class="nav-item" data-view="leads" onclick="navigateTo('leads')"><span class="ic">◎</span> Leads</button>
-    <button class="nav-item" data-view="reports" onclick="navigateTo('reports')"><span class="ic">▥</span> Reports</button>
+    <button class="nav-item" data-view="reports" onclick="navigateTo('reports')"><span class="ic">▥</span> Report Builder</button>
+    <button class="nav-item" data-view="knowledge-base" data-tour="nav-knowledge-base" onclick="navigateTo('knowledge-base')"><span class="ic">◐</span> Knowledge Base <span class="nav-arrow">▲</span></button>
+    <div class="nav-subitems">
+      <button class="nav-subitem" data-subtab="profile" onclick="setKbTab('profile')">Business Profile</button>
+      <button class="nav-subitem" data-subtab="research" onclick="setKbTab('research')">Market Research</button>
+      <button class="nav-subitem" data-subtab="strategy" onclick="setKbTab('strategy')">Marketing Strategy</button>
+    </div>
+    <button class="nav-item" data-view="ai-assistant" onclick="navigateTo('ai-assistant')"><span class="ic">✦</span> AI Assistant <span class="nav-badge" style="background:var(--orange-dim);color:var(--orange);font-size:9px;padding:2px 5px;border-radius:4px;font-weight:700;">AI</span></button>
 
     <div class="nav-group-label">Setup</div>
     <button class="nav-item" data-view="integrations" data-tour="nav-integrations" onclick="navigateTo('integrations')"><span class="ic">⎆</span> Integrations</button>
@@ -398,6 +446,13 @@
 
   <!-- ============ MAIN ============ -->
   <div class="main-col">
+    <div class="integration-nudge" id="integration-nudge">
+      <div class="msg">
+        <div class="mark">✦</div>
+        <div><strong>Foxtly AI:</strong> Connect your Meta and Google Ads accounts so I can start building and running your campaigns.</div>
+      </div>
+      <button class="btn primary small" onclick="navigateTo('integrations')">Connect accounts</button>
+    </div>
     <div class="main" id="view-root">
       <!-- view content injected here -->
     </div>
@@ -418,7 +473,10 @@
         <div class="status">● Online</div>
       </div>
     </div>
-    <button class="modal-close" onclick="toggleAI()">✕</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="modal-close" title="Full screen" onclick="toggleAI(); navigateTo('ai-assistant')" style="font-size:14px;">⛶</button>
+      <button class="modal-close" onclick="toggleAI()">✕</button>
+    </div>
   </div>
   <div class="ai-messages" id="ai-messages"></div>
   <div class="ai-chips" id="ai-chips"></div>
@@ -448,7 +506,7 @@
   <div class="box">
     <div class="emoji">👋</div>
     <h3>Hi, I'm your Foxtly AI</h3>
-    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. Want a 60-second tour?</p>
+    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. Let me show you around so you know where everything is.</p>
     <div class="row">
       <button class="btn" onclick="skipTour()">Skip for now</button>
       <button class="btn primary" onclick="startTourSteps()">Show me around</button>
@@ -474,30 +532,32 @@
    ========================================================= */
 
 const PROTO_SCREENS = [
-  {group:'Marketing & Auth', items:[
-    {id:'landing', label:'01 · Landing & Pricing', mode:'auth'},
-    {id:'signup', label:'02 · Sign up / Verify email', mode:'auth'},
-    {id:'onboarding', label:'05 · Onboarding questionnaire', mode:'auth'},
-  ]},
   {group:'Workspace', items:[
-    {id:'decision-center', label:'03 · Decision Center', mode:'app'},
-    {id:'knowledge-base', label:'06 · Knowledge Base', mode:'app'},
-    {id:'integrations', label:'07 · Integrations', mode:'app'},
-    {id:'campaign-strategy', label:'08 · Campaign Strategy', mode:'app'},
-    {id:'creative-studio', label:'09 · Creative Studio', mode:'app'},
-    {id:'approvals', label:'10 · Approval Queue', mode:'app'},
-    {id:'settings', label:'11 · Notification Settings', mode:'app'},
-    {id:'campaigns', label:'12 · Performance Dashboard', mode:'app'},
-    {id:'leads', label:'13 · Leads & CRM', mode:'app'},
-    {id:'reports', label:'14 · Reports', mode:'app'},
-    {id:'billing', label:'15 · Billing & Subscription', mode:'app'},
+    {id:'decision-center', label:'01 · Decision Center (start here)', mode:'app'},
+    {id:'onboarding', label:'02 · Onboarding questionnaire', mode:'auth'},
+    {id:'knowledge-base', label:'03 · Knowledge Base', mode:'app'},
+    {id:'integrations', label:'04 · Integrations', mode:'app'},
+    {id:'campaign-strategy', label:'05 · Campaign Strategy', mode:'app'},
+    {id:'creative-studio', label:'06 · Creative Studio', mode:'app'},
+    {id:'approvals', label:'07 · Approval Queue', mode:'app'},
+    {id:'settings', label:'08 · Notification Settings', mode:'app'},
+    {id:'advertising', label:'09 · Advertising (Campaigns / Analytics / Creatives)', mode:'app'},
+    {id:'leads', label:'10 · Leads & CRM', mode:'app'},
+    {id:'reports', label:'11 · Reports', mode:'app'},
+    {id:'billing', label:'12 · Billing & Subscription', mode:'app'},
+  ]},
+  {group:'Marketing & Auth (optional)', items:[
+    {id:'landing', label:'Landing & Pricing', mode:'auth'},
+    {id:'signup', label:'Sign up / Verify email', mode:'auth'},
   ]},
 ];
 
 // ---------- Demo state ----------
 const state = {
   currentView: 'decision-center',
+  kpiEmptyDemo: false,
   setupProgress: { profile:true, meta:true, google:false, firstCampaign:false },
+  pendingIntegrationNudge: false,
   pendingActions: [
     { id:'pa1', type:'urgent', icon:'⚠', title:"AI recommends pausing \"Spring Promo\" creative",
       desc:"Spending $40/day with 0 leads in the last 48 hours.", reversibility:'green',
@@ -572,7 +632,8 @@ const state = {
 // site is deployed at a domain root, a GitHub Pages project path
 // (https://user.github.io/repo-name/...), or opened locally via file://.
 const ROUTE_MAP = {
-  '': { type:'auth', id:'landing' },
+  '': { type:'view', id:'decision-center' },
+  'landing': { type:'auth', id:'landing' },
   'signup': { type:'auth', id:'signup' },
   'verify-email': { type:'auth', id:'verify-email' },
   'onboarding': { type:'auth', id:'onboarding' },
@@ -584,9 +645,11 @@ const ROUTE_MAP = {
   'approvals': { type:'view', id:'approvals' },
   'settings': { type:'view', id:'settings' },
   'billing': { type:'view', id:'billing' },
-  'campaigns': { type:'view', id:'campaigns' },
+  'campaigns': { type:'view', id:'advertising' },
+  'advertising': { type:'view', id:'advertising' },
   'leads': { type:'view', id:'leads' },
   'reports': { type:'view', id:'reports' },
+  'ai-assistant': { type:'view', id:'ai-assistant' },
 };
 const ROUTE_SLUG = {};
 Object.keys(ROUTE_MAP).forEach(slug=>{
@@ -641,14 +704,27 @@ function navigateTo(viewId, opts){
   document.querySelectorAll('.nav-item').forEach(el=>{
     el.classList.toggle('active', el.dataset.view===viewId);
   });
+  document.querySelectorAll('.nav-subitem').forEach(el=>{
+    let isActive = false;
+    if(viewId==='advertising' && el.dataset.subtab===state.advertisingTab) isActive = true;
+    if(viewId==='knowledge-base' && el.dataset.subtab===state.kbTab) isActive = true;
+    el.classList.toggle('active', isActive);
+  });
   const root = document.getElementById('view-root');
   const renderer = VIEWS[viewId];
   root.innerHTML = renderer ? renderer() : '<div class="card">Not found</div>';
   root.scrollTop = 0;
   window.scrollTo(0,0);
   updateApprovalsBadge();
+  updateIntegrationNudge();
   closeProtoPanel();
   if(!opts.skipPush) updateUrl('view', viewId);
+}
+
+function updateIntegrationNudge(){
+  const el = document.getElementById('integration-nudge');
+  if(!el) return;
+  el.classList.toggle('show', !!state.pendingIntegrationNudge);
 }
 
 function navigateAuth(screenId, opts){
@@ -731,13 +807,20 @@ const REVERS_LABEL = {
 VIEWS['decision-center'] = function(){
   const pending = state.pendingActions.filter(a=>a.status!=='done' && a.status!=='rejected');
   const progressItems = [
-    {key:'profile', label:'Complete business profile', view:'knowledge-base'},
-    {key:'meta', label:'Connect Meta Ads account', view:'integrations'},
-    {key:'google', label:'Connect Google Ads account', view:'integrations'},
-    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-strategy'},
+    {key:'profile', label:'Complete business profile', view:'knowledge-base', cta:'Edit profile'},
+    {key:'meta', label:'Connect Meta Ads account', view:'integrations', cta:'Connect'},
+    {key:'google', label:'Connect Google Ads account', view:'integrations', cta:'Connect'},
+    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-strategy', cta:'Start'},
   ];
   const done = progressItems.filter(i=>state.setupProgress[i.key]).length;
   const pct = Math.round(done/progressItems.length*100);
+
+  const kpis = [
+    { label:'Spend', value: state.period==='7d'?'$1,940':'$284', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div>` },
+    { label:'Leads', value: state.period==='7d'?'74':'12', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'18%':'9%'} vs prior period</div>` },
+    { label:'Avg. cost per lead', value: state.period==='7d'?'$26.20':'$23.70', deltaHTML: `<div class="kpi-delta down">↓ ${state.period==='7d'?'6%':'11%'} vs prior period</div>` },
+    { label:'Active campaigns', value: '2', deltaHTML: `<div class="kpi-delta"><span class="neutral">No change</span></div>` },
+  ];
 
   return `
     <div class="topbar">
@@ -746,6 +829,7 @@ VIEWS['decision-center'] = function(){
         <div class="greeting">Here's what's happening with your ads today.</div>
       </div>
       <div class="topbar-right">
+        <button class="link-btn muted small" onclick="toggleKpiEmptyDemo()">${state.kpiEmptyDemo ? '← Back to live data' : 'Preview: no data yet'}</button>
         <div class="period-toggle">
           <button class="${state.period!=='7d'?'active':''}" onclick="setPeriod('today')">Today</button>
           <button class="${state.period==='7d'?'active':''}" onclick="setPeriod('7d')">7 days</button>
@@ -754,11 +838,27 @@ VIEWS['decision-center'] = function(){
       </div>
     </div>
 
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value">${state.period==='7d'?'$1,940':'$284'}</div><div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div></div>
-      <div class="kpi-card"><div class="kpi-label">Leads</div><div class="kpi-value">${state.period==='7d'?'74':'12'}</div><div class="kpi-delta up">↑ ${state.period==='7d'?'18%':'9%'} vs prior period</div></div>
-      <div class="kpi-card"><div class="kpi-label">Avg. cost per lead</div><div class="kpi-value">${state.period==='7d'?'$26.20':'$23.70'}</div><div class="kpi-delta down">↓ ${state.period==='7d'?'6%':'11%'} vs prior period</div></div>
-      <div class="kpi-card"><div class="kpi-label">Active campaigns</div><div class="kpi-value">2</div><div class="kpi-delta"><span class="neutral">No change</span></div></div>
+    <div class="dash-top">
+      <div class="kpi-grid">
+        ${state.kpiEmptyDemo ? kpis.map(k=>`
+          <div class="kpi-card empty">
+            <div class="kpi-label">${k.label}</div>
+            <div class="kpi-value muted">—</div>
+            <div class="kpi-delta"><span class="neutral">No data yet</span></div>
+          </div>
+        `).join('') : kpis.map(k=>`
+          <div class="kpi-card">
+            <div class="kpi-label">${k.label}</div>
+            <div class="kpi-value">${k.value}</div>
+            ${k.deltaHTML}
+          </div>
+        `).join('')}
+      </div>
+      <div class="card insight-card">
+        <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
+        <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target. "Spring Promo" hasn't generated a lead in 48 hours and is likely worth pausing or refreshing the creative.</p>
+        <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
+      </div>
     </div>
 
     <div class="section" data-tour="action-queue">
@@ -771,25 +871,26 @@ VIEWS['decision-center'] = function(){
       <div class="action-list" id="action-list">
         ${pending.length ? pending.map(a=>renderActionCard(a)).join('') : `<div class="card" style="text-align:center;color:var(--text-secondary);">✓ All caught up — nothing needs your review right now.</div>`}
       </div>
+      ${pending.length ? `<div style="text-align:right;margin-top:8px;"><button class="link-btn small" onclick="navigateTo('approvals')">View all approvals →</button></div>` : ''}
     </div>
 
     <div class="section">
       <div class="section-head">
         <div><h2>Your campaigns</h2><p>2 active campaigns across Meta Ads</p></div>
-        <button class="btn" onclick="navigateTo('campaigns')">View all</button>
+        <button class="btn" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">View all</button>
       </div>
       <div class="grid-3">
-        <div class="card" style="cursor:pointer" onclick="navigateTo('campaigns')">
+        <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
           <div class="flex justify-between items-center mb-12"><strong>Free Estimate — Plumbing</strong><span class="badge green">Active</span></div>
           <div class="small muted mb-8">Meta Ads · Lead generation</div>
           <div class="flex justify-between small"><span>Spend: <strong>$168</strong></span><span>Leads: <strong>9</strong></span><span>CPL: <strong>$18.70</strong></span></div>
         </div>
-        <div class="card" style="cursor:pointer" onclick="navigateTo('campaigns')">
+        <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
           <div class="flex justify-between items-center mb-12"><strong>Same-Day Service</strong><span class="badge green">Active</span></div>
           <div class="small muted mb-8">Meta Ads · Lead generation</div>
           <div class="flex justify-between small"><span>Spend: <strong>$76</strong></span><span>Leads: <strong>3</strong></span><span>CPL: <strong>$25.30</strong></span></div>
         </div>
-        <div class="card" style="cursor:pointer; opacity:0.7;" onclick="navigateTo('campaigns')">
+        <div class="card" style="cursor:pointer; opacity:0.7;" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
           <div class="flex justify-between items-center mb-12"><strong>Spring Promo</strong><span class="badge yellow">Paused</span></div>
           <div class="small muted mb-8">Meta Ads · Lead generation</div>
           <div class="flex justify-between small"><span>Spend: <strong>$40</strong></span><span>Leads: <strong>0</strong></span><span>CPL: <strong>—</strong></span></div>
@@ -797,26 +898,33 @@ VIEWS['decision-center'] = function(){
       </div>
     </div>
 
-    <div class="two-col">
-      <div class="card">
-        <h2 class="mb-12">Setup progress</h2>
-        <div class="progress-track mb-12"><div class="progress-fill" style="width:${pct}%"></div></div>
-        <div class="small muted mb-12">${done} of ${progressItems.length} steps complete</div>
-        ${progressItems.map(i=>`
-          <label class="checkbox-row mb-8" style="cursor:pointer;">
-            <input type="checkbox" ${state.setupProgress[i.key]?'checked':''} onchange="toggleSetupItem('${i.key}')">
-            <span style="${state.setupProgress[i.key]?'text-decoration:line-through;color:var(--text-muted);':''}">${i.label}</span>
-          </label>
-        `).join('')}
+    <div class="section">
+      <div class="section-head">
+        <div><h2>Setup progress</h2><p>${done} of ${progressItems.length} steps complete</p></div>
       </div>
-      <div class="card">
-        <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
-        <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target. "Spring Promo" hasn't generated a lead in 48 hours and is likely worth pausing or refreshing the creative.</p>
-        <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
+      <div class="card card-narrow">
+        <div class="progress-track mb-12"><div class="progress-fill" style="width:${pct}%"></div></div>
+        ${progressItems.map(i=>{
+          const isDone = state.setupProgress[i.key];
+          return `
+          <div class="flex items-center justify-between gap-12 mb-8">
+            <label class="checkbox-row" style="cursor:pointer; flex:1;">
+              <input type="checkbox" ${isDone?'checked':''} onchange="toggleSetupItem('${i.key}')">
+              <span style="${isDone?'text-decoration:line-through;color:var(--text-muted);':''}">${i.label}</span>
+            </label>
+            ${!isDone ? `<button class="btn small" onclick="navigateTo('${i.view}')">${i.cta}</button>` : ''}
+          </div>
+          `;
+        }).join('')}
       </div>
     </div>
   `;
 };
+
+function toggleKpiEmptyDemo(){
+  state.kpiEmptyDemo = !state.kpiEmptyDemo;
+  navigateTo('decision-center');
+}
 
 function renderActionCard(a){
   if(a.status==='applying'){
@@ -919,7 +1027,7 @@ VIEWS['knowledge-base'] = function(){
     <div class="tabs">
       <button class="tab ${state.kbTab==='profile'?'active':''}" onclick="setKbTab('profile')">Business Profile</button>
       <button class="tab ${state.kbTab==='research'?'active':''}" onclick="setKbTab('research')">Market Research</button>
-      <button class="tab ${state.kbTab==='strategy'?'active':''}" onclick="setKbTab('strategy')">Strategy Report</button>
+      <button class="tab ${state.kbTab==='strategy'?'active':''}" onclick="setKbTab('strategy')">Marketing Strategy</button>
     </div>
     ${state.kbTab==='profile' ? renderKbProfile() : state.kbTab==='research' ? renderKbResearch() : renderKbStrategy()}
   `;
@@ -1019,7 +1127,7 @@ function renderKbResearch(){
 function renderKbStrategy(){
   return `
     <div class="section-head">
-      <div><h2>Your AI Strategy Report</h2><p>Generated Jun 5, 2026 · based on your business profile and market research</p></div>
+      <div><h2>Your AI Marketing Strategy</h2><p>Generated Jun 5, 2026 · based on your business profile and market research</p></div>
       <div class="flex gap-8"><button class="btn" onclick="showToast('Refreshing strategy report…')">Refresh</button><button class="btn" onclick="showToast('Generating PDF…')">Download PDF</button></div>
     </div>
     <div class="card mb-16">
@@ -1097,12 +1205,23 @@ VIEWS['integrations'] = function(){
           <div class="action-icon" style="background:var(--purple-dim); color:var(--purple);">G</div>
           <div>
             <div style="font-weight:700; font-size:15px;">Google Ads</div>
-            <div class="small muted mt-4">Google Ads connection is temporarily unavailable while we complete Google's API verification. We'll notify you the moment it's ready — no action needed from you.</div>
+            ${google.status==='blocked'
+              ? `<div class="small muted mt-4">Google Ads connection is temporarily unavailable while we complete Google's API verification. We'll notify you the moment it's ready — no action needed from you.</div>`
+              : `<div class="small muted mt-4">Connect your Google Ads account to let AI manage your Search and Performance Max campaigns.</div>`}
+            ${google.status==='connected' ? `<div class="small mt-8">✅ ${google.account}</div>` : ''}
           </div>
         </div>
         <div style="text-align:right;">
-          <span class="badge purple">Pending verification 🚫</span>
-          <div class="mt-12"><button class="btn small" disabled title="Coming soon">Connect Google Ads</button></div>
+          ${google.status==='blocked' ? '<span class="badge purple">Pending verification 🚫</span>'
+            : google.status==='connected' ? '<span class="badge green">Connected ✅</span>'
+            : google.status==='connecting' ? '<span class="badge yellow"><span class="spinner"></span> Connecting…</span>'
+            : '<span class="badge gray">Not connected</span>'}
+          <div class="mt-12">
+            ${google.status==='blocked' ? `<button class="btn small" disabled title="Coming soon">Connect Google Ads</button>`
+              : google.status==='connected' ? `<button class="btn small danger" onclick="disconnectGoogle()">Disconnect</button>`
+              : google.status==='connecting' ? ''
+              : `<button class="btn small primary" onclick="connectGoogle()">Connect Google Ads</button>`}
+          </div>
         </div>
       </div>
     </div>
@@ -1150,6 +1269,7 @@ function connectMeta(){
     state.setupProgress.meta = true;
     navigateTo('integrations');
     showToast('Meta Ads connected.', {success:true});
+    clearIntegrationNudge();
   }, 1400);
 }
 function disconnectMeta(){
@@ -1157,6 +1277,35 @@ function disconnectMeta(){
   state.setupProgress.meta = false;
   navigateTo('integrations');
   showToast('Meta Ads disconnected.');
+}
+function connectGoogle(){
+  state.integrations.google.status = 'connecting';
+  navigateTo('integrations');
+  setTimeout(()=>{
+    state.integrations.google.status = 'connected';
+    state.integrations.google.account = "Mike's Plumbing — Google Ads #821-440-9912";
+    state.setupProgress.google = true;
+    navigateTo('integrations');
+    showToast('Google Ads connected.', {success:true});
+    clearIntegrationNudge();
+  }, 1400);
+}
+function disconnectGoogle(){
+  state.integrations.google.status = 'none';
+  state.setupProgress.google = false;
+  navigateTo('integrations');
+  showToast('Google Ads disconnected.');
+}
+function clearIntegrationNudge(){
+  if(!state.pendingIntegrationNudge) return;
+  const oneConnected = state.integrations.meta.status==='connected' || state.integrations.google.status==='connected';
+  if(oneConnected){
+    state.pendingIntegrationNudge = false;
+    updateIntegrationNudge();
+    appendAIMessage('bot', "🎉 Thanks for connecting your ad account — I can now start building and running campaigns for you. I'll check in here before making any changes.");
+    const nudge = document.getElementById('ai-nudge');
+    if(nudge) nudge.style.display = '';
+  }
 }
 function connectCrm(name){
   state.integrations.crm = {status:'connected', name};
@@ -1286,119 +1435,435 @@ function confirmAddInterest(){
 state.creativeGenStyle = 'photo';
 state.creativeGenFocus = 'team';
 state.generating = false;
+state.generatingHiggsfield = false;
+state.csTab = 'upload';
+state.csUploadType = 'photo';
+state.higgsfieldStyle = 'cinematic';
+state.higgsfieldDuration = '15';
+state.higgsfieldFormat = '9:16';
+state.higgsfieldScene = '';
+state.higgsfieldTemplate = false;
+state.creatives.placements = ['feed_square', 'stories'];
+state.creatives.branding = { color: '#f0883e', hasLogo: false };
+
+// ---- Placement & format definitions ----
+const PLACEMENT_DEFS = {
+  feed_square:   { label:'Feed (1:1)',           ratio:'1:1',  w:1440, h:1440, desc:'Facebook & Instagram feed — square',       safe:'Keep text away from edges' },
+  feed_portrait: { label:'Feed (4:5)',           ratio:'4:5',  w:1440, h:1800, desc:'Instagram feed — portrait (more screen space)', safe:'Keep text in center 80%' },
+  stories:       { label:'Stories & Reels (9:16)', ratio:'9:16', w:1080, h:1920, desc:'Full-screen vertical — Stories & Reels', safe:'Top 14% + bottom 35% are UI overlay zones' },
+};
+const CREATIVE_GRADIENTS = ['linear-gradient(135deg,#f0883e,#fbbf24)','linear-gradient(135deg,#60a5fa,#a78bfa)','linear-gradient(135deg,#34d399,#60a5fa)','linear-gradient(135deg,#f87171,#fbbf24)','linear-gradient(135deg,#a78bfa,#f87171)','linear-gradient(135deg,#fbbf24,#34d399)'];
+const BRAND_COLORS = ['#f0883e','#3b82f6','#10b981','#8b5cf6','#ef4444','#f59e0b'];
+let brandColorIdx = 0;
 
 VIEWS['creative-studio'] = function(){
   const all = [...state.creatives.uploaded, ...state.creatives.generated].filter(c=>c.selected);
+  const placements = state.creatives.placements;
+  const coveredRatios = all.map(c=>c.aspectRatio);
+
+  // Per-placement coverage
+  const placementStatus = Object.entries(PLACEMENT_DEFS).filter(([k])=>placements.includes(k)).map(([k,p])=>{
+    const covered = coveredRatios.includes(p.ratio);
+    return { key:k, ...p, covered };
+  });
+  const allCovered = placementStatus.length>0 && placementStatus.every(s=>s.covered);
+
   return `
-    <div class="topbar"><div><h1>Add creatives for your campaign</h1><div class="greeting">Choose how you'd like to get ad images for "Free Estimate — Plumbing".</div></div></div>
-
-    <div class="grid-2 mb-16">
-      <div class="card">
-        <div class="ico" style="font-size:24px; margin-bottom:8px;">📤</div>
-        <h2 class="mb-8">Upload your own</h2>
-        <p class="small muted mb-12">Have photos of your work, your team, or your storefront? Upload them and we'll format them for Meta Ads.</p>
-        <button class="btn block" onclick="simulateUpload()">Upload files</button>
+    <div class="topbar">
+      <div>
+        <h1>Creative Studio</h1>
+        <div class="greeting">Set up ad creatives for "Free Estimate — Plumbing" · Meta Ads</div>
       </div>
-      <div class="card">
-        <div class="ico" style="font-size:24px; margin-bottom:8px;">✨</div>
-        <h2 class="mb-8">Let AI create some for you</h2>
-        <p class="small muted mb-12">No photos? AI can generate professional ad images based on your business and offer.</p>
-        <div class="field-row mb-12">
-          <div class="field" style="margin-bottom:0;"><label class="field-label">Style</label>
-            <select onchange="state.creativeGenStyle=this.value">
-              <option value="photo" ${state.creativeGenStyle==='photo'?'selected':''}>Professional photo</option>
-              <option value="illustration">Illustration</option>
-              <option value="bold">Bold & colorful</option>
-            </select>
-          </div>
-          <div class="field" style="margin-bottom:0;"><label class="field-label">Focus</label>
-            <select onchange="state.creativeGenFocus=this.value">
-              <option value="team" ${state.creativeGenFocus==='team'?'selected':''}>Your team at work</option>
-              <option value="before-after">Before & after</option>
-              <option value="offer">Special offer</option>
-              <option value="landmark">Local landmark</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn block primary" onclick="generateCreatives()" ${state.generating?'disabled':''}>${state.generating?'Generating…':'Generate 4 options'}</button>
+      ${allCovered ? `<span class="badge green" style="font-size:12px;">✓ All placements covered</span>` : all.length ? `<span class="badge yellow" style="font-size:12px;">⚠ Some placements uncovered</span>` : ''}
+    </div>
+
+    <!-- ── STEP 1: PLACEMENTS ── -->
+    <div class="section mb-16">
+      <div class="section-head">
+        <h2>1 · Select placements</h2>
+        <span class="badge muted small">Meta requirements</span>
+      </div>
+      <p class="small muted mb-12">Choose where your ads will run. Each placement needs creatives in the right format.</p>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+        ${Object.entries(PLACEMENT_DEFS).map(([key,p])=>{
+          const sel = placements.includes(key);
+          const covered = coveredRatios.includes(p.ratio) && all.some(c=>c.aspectRatio===p.ratio);
+          const rw = p.ratio==='1:1'?28:p.ratio==='4:5'?22:13;
+          return `<div class="card tight" onclick="togglePlacement('${key}')" style="padding:14px; cursor:pointer; border-color:${sel?'var(--orange)':'var(--border)'}; transition:border-color 0.15s;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+              <div>
+                <div style="font-weight:600; font-size:13px; margin-bottom:2px;">${p.label}</div>
+                <div class="small muted">${p.desc}</div>
+              </div>
+              <div style="width:18px; height:18px; border-radius:4px; border:2px solid ${sel?'var(--orange)':'var(--border-light)'}; background:${sel?'var(--orange)':'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-left:8px;">
+                ${sel?'<span style="color:#000;font-size:10px;font-weight:900;line-height:1;">✓</span>':''}
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+              <div style="width:${rw}px; height:28px; border-radius:3px; border:1.5px solid var(--border-light); background:var(--card-bg-2); flex-shrink:0;"></div>
+              <div class="small muted">${p.w}×${p.h}px · JPG PNG MP4</div>
+            </div>
+            ${sel && covered ? `<div class="small" style="color:var(--green);">✓ Covered</div>` : ''}
+            ${sel && !covered && all.length>0 ? `<div class="small" style="color:var(--yellow);">⚠ No creative yet</div>` : ''}
+            ${sel ? `<div class="small muted" style="margin-top:4px; font-size:11px;">Safe zone: ${p.safe}</div>` : ''}
+          </div>`;
+        }).join('')}
       </div>
     </div>
 
-    ${state.generating ? `
-      <div class="section">
-        <div class="section-head"><h2>Creating your ad images... (~30 sec)</h2></div>
-        <div class="grid-3" style="grid-template-columns:repeat(4,1fr);">
-          ${[1,2,3,4].map(()=>`<div class="card" style="height:140px; display:flex;align-items:center;justify-content:center;"><span class="spinner"></span></div>`).join('')}
+    <!-- ── STEP 2: BRANDING ── -->
+    <div class="section mb-16">
+      <div class="section-head"><h2>2 · Branding</h2><span class="small muted">Applied to all creatives as overlay</span></div>
+      <div class="card tight" style="padding:16px;">
+        <div style="display:flex; gap:24px; align-items:center; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div onclick="simulateLogoUpload()" style="width:44px; height:44px; border-radius:8px; border:1.5px dashed ${state.creatives.branding.hasLogo?'var(--green)':'var(--border-light)'}; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; background:${state.creatives.branding.hasLogo?'var(--card-bg-3)':'transparent'}; transition:border-color 0.15s;">
+              ${state.creatives.branding.hasLogo ? '🖼' : '+'}
+            </div>
+            <div>
+              <div style="font-size:13px; font-weight:500;">${state.creatives.branding.hasLogo ? 'Logo uploaded ✓' : 'Upload logo'}</div>
+              <div class="small muted">PNG with transparent background · max 5MB</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div onclick="cycleBrandColor()" style="width:34px; height:34px; border-radius:6px; background:${state.creatives.branding.color}; cursor:pointer; border:2px solid var(--border-light); transition:background 0.2s;"></div>
+            <div>
+              <div style="font-size:13px; font-weight:500;">Brand color</div>
+              <div class="small muted">${state.creatives.branding.color} · click to cycle</div>
+            </div>
+          </div>
+          <div class="small muted" style="margin-left:auto; max-width:200px; text-align:right;">Used for text overlays, borders, and CTA buttons on all creatives</div>
         </div>
       </div>
-    ` : ''}
-
-    ${state.creatives.generated.length ? `
-      <div class="section">
-        <div class="section-head"><h2>AI-generated options</h2><button class="btn small" onclick="generateCreatives()">Generate more</button></div>
-        <div class="grid-3" style="grid-template-columns:repeat(4,1fr);">
-          ${state.creatives.generated.map(c=>renderCreativeTile(c, 'generated')).join('')}
-        </div>
-      </div>
-    ` : ''}
-
-    ${state.creatives.uploaded.length ? `
-      <div class="section">
-        <div class="section-head"><h2>Uploaded photos</h2></div>
-        <p class="small muted mb-12" style="font-style:italic;">✦ These look great! I added your offer text overlay — preview below.</p>
-        <div class="grid-3" style="grid-template-columns:repeat(4,1fr);">
-          ${state.creatives.uploaded.map(c=>renderCreativeTile(c, 'uploaded')).join('')}
-        </div>
-      </div>
-    ` : ''}
-
-    <div class="section">
-      <div class="section-head"><h2>Your ad creatives ${all.length ? `(${all.length})` : ''}</h2></div>
-      ${all.length ? `<div class="grid-3" style="grid-template-columns:repeat(4,1fr);">${all.map(c=>renderCreativeTile(c, c.kind, true)).join('')}</div>`
-        : '<div class="card" style="text-align:center; color:var(--yellow);">⚠ You need at least one creative to launch your campaign.</div>'}
     </div>
 
+    <!-- ── STEP 3: ADD CREATIVES ── -->
+    <div class="section mb-16">
+      <div class="section-head"><h2>3 · Add creatives</h2></div>
+      <div class="tabs" style="margin-bottom:16px;">
+        <button class="tab ${state.csTab==='upload'?'active':''}" onclick="setCsTab('upload')">📤 Upload your own</button>
+        <button class="tab ${state.csTab==='ai'?'active':''}" onclick="setCsTab('ai')">✨ AI Images</button>
+        <button class="tab ${state.csTab==='higgsfield'?'active':''}" onclick="setCsTab('higgsfield')">🎬 Higgsfield Video</button>
+      </div>
+      ${state.csTab==='upload' ? renderCsUploadTab() : ''}
+      ${state.csTab==='ai' ? renderCsAiTab() : ''}
+      ${state.csTab==='higgsfield' ? renderCsHiggsfieldTab() : ''}
+    </div>
+
+    <!-- ── STEP 4: YOUR CREATIVES ── -->
+    <div class="section mb-16">
+      <div class="section-head">
+        <h2>Your ad creatives ${all.length ? `(${all.length})` : ''}</h2>
+        ${all.length ? `<span class="badge ${allCovered?'green':'yellow'}">${allCovered?'✓ Ready to launch':'Add more for all placements'}</span>` : ''}
+      </div>
+      ${all.length ? `
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
+          ${all.map(c=>renderCreativeTile(c, true)).join('')}
+        </div>
+      ` : '<div class="card" style="text-align:center; color:var(--yellow); padding:24px;">⚠ You need at least one creative to launch your campaign.</div>'}
+    </div>
+
+    <!-- ── BOTTOM BAR ── -->
     <div class="card mt-16" style="position:sticky; bottom:16px; display:flex; justify-content:space-between; align-items:center; border-color:var(--border-light); box-shadow:0 8px 24px rgba(0,0,0,0.4);">
       <button class="link-btn muted" onclick="navigateTo('campaign-strategy')">← Back to strategy</button>
-      <button class="btn primary" ${all.length===0?'disabled':''} onclick="continueToReview()">Continue to review →</button>
+      <div style="display:flex; align-items:center; gap:12px;">
+        ${all.length===0 ? '<span class="small muted">Add at least 1 creative to continue</span>' : `<span class="small" style="color:var(--green);">✓ ${all.length} creative${all.length>1?'s':''} selected</span>`}
+        <button class="btn primary" ${all.length===0?'disabled':''} onclick="continueToReview()">Continue to review →</button>
+      </div>
     </div>
   `;
 };
 
-const CREATIVE_GRADIENTS = ['linear-gradient(135deg,#f0883e,#fbbf24)','linear-gradient(135deg,#60a5fa,#a78bfa)','linear-gradient(135deg,#34d399,#60a5fa)','linear-gradient(135deg,#f87171,#fbbf24)','linear-gradient(135deg,#a78bfa,#f87171)','linear-gradient(135deg,#fbbf24,#34d399)'];
-
-function renderCreativeTile(c, kind, removable){
-  return `<div class="card tight" style="padding:8px;">
-    <div style="height:90px; border-radius:8px; background:${c.gradient}; display:flex; align-items:flex-end; padding:8px; margin-bottom:8px;">
-      <span class="badge" style="background:rgba(0,0,0,0.5); color:#fff;">${state.campaignBuilder.offer}</span>
+function renderCsUploadTab(){
+  const placements = state.creatives.placements;
+  const recSizes = placements.map(p=>{ const d=PLACEMENT_DEFS[p]; return d?`${d.w}\u00d7${d.h}px`:null; }).filter(Boolean);
+  return `
+    <div onclick="simulateUpload()" style="background:var(--card-bg); border:2px dashed var(--border-light); border-radius:12px; padding:32px; text-align:center; cursor:pointer; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border-light)'">
+      <div style="font-size:32px; margin-bottom:10px;">📁</div>
+      <div style="font-weight:600; margin-bottom:6px;">Drop files here or click to upload</div>
+      <div class="small muted">Images: JPG, PNG — max 30MB per file · Videos: MP4, MOV — max 200MB, max 60 sec</div>
+      ${recSizes.length ? `<div class="small muted mt-8">Recommended sizes for selected placements: ${recSizes.join(', ')}</div>` : ''}
     </div>
-    <label class="checkbox-row" style="cursor:pointer;">
-      <input type="checkbox" ${c.selected?'checked':''} onchange="toggleCreative('${kind}','${c.id}')"> Use as ad creative
+    <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+      <span class="small muted">Upload as:</span>
+      <button class="btn small" onclick="event.stopPropagation(); state.csUploadType='photo'; navigateTo('creative-studio')" style="${state.csUploadType==='photo'?'border-color:var(--orange);color:var(--orange);':''}">🖼 Photos</button>
+      <button class="btn small" onclick="event.stopPropagation(); state.csUploadType='video'; navigateTo('creative-studio')" style="${state.csUploadType==='video'?'border-color:var(--orange);color:var(--orange);':''}">🎬 Video</button>
+    </div>
+    ${state.creatives.uploaded.length ? `
+      <div class="mt-16">
+        <div class="small muted mb-8">Uploaded files</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
+          ${state.creatives.uploaded.map(c=>renderCreativeTile(c, false)).join('')}
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderCsAiTab(){
+  const aiGenerated = state.creatives.generated.filter(c=>c.kind==='generated');
+  return `
+    <div class="card" style="padding:20px;">
+      <p class="small muted mb-16">AI generates professional ad images from your business profile. Each image is auto-sized for your selected placements.</p>
+      <div class="field-row mb-14">
+        <div class="field" style="margin-bottom:0;"><label class="field-label">Style</label>
+          <select onchange="state.creativeGenStyle=this.value">
+            <option value="photo" ${state.creativeGenStyle==='photo'?'selected':''}>Professional photo</option>
+            <option value="illustration" ${state.creativeGenStyle==='illustration'?'selected':''}>Illustration</option>
+            <option value="bold" ${state.creativeGenStyle==='bold'?'selected':''}>Bold & colorful</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;"><label class="field-label">Focus</label>
+          <select onchange="state.creativeGenFocus=this.value">
+            <option value="team" ${state.creativeGenFocus==='team'?'selected':''}>Your team at work</option>
+            <option value="before-after" ${state.creativeGenFocus==='before-after'?'selected':''}>Before & after</option>
+            <option value="offer" ${state.creativeGenFocus==='offer'?'selected':''}>Special offer</option>
+            <option value="landmark" ${state.creativeGenFocus==='landmark'?'selected':''}>Local landmark</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;"><label class="field-label">Offer text</label>
+          <input type="text" value="${state.campaignBuilder.offer}" onchange="state.campaignBuilder.offer=this.value" placeholder="e.g. Free Estimate">
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <label class="checkbox-row" style="cursor:pointer; gap:8px;">
+          <input type="checkbox" ${state.creatives.branding.hasLogo?'checked':''} onchange="state.creatives.branding.hasLogo=this.checked; navigateTo('creative-studio')">
+          <span class="small">Include logo & brand color</span>
+        </label>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" onclick="generateCreativesSingle()" ${state.generating?'disabled':''}>Generate 1</button>
+          <button class="btn primary" onclick="generateCreatives()" ${state.generating?'disabled':''}>
+            ${state.generating ? '<span class="spinner" style="display:inline-block;"></span> Generating…' : 'Generate 4 options'}
+          </button>
+        </div>
+      </div>
+    </div>
+    ${state.generating ? `
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px;">
+        ${[1,2,3,4].map(()=>`<div class="card tight" style="height:140px; display:flex;align-items:center;justify-content:center;"><span class="spinner"></span></div>`).join('')}
+      </div>
+      <div class="small muted mt-8" style="text-align:center;">Creating your ad images… (~30 sec)</div>
+    ` : ''}
+    ${aiGenerated.length ? `
+      <div class="mt-16">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div class="small muted">AI-generated images</div>
+          <button class="btn small" onclick="generateCreatives()">Generate more</button>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
+          ${aiGenerated.map(c=>renderCreativeTile(c, false)).join('')}
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderCsHiggsfieldTab(){
+  const hfGenerated = state.creatives.generated.filter(c=>c.kind==='higgsfield');
+  return `
+    <div class="card" style="padding:20px;">
+      <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px;">
+        <div style="width:38px; height:38px; border-radius:8px; background:linear-gradient(135deg,#1a1a2e,#7c3aed); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🎬</div>
+        <div>
+          <div style="font-weight:600; margin-bottom:3px;">Higgsfield AI Video</div>
+          <div class="small muted">Generate short video ads (15–30 sec) powered by Higgsfield AI, optimised for Meta Feed and Stories.</div>
+        </div>
+      </div>
+      <div class="field mb-12"><label class="field-label">Scene description</label>
+        <textarea style="resize:vertical; min-height:64px; font-family:inherit; font-size:13px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); width:100%; line-height:1.5;" placeholder="e.g. A plumber arrives at a home, fixes a leak under the sink, gives a thumbs up. Professional, trust-building tone." oninput="state.higgsfieldScene=this.value">${state.higgsfieldScene||''}</textarea>
+      </div>
+      <div class="field-row mb-14">
+        <div class="field" style="margin-bottom:0;"><label class="field-label">Style</label>
+          <select onchange="state.higgsfieldStyle=this.value">
+            <option value="cinematic" ${state.higgsfieldStyle==='cinematic'?'selected':''}>Cinematic</option>
+            <option value="documentary" ${state.higgsfieldStyle==='documentary'?'selected':''}>Documentary</option>
+            <option value="ugc" ${state.higgsfieldStyle==='ugc'?'selected':''}>UGC / Authentic</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;"><label class="field-label">Duration</label>
+          <select onchange="state.higgsfieldDuration=this.value">
+            <option value="15" ${(state.higgsfieldDuration||'15')==='15'?'selected':''}>15 seconds</option>
+            <option value="30" ${state.higgsfieldDuration==='30'?'selected':''}>30 seconds</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;"><label class="field-label">Format</label>
+          <select onchange="state.higgsfieldFormat=this.value">
+            <option value="9:16" ${(state.higgsfieldFormat||'9:16')==='9:16'?'selected':''}>Stories / Reels (9:16)</option>
+            <option value="1:1" ${state.higgsfieldFormat==='1:1'?'selected':''}>Feed square (1:1)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <button class="btn small" onclick="simulateHiggsfieldTemplate()" style="${state.higgsfieldTemplate?'border-color:var(--green);color:var(--green);':''}">
+            📎 ${state.higgsfieldTemplate?'Reference image uploaded ✓':'Upload reference image (optional)'}
+          </button>
+          <div class="small muted mt-6">Your photo as visual reference for the AI</div>
+        </div>
+        <button class="btn primary" onclick="generateHiggsfieldVideo()" ${state.generatingHiggsfield?'disabled':''}>
+          ${state.generatingHiggsfield ? '<span class="spinner" style="display:inline-block;"></span> Generating video…' : '🎬 Generate video ad'}
+        </button>
+      </div>
+    </div>
+    ${state.generatingHiggsfield ? `
+      <div class="card mt-12" style="text-align:center; padding:32px;">
+        <span class="spinner" style="display:inline-block; margin-bottom:12px; width:24px; height:24px;"></span>
+        <div style="font-weight:500; margin-bottom:6px;">Generating your video ad via Higgsfield AI…</div>
+        <div class="small muted">This usually takes 1–3 minutes</div>
+      </div>
+    ` : ''}
+    ${hfGenerated.length ? `
+      <div class="mt-16">
+        <div class="small muted mb-8">Generated videos</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
+          ${hfGenerated.map(c=>renderCreativeTile(c, false)).join('')}
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderCreativeTile(c, removable){
+  const isVideo = c.mediaType==='video';
+  const ratioH = {'1:1':'100%','4:5':'125%','9:16':'177.8%'}[c.aspectRatio] || '100%';
+  const kindLabel = {'higgsfield':'🎬 Higgsfield','uploaded':'📤 Uploaded','generated':'✨ AI'}[c.kind] || c.kind;
+  const brandColor = state.creatives.branding.color;
+  return `<div class="card tight" style="padding:8px;">
+    <div style="position:relative; border-radius:8px; background:${c.gradient}; overflow:hidden; margin-bottom:8px;">
+      <div style="padding-top:${ratioH};"></div>
+      <div style="position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:8px;">
+        <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:flex-start;">
+          <span style="background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 5px; border-radius:4px;">${c.aspectRatio||'1:1'}</span>
+          ${isVideo ? '<span style="background:rgba(107,63,255,0.8); color:#fff; font-size:10px; padding:2px 5px; border-radius:4px;">▶ Video</span>' : ''}
+        </div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span style="background:rgba(0,0,0,0.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:4px;">${state.campaignBuilder.offer}</span>
+          ${c.hasBranding ? `<span style="width:12px; height:12px; border-radius:2px; background:${brandColor}; display:inline-block; flex-shrink:0;"></span>` : ''}
+        </div>
+      </div>
+      ${c.kind==='generated' ? `<button onclick="regenerateSingle('${c.id}')" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.65); border:none; border-radius:4px; color:#fff; padding:3px 7px; font-size:10px; cursor:pointer; line-height:1.4;">↻</button>` : ''}
+    </div>
+    <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px;">${kindLabel}</div>
+    <label class="checkbox-row" style="cursor:pointer; font-size:12px; gap:6px;">
+      <input type="checkbox" ${c.selected?'checked':''} onchange="toggleCreative('${c.kind==='higgsfield'?'generated':c.kind}','${c.id}')">
+      Use as ad
     </label>
+    ${removable ? `<button onclick="removeCreative('${c.kind==='higgsfield'?'generated':c.kind}','${c.id}')" class="link-btn muted" style="font-size:11px; margin-top:4px; display:block;">Remove</button>` : ''}
   </div>`;
 }
 
+// Legacy alias (used elsewhere in app)
+function renderCreativeTileLegacy(c, kind, removable){ return renderCreativeTile(c, removable); }
+
+function togglePlacement(key){
+  const arr = state.creatives.placements;
+  const idx = arr.indexOf(key);
+  if(idx>=0) arr.splice(idx,1); else arr.push(key);
+  navigateTo('creative-studio');
+}
+function setCsTab(tab){ state.csTab = tab; navigateTo('creative-studio'); }
+function simulateLogoUpload(){
+  state.creatives.branding.hasLogo = !state.creatives.branding.hasLogo;
+  navigateTo('creative-studio');
+  if(state.creatives.branding.hasLogo) showToast('Logo uploaded.', {success:true});
+}
+function cycleBrandColor(){
+  brandColorIdx = (brandColorIdx+1) % BRAND_COLORS.length;
+  state.creatives.branding.color = BRAND_COLORS[brandColorIdx];
+  navigateTo('creative-studio');
+}
+function simulateHiggsfieldTemplate(){
+  state.higgsfieldTemplate = !state.higgsfieldTemplate;
+  navigateTo('creative-studio');
+  if(state.higgsfieldTemplate) showToast('Reference image uploaded.', {success:true});
+}
 function simulateUpload(){
-  for(let i=0;i<2;i++){
+  const placements = state.creatives.placements;
+  const ratios = placements.length
+    ? placements.map(p=>PLACEMENT_DEFS[p]?.ratio||'1:1')
+    : ['1:1'];
+  const isVideo = state.csUploadType==='video';
+  for(let i=0; i<ratios.length; i++){
     const id = 'u'+Date.now()+i;
-    state.creatives.uploaded.push({id, kind:'uploaded', selected:true, gradient: CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)]});
+    state.creatives.uploaded.push({
+      id, kind:'uploaded', selected:true,
+      mediaType: isVideo ? 'video' : 'image',
+      aspectRatio: ratios[i],
+      hasBranding: state.creatives.branding.hasLogo,
+      gradient: CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)]
+    });
   }
   navigateTo('creative-studio');
-  showToast('2 photos uploaded.', {success:true});
+  showToast(`${ratios.length} ${state.csUploadType}${ratios.length>1?'s':''} uploaded.`, {success:true});
 }
 function generateCreatives(){
   state.generating = true;
   navigateTo('creative-studio');
   setTimeout(()=>{
     state.generating = false;
-    state.creatives.generated = [0,1,2,3].map(i=>({id:'g'+Date.now()+i, kind:'generated', selected:i<2, gradient: CREATIVE_GRADIENTS[i % CREATIVE_GRADIENTS.length]}));
+    const placements = state.creatives.placements;
+    const ratios = placements.length ? placements.map(p=>PLACEMENT_DEFS[p]?.ratio||'1:1') : ['1:1'];
+    state.creatives.generated = state.creatives.generated.filter(c=>c.kind!=='generated');
+    for(let i=0;i<4;i++){
+      state.creatives.generated.push({
+        id:'g'+Date.now()+i, kind:'generated', selected:i<2,
+        mediaType:'image', aspectRatio: ratios[i % ratios.length],
+        hasBranding: state.creatives.branding.hasLogo,
+        gradient: CREATIVE_GRADIENTS[i % CREATIVE_GRADIENTS.length]
+      });
+    }
     navigateTo('creative-studio');
-  }, 1400);
+    showToast('4 AI images generated.', {success:true});
+  }, 1600);
+}
+function generateCreativesSingle(){
+  state.generating = true;
+  navigateTo('creative-studio');
+  setTimeout(()=>{
+    state.generating = false;
+    const placements = state.creatives.placements;
+    const ratio = placements.length ? (PLACEMENT_DEFS[placements[0]]?.ratio||'1:1') : '1:1';
+    state.creatives.generated.push({
+      id:'g'+Date.now(), kind:'generated', selected:true,
+      mediaType:'image', aspectRatio: ratio,
+      hasBranding: state.creatives.branding.hasLogo,
+      gradient: CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)]
+    });
+    navigateTo('creative-studio');
+    showToast('1 AI image generated.', {success:true});
+  }, 1100);
+}
+function regenerateSingle(id){
+  const c = state.creatives.generated.find(x=>x.id===id);
+  if(!c) return;
+  c.gradient = CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)];
+  navigateTo('creative-studio');
+  showToast('Creative regenerated.', {success:true});
+}
+function generateHiggsfieldVideo(){
+  state.generatingHiggsfield = true;
+  navigateTo('creative-studio');
+  setTimeout(()=>{
+    state.generatingHiggsfield = false;
+    const ratio = (state.higgsfieldFormat||'9:16');
+    state.creatives.generated.push({
+      id:'hf'+Date.now(), kind:'higgsfield', selected:true,
+      mediaType:'video', aspectRatio: ratio,
+      hasBranding: state.creatives.branding.hasLogo,
+      gradient: 'linear-gradient(135deg,#1a1a2e,#7c3aed,#db2777)'
+    });
+    navigateTo('creative-studio');
+    showToast('Video ad generated via Higgsfield.', {success:true});
+  }, 2400);
 }
 function toggleCreative(kind, id){
   const list = state.creatives[kind];
   const item = list.find(x=>x.id===id);
   if(item) item.selected = !item.selected;
+  navigateTo('creative-studio');
+}
+function removeCreative(kind, id){
+  state.creatives[kind] = state.creatives[kind].filter(x=>x.id!==id);
   navigateTo('creative-studio');
 }
 function continueToReview(){
@@ -1792,6 +2257,7 @@ state.campaignsPeriod = 'today';
 state.campaignsView = 'list';
 state.selectedCampaign = null;
 state.campaignTab = 'creatives';
+state.advertisingTab = 'campaigns';
 
 const CAMPAIGNS = [
   { id:'c1', name:'Free Estimate — Plumbing', platform:'Meta', status:'Active', spend:168, leads:9, cpl:18.70, change:-11, anomaly:false,
@@ -1815,12 +2281,20 @@ const CAMPAIGNS = [
     aiComment:"This creative spent $40 with 0 leads in 48 hours. I've proposed pausing it — see Approval Queue." },
 ];
 
-VIEWS['campaigns'] = function(){
-  if(state.campaignsView==='detail' && state.selectedCampaign){
-    return renderCampaignDetail(CAMPAIGNS.find(c=>c.id===state.selectedCampaign));
-  }
-  return renderCampaignsList();
+VIEWS['advertising'] = function(){
+  return `
+    <div class="tabs">
+      <button class="tab ${state.advertisingTab==='campaigns'?'active':''}" onclick="setAdvertisingTab('campaigns')">Campaigns</button>
+      <button class="tab ${state.advertisingTab==='analytics'?'active':''}" onclick="setAdvertisingTab('analytics')">Analytics</button>
+      <button class="tab ${state.advertisingTab==='creatives'?'active':''}" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
+    </div>
+    ${state.advertisingTab==='analytics' ? renderAdvertisingAnalytics()
+      : state.advertisingTab==='creatives' ? renderAdvertisingCreatives()
+      : (state.campaignsView==='detail' && state.selectedCampaign) ? renderCampaignDetail(CAMPAIGNS.find(c=>c.id===state.selectedCampaign))
+      : renderCampaignsList()}
+  `;
 };
+function setAdvertisingTab(t){ state.advertisingTab = t; navigateTo('advertising'); }
 
 function renderCampaignsList(){
   return `
@@ -1852,15 +2326,15 @@ function renderCampaignsList(){
     </div>
   `;
 }
-function setCampaignsPeriod(p){ state.campaignsPeriod = p; navigateTo('campaigns'); }
-function openCampaignDetail(id){ state.selectedCampaign = id; state.campaignsView = 'detail'; state.campaignTab = 'creatives'; navigateTo('campaigns'); }
+function setCampaignsPeriod(p){ state.campaignsPeriod = p; navigateTo('advertising'); }
+function openCampaignDetail(id){ state.selectedCampaign = id; state.campaignsView = 'detail'; state.campaignTab = 'creatives'; navigateTo('advertising'); }
 
 function renderCampaignDetail(c){
   const pendingForCampaign = state.pendingActions.find(a=>a.status==='proposed' && a.title.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()));
   return `
     <div class="topbar">
       <div>
-        <button class="link-btn muted small mb-8" onclick="state.campaignsView='list'; navigateTo('campaigns')">← Back to campaigns</button>
+        <button class="link-btn muted small mb-8" onclick="state.campaignsView='list'; navigateTo('advertising')">← Back to campaigns</button>
         <h1>${c.name} <span class="badge ${c.status==='Active'?'green':'yellow'}" style="vertical-align:middle;">${c.status}</span></h1>
       </div>
       <div class="topbar-right">
@@ -1936,7 +2410,7 @@ function renderCampaignDetail(c){
     </div>
   `;
 }
-function setCampaignTab(t){ state.campaignTab = t; navigateTo('campaigns'); }
+function setCampaignTab(t){ state.campaignTab = t; navigateTo('advertising'); }
 
 function renderLineChart(){
   const spendPts = [22,28,24,30,26,20,18];
@@ -1956,6 +2430,101 @@ function renderLineChart(){
     <span><span style="display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:2px;margin-right:4px;"></span>Spend</span>
     <span><span style="display:inline-block;width:10px;height:10px;background:var(--blue);border-radius:2px;margin-right:4px;"></span>Leads</span>
   </div>`;
+}
+
+function renderAdvertisingAnalytics(){
+  const metaKpis = [
+    { label:'Spend', value: state.period==='7d'?'$1,940':'$284', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div>` },
+    { label:'Leads', value: state.period==='7d'?'74':'12', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'18%':'9%'} vs prior period</div>` },
+    { label:'Avg. cost per lead', value: state.period==='7d'?'$26.20':'$23.70', deltaHTML: `<div class="kpi-delta down">↓ ${state.period==='7d'?'6%':'11%'} vs prior period</div>` },
+    { label:'CTR', value: '2.1%', deltaHTML: `<div class="kpi-delta"><span class="neutral">No change</span></div>` },
+  ];
+  return `
+    <div class="topbar">
+      <div>
+        <h1>Advertising analytics</h1>
+        <div class="greeting">Performance across your connected ad platforms.</div>
+      </div>
+      <div class="topbar-right">
+        <div class="period-toggle">
+          <button class="${state.period!=='7d'?'active':''}" onclick="setAnalyticsPeriod('today')">Today</button>
+          <button class="${state.period==='7d'?'active':''}" onclick="setAnalyticsPeriod('7d')">7 days</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div><h2>Meta Ads</h2><p>${state.integrations.meta.account}</p></div>
+        <span class="badge green">Connected</span>
+      </div>
+      <div class="kpi-grid">
+        ${metaKpis.map(k=>`
+          <div class="kpi-card">
+            <div class="kpi-label">${k.label}</div>
+            <div class="kpi-value">${k.value}</div>
+            ${k.deltaHTML}
+          </div>
+        `).join('')}
+      </div>
+      <div class="card mt-16">
+        <h2 class="mb-12">Spend & leads (last 7 days)</h2>
+        ${renderLineChart()}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div><h2>Google Ads</h2><p>Account not yet connected</p></div>
+        <span class="badge yellow">Not connected</span>
+      </div>
+      <div class="kpi-grid">
+        ${['Spend','Leads','Avg. cost per lead','CTR'].map(label=>`
+          <div class="kpi-card empty">
+            <div class="kpi-label">${label}</div>
+            <div class="kpi-value muted">—</div>
+            <div class="kpi-delta"><span class="neutral">No data yet</span></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card mt-16" style="text-align:center;">
+        <p class="small muted mb-12">Google Ads is in progress — once your account is connected, performance will show up here automatically.</p>
+        <button class="btn" onclick="navigateTo('integrations')">Go to Integrations</button>
+      </div>
+    </div>
+  `;
+}
+function setAnalyticsPeriod(p){ state.period = p; navigateTo('advertising'); }
+
+function renderAdvertisingCreatives(){
+  const allCreatives = CAMPAIGNS.flatMap(c => c.creatives.map((cr,i) => ({...cr, campaign:c.name, platform:c.platform, gradient: CREATIVE_GRADIENTS[(c.id.charCodeAt(1)+i) % CREATIVE_GRADIENTS.length]})));
+  return `
+    <div class="topbar">
+      <div>
+        <h1>Ad creatives</h1>
+        <div class="greeting">${allCreatives.length} creatives across ${CAMPAIGNS.length} campaigns</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn primary" onclick="navigateTo('creative-studio')">+ New creative</button>
+      </div>
+    </div>
+    <div class="grid-3">
+      ${allCreatives.map(cr=>`
+        <div class="card">
+          <div style="height:120px; border-radius:8px; background:${cr.gradient}; margin-bottom:12px; display:flex; align-items:flex-end; justify-content:flex-end; padding:10px;">
+            ${cr.badge ? `<span class="badge ${cr.badge==='Top performer'?'green':'red'}">${cr.badge}</span>` : ''}
+          </div>
+          <div style="font-weight:600; margin-bottom:4px;">${cr.name}</div>
+          <div class="small muted mb-12">${cr.campaign} · ${cr.platform} Ads</div>
+          <div class="flex justify-between small">
+            <span>Spend: <strong>$${cr.spend}</strong></span>
+            <span>Leads: <strong>${cr.leads}</strong></span>
+            <span>CPL: <strong>${cr.cpl?'$'+cr.cpl.toFixed(2):'—'}</strong></span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function requestCampaignAction(id, kind){
@@ -2175,98 +2744,177 @@ function setLeadValue(id, val){
 <!-- ===================== VIEW: 14 REPORTS (Weekly AI Report) ===================== -->
 <script>
 state.reportsWeek = 'Jun 2 – Jun 8, 2026';
+state.reportConfig = {
+  name: 'Q1 Performance Report',
+  dateRange: 'last30',
+  platform: 'all',
+  metrics: { totalSpend:true, revenue:true, leads:true, clicks:false, impressions:false, cpl:false, ctr:false, roas:true, conversions:false },
+  breakdown: { platform:true, campaign:true, audience:false, location:false, ageGroup:false, device:false, creative:false, placement:false },
+  generated: false
+};
+
+function toggleReportMetric(key){ state.reportConfig.metrics[key]=!state.reportConfig.metrics[key]; navigateTo('reports'); }
+function toggleReportBreakdown(key){ state.reportConfig.breakdown[key]=!state.reportConfig.breakdown[key]; navigateTo('reports'); }
+function generateReport(){ state.reportConfig.generated=true; navigateTo('reports'); showToast('✦ AI Report generated successfully'); }
 
 VIEWS['reports'] = function(){
-  const totalSpend = CAMPAIGNS.reduce((s,c)=>s+c.spend,0);
-  const totalLeads = CAMPAIGNS.reduce((s,c)=>s+c.leads,0);
-  const cpl = totalLeads ? (totalSpend/totalLeads) : null;
-  const closedWon = state.leads.filter(l=>l.status==='closed_won');
-  const costPerCustomer = closedWon.length ? (totalSpend/closedWon.length) : null;
-  const newLeads = state.leads.length;
-  const movedBooked = state.leads.filter(l=>l.status==='booked').length;
+  const cfg = state.reportConfig;
+  const metrics = [
+    {key:'totalSpend', label:'Total Spend'}, {key:'revenue', label:'Revenue'},
+    {key:'leads', label:'Leads'}, {key:'clicks', label:'Clicks'},
+    {key:'impressions', label:'Impressions'}, {key:'cpl', label:'Cost Per Lead'},
+    {key:'ctr', label:'CTR'}, {key:'roas', label:'ROAS'}, {key:'conversions', label:'Conversions'}
+  ];
+  const breakdowns = [
+    {key:'platform', label:'Platform'}, {key:'campaign', label:'Campaign'},
+    {key:'audience', label:'Audience'}, {key:'location', label:'Location'},
+    {key:'ageGroup', label:'Age Group'}, {key:'device', label:'Device'},
+    {key:'creative', label:'Creative'}, {key:'placement', label:'Placement'}
+  ];
+
+  const activeMetrics = metrics.filter(m=>cfg.metrics[m.key]);
+
+  const previewHtml = cfg.generated && activeMetrics.length ? `
+    <div style="padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div><strong style="font-size:15px;">${cfg.name || 'Report'}</strong><div class="small muted">Generated just now</div></div>
+        <button class="btn small" onclick="showToast('Downloading PDF… (demo)')">Download PDF</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:20px;">
+        ${activeMetrics.map(m=>{
+          const vals = {totalSpend:'$284',revenue:'$1,420',leads:'12',clicks:'843',impressions:'14,200',cpl:'$23.70',ctr:'5.9%',roas:'4.2x',conversions:'9'};
+          return `<div class="card tight" style="text-align:center;"><div class="small muted">${m.label}</div><div style="font-size:18px;font-weight:700;margin-top:4px;">${vals[m.key]||'—'}</div></div>`;
+        }).join('')}
+      </div>
+      ${cfg.breakdown.campaign ? `
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Campaign</th>${activeMetrics.slice(0,4).map(m=>`<th>${m.label}</th>`).join('')}</tr></thead>
+          <tbody>
+            <tr><td><strong>Free Estimate — Plumbing</strong></td><td>$168</td><td>$840</td><td>9</td><td>487</td></tr>
+            <tr><td><strong>Same-Day Service</strong></td><td>$76</td><td>$380</td><td>3</td><td>221</td></tr>
+            <tr><td><strong>Spring Promo</strong></td><td>$40</td><td>$200</td><td>0</td><td>135</td></tr>
+          </tbody>
+        </table>
+      </div>` : ''}
+      <div class="card tight mt-16" style="background:var(--card-bg-2);">
+        <div class="badge orange mb-8">AI Summary</div>
+        <p class="small">Your "Free Estimate — Plumbing" campaign accounts for 59% of spend and 75% of leads. ROAS of 4.2x is strong. Consider pausing Spring Promo and reallocating budget.</p>
+      </div>
+    </div>
+  ` : `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:260px;color:var(--text-muted);gap:12px;">
+      <div style="font-size:36px;">▥</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-secondary);">Configure your report</div>
+      <div class="small muted">Select metrics and dimensions, then click Generate</div>
+    </div>
+  `;
 
   return `
     <div class="topbar">
-      <div><h1>Weekly report</h1><div class="greeting">${state.reportsWeek}</div></div>
-      <div class="topbar-right">
-        <select class="field-input" style="max-width:220px;">
-          <option>${state.reportsWeek}</option>
-          <option>May 26 – Jun 1, 2026</option>
-          <option>May 19 – May 25, 2026</option>
-        </select>
-        <button class="btn" onclick="showToast('Generating PDF... (demo)')">Download PDF</button>
-      </div>
+      <div><h1>Report Builder</h1><div class="greeting">Build and export custom performance reports with AI analysis</div></div>
     </div>
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;">
+      <div>
+        <div class="card mb-16">
+          <div style="font-weight:700;font-size:13px;margin-bottom:14px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;">Report Settings</div>
 
-    <h2 class="mb-12">This week at a glance</h2>
-    <div class="kpi-grid mb-16">
-      <div class="kpi-card">
-        <div class="kpi-label">Total spend</div>
-        <div class="kpi-value">$${totalSpend}</div>
-        <div class="kpi-delta down">↓ 6% vs prev week</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Leads</div>
-        <div class="kpi-value">${totalLeads}</div>
-        <div class="kpi-delta up">↑ 20% vs prev week</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Cost per lead</div>
-        <div class="kpi-value">${cpl?'$'+cpl.toFixed(2):'—'}</div>
-        <div class="kpi-delta down">↓ 18% vs prev week</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Est. cost per customer</div>
-        <div class="kpi-value">${costPerCustomer?'$'+costPerCustomer.toFixed(0):'—'}</div>
-        <div class="small muted mt-4">${costPerCustomer?'':'Connect a CRM to see this metric'}</div>
-      </div>
-    </div>
+          <div class="form-row mb-12">
+            <label class="small muted" style="display:block;margin-bottom:4px;">Report Name</label>
+            <input class="field-input" value="${cfg.name}" oninput="state.reportConfig.name=this.value" style="width:100%;">
+          </div>
+          <div class="form-row mb-12">
+            <label class="small muted" style="display:block;margin-bottom:4px;">Date Range</label>
+            <select class="field-input" style="width:100%;" onchange="state.reportConfig.dateRange=this.value">
+              <option value="last7" ${cfg.dateRange==='last7'?'selected':''}>Last 7 days</option>
+              <option value="last14" ${cfg.dateRange==='last14'?'selected':''}>Last 14 days</option>
+              <option value="last30" ${cfg.dateRange==='last30'?'selected':''}>Last 30 days</option>
+              <option value="last90" ${cfg.dateRange==='last90'?'selected':''}>Last 90 days</option>
+              <option value="custom" ${cfg.dateRange==='custom'?'selected':''}>Custom range</option>
+            </select>
+          </div>
+          <div class="form-row mb-16">
+            <label class="small muted" style="display:block;margin-bottom:4px;">Platform</label>
+            <select class="field-input" style="width:100%;" onchange="state.reportConfig.platform=this.value">
+              <option value="all" ${cfg.platform==='all'?'selected':''}>All Platforms</option>
+              <option value="meta" ${cfg.platform==='meta'?'selected':''}>Meta Ads</option>
+              <option value="google" ${cfg.platform==='google'?'selected':''}>Google Ads</option>
+            </select>
+          </div>
 
-    <div class="card tight mb-16" style="background:var(--card-bg-2);">
-      <div class="badge orange mb-8">AI summary</div>
-      <p class="small">Solid week — your cost per lead dropped 18% after we paused the underperforming creative on Tuesday. "Free Estimate — Plumbing" continues to be your strongest performer.</p>
-    </div>
-
-    <h2 class="mb-12">Campaign breakdown</h2>
-    <div class="table-card mb-16">
-      <table>
-        <thead><tr><th>Campaign</th><th>Platform</th><th>Spend</th><th>Leads</th><th>CPL</th><th>Trend</th></tr></thead>
-        <tbody>
-          ${[...CAMPAIGNS].sort((a,b)=>b.spend-a.spend).map(c=>`
-            <tr onclick="state.selectedCampaign='${c.id}'; state.campaignsView='detail'; state.campaignTab='creatives'; navigateTo('campaigns')" style="cursor:pointer;">
-              <td><strong>${c.name}</strong></td>
-              <td>${c.platform}</td>
-              <td>$${c.spend}</td>
-              <td>${c.leads}</td>
-              <td>${c.cpl?'$'+c.cpl.toFixed(2):'—'}</td>
-              <td>${renderSparkline(c.change)}</td>
-            </tr>
+          <div style="font-weight:700;font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Metrics</div>
+          ${metrics.map(m=>`
+            <label class="flex items-center gap-8 mb-8" style="cursor:pointer;font-size:13px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:${cfg.metrics[m.key]?'var(--orange)':'var(--border)'};flex-shrink:0;"></span>
+              <input type="checkbox" ${cfg.metrics[m.key]?'checked':''} onchange="toggleReportMetric('${m.key}')" style="display:none;">
+              <span style="${cfg.metrics[m.key]?'color:var(--text)':'color:var(--text-muted)'}">${m.label}</span>
+            </label>
           `).join('')}
-        </tbody>
-      </table>
-    </div>
 
-    <h2 class="mb-12">What AI did this week</h2>
-    <div class="action-list mb-16">
-      ${state.history.length ? state.history.map(h=>`
-        <div class="card tight">✅ <span class="small">${h.desc}</span> <span class="small muted">(${h.who}, ${h.date})</span></div>
-      `).join('') : `<div class="card tight small muted">No changes were made this week — performance has been stable.</div>`}
-    </div>
+          <div style="font-weight:700;font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-top:16px;margin-bottom:10px;">Breakdown By</div>
+          ${breakdowns.map(b=>`
+            <label class="flex items-center gap-8 mb-8" style="cursor:pointer;font-size:13px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:${cfg.breakdown[b.key]?'var(--orange)':'var(--border)'};flex-shrink:0;"></span>
+              <input type="checkbox" ${cfg.breakdown[b.key]?'checked':''} onchange="toggleReportBreakdown('${b.key}')" style="display:none;">
+              <span style="${cfg.breakdown[b.key]?'color:var(--text)':'color:var(--text-muted)'}">${b.label}</span>
+            </label>
+          `).join('')}
 
-    <h2 class="mb-12">What AI recommends next</h2>
-    <div class="action-list mb-16">
-      ${renderRecommendationCard('scale','🔼','Scale','Free Estimate — Plumbing','This campaign has the lowest CPL ($14.20) and room in your budget. Consider increasing the daily budget by $10.')}
-      ${renderRecommendationCard('stop','⏸','Stop','Creative "Generic Banner" (Spring Promo)','0 leads in 14 days, $40 spent. Pausing this creative would free up budget for better performers.')}
-      ${renderRecommendationCard('launch','🚀','Launch','New campaign for "Drain Cleaning"','Your strategy report identified this as an underused service with local demand.')}
-    </div>
+          <button class="btn primary" style="width:100%;margin-top:16px;padding:12px;" onclick="generateReport()">✦ Generate AI Report</button>
+        </div>
+      </div>
 
-    <h2 class="mb-12">Leads this week</h2>
-    <div class="card tight flex justify-between items-center">
-      <div class="small">${newLeads} new leads · ${movedBooked} moved to Booked · ${closedWon.length} closed as customer${closedWon.length===1?'':'s'}</div>
-      <button class="link-btn small" onclick="navigateTo('leads')">View leads →</button>
+      <div class="card" style="min-height:400px;padding:0;overflow:hidden;">
+        ${previewHtml}
+      </div>
     </div>
   `;
 };
+
+VIEWS['ai-assistant'] = function(){
+  return `
+    <div class="topbar"><div><h1>AI Assistant</h1><div class="greeting">Your AI marketing strategist — ask anything about your campaigns, leads, and strategy</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+      <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:520px;">
+        <div style="flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;" id="ai-fs-messages">
+          <div class="ai-msg bot" style="max-width:80%;">Hi! I'm your Foxtly AI. I'm watching your campaigns and leads, and I'll ask for your approval before making changes. Ask me anything below.</div>
+        </div>
+        <div class="ai-input-row" style="border-top:1px solid var(--border);padding:14px 16px;">
+          <input type="text" id="ai-fs-input" placeholder="Ask anything about your campaigns..." class="field-input" style="flex:1;" onkeydown="if(event.key==='Enter')sendAIFSMessage()">
+          <button class="btn primary small" onclick="sendAIFSMessage()">Send</button>
+        </div>
+      </div>
+      <div>
+        <div class="card mb-12">
+          <div style="font-weight:700;font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Quick questions</div>
+          ${["What's my cost per lead?","Any new leads?","What did you do this week?","How's Spring Promo doing?","What should I focus on today?","Is my budget on track?"].map(q=>`<button class="ai-chip mb-6" style="display:block;width:100%;" onclick="document.getElementById('ai-fs-input').value='${q}'; sendAIFSMessage()">${q}</button>`).join('')}
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">At a glance</div>
+          <div class="small flex justify-between mb-8"><span class="muted">Active campaigns</span><strong>2</strong></div>
+          <div class="small flex justify-between mb-8"><span class="muted">Spend this week</span><strong>$284</strong></div>
+          <div class="small flex justify-between mb-8"><span class="muted">Leads this week</span><strong>12</strong></div>
+          <div class="small flex justify-between"><span class="muted">Pending approvals</span><strong>3</strong></div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+function sendAIFSMessage(){
+  const input = document.getElementById('ai-fs-input');
+  if(!input||!input.value.trim()) return;
+  const msg = input.value.trim();
+  input.value='';
+  const container = document.getElementById('ai-fs-messages');
+  if(container){
+    container.innerHTML += `<div class="ai-msg user" style="align-self:flex-end;max-width:80%;">${msg}</div>`;
+    setTimeout(()=>{
+      container.innerHTML += `<div class="ai-msg bot" style="max-width:80%;">Great question! In this demo, I can show you how the assistant would respond. In the live platform, I'd analyze your actual campaign data and give you a detailed answer.</div>`;
+      container.scrollTop = container.scrollHeight;
+    }, 800);
+    container.scrollTop = container.scrollHeight;
+  }
+}
 
 function renderSparkline(change){
   const up = change > 0;
@@ -2405,10 +3053,10 @@ function getAIResponse(text){
 // ---------- Product Tour ----------
 const TOUR_STEPS = [
   { target:'[data-tour="action-queue"]', title:'✦ Your Action Queue', body:"This is where I propose changes — like adjusting budgets or pausing underperforming ads. Nothing happens automatically: you review and approve or reject each one." },
-  { target:'[data-tour="ai-fab"]', title:'✦ Your AI Assistant', body:"Click here anytime to ask me about your campaigns, leads, or strategy. I'm always available." },
   { target:'[data-tour="nav-approvals"]', title:'☑ Approval Queue', body:"Every change I want to make — big or small — shows up here first, with an explanation and reversibility level. Nothing happens without your OK." },
   { target:'[data-tour="nav-knowledge-base"]', title:'◐ Knowledge Base', body:"This is everything I know about your business: your profile, market research, and the strategy I'm using to run your ads." },
   { target:'[data-tour="nav-integrations"]', title:'⎆ Integrations', body:"Connect your ad accounts and CRM here so I can manage campaigns and sync your leads automatically." },
+  { target:'[data-tour="ai-fab"]', title:'✦ Your AI Assistant', body:"And I'm always right here in the corner — click anytime to ask about your campaigns, leads, or strategy." },
 ];
 
 function openWelcomeTourModal(){
@@ -2442,10 +3090,31 @@ function nextTourStep(){
   if(state.tour.step >= TOUR_STEPS.length){
     document.getElementById('tour-overlay').classList.remove('open');
     state.tour.active = false;
-    showToast("Tour complete — you're all set! ✦");
+    setTimeout(showQuestionnairePrompt, 3000);
     return;
   }
   renderTourStep();
+}
+function showQuestionnairePrompt(){
+  const box = document.querySelector('#tour-modal .box');
+  box.innerHTML = `
+    <div class="emoji">📋</div>
+    <h3>One more thing</h3>
+    <p>Want to answer a few quick questions about your business? It helps me build a more accurate strategy and recommendations for your ads.</p>
+    <div class="row">
+      <button class="btn" onclick="declineQuestionnairePrompt()">Maybe later</button>
+      <button class="btn primary" onclick="startQuestionnaire()">Start questionnaire</button>
+    </div>
+  `;
+  document.getElementById('tour-modal').classList.add('open');
+}
+function declineQuestionnairePrompt(){
+  document.getElementById('tour-modal').classList.remove('open');
+}
+function startQuestionnaire(){
+  document.getElementById('tour-modal').classList.remove('open');
+  state.onboarding.step = 1;
+  navigateAuth('onboarding');
 }
 function renderTourStep(){
   const step = TOUR_STEPS[state.tour.step];
@@ -2568,7 +3237,7 @@ function renderTourStep(){
 <script>
 state.onboarding = {
   step: 1,
-  businessName: state.businessProfile ? state.businessProfile.name : "Mike's Plumbing",
+  businessName: (state.businessProfile && state.businessProfile.name) ? state.businessProfile.name : "Mike's Plumbing",
   industry: 'Plumbing',
   industryOther: '',
   teamSize: '2-5',
@@ -2640,7 +3309,7 @@ AUTH_VIEWS['landing'] = function(){
       <p class="lead">From sign-up to optimized ads, in four simple steps.</p>
       <div class="mkt-grid-4">
         <div class="mkt-step"><div class="num">1</div><h3>Tell us about your business</h3><p>A short questionnaire (~5 min), no marketing jargon.</p></div>
-        <div class="mkt-step"><div class="num">2</div><h3>AI builds your strategy</h3><p>Market &amp; competitor research, channel and budget recommendations.</p></div>
+        <div class="mkt-step"><div class="num">2</div><h3>AI builds your strategy</h3><p>Market &amp; competitor research, channel and budget recommendations — delivered to your Knowledge Base within minutes, with an AI notification when it's ready.</p></div>
         <div class="mkt-step"><div class="num">3</div><h3>You approve, AI launches</h3><p>Every action needs your OK before it touches your ad account.</p></div>
         <div class="mkt-step"><div class="num">4</div><h3>AI optimizes every 6 hours</h3><p>Pauses what's not working, scales what is, and sends you a recap.</p></div>
       </div>
@@ -2798,8 +3467,8 @@ function signupWithGoogle(){
   setTimeout(()=>{
     state.signup.loading = false;
     if(state.signup.businessName) state.onboarding.businessName = state.signup.businessName;
-    state.onboarding.step = 1;
-    navigateAuth('onboarding');
+    navigateTo('decision-center');
+    setTimeout(openWelcomeTourModal, 600);
   }, 900);
 }
 function signupWithEmail(){
@@ -2836,8 +3505,8 @@ AUTH_VIEWS['verify-email'] = function(){
 };
 function verifyEmailContinue(){
   if(state.signup.businessName) state.onboarding.businessName = state.signup.businessName;
-  state.onboarding.step = 1;
-  navigateAuth('onboarding');
+  navigateTo('decision-center');
+  setTimeout(openWelcomeTourModal, 600);
 }
 
 /* ---------------- 05. ONBOARDING QUESTIONNAIRE ---------------- */
@@ -3065,8 +3734,8 @@ function renderObFinal(){
     <div class="ob-shell ob-final">
       <div class="emoji">🎉</div>
       <h1>Thanks, ${ob.businessName || 'there'}!</h1>
-      <p>I'm putting this together with market research to build your strategy. This usually takes a few minutes — I'll let you know in the Decision Center as soon as it's ready.</p>
-      <button class="btn primary" onclick="finishOnboarding()">Go to Knowledge Base</button>
+      <p>I'm putting this together with market research to build your strategy. This usually takes a few minutes — I'll let you know in the Dashboard as soon as it's ready.</p>
+      <button class="btn primary" onclick="finishOnboarding()">Go to Dashboard</button>
     </div>
   </div>
   `;
@@ -3075,9 +3744,33 @@ function finishOnboarding(){
   if(state.onboarding.businessName){
     state.businessProfile.name = state.onboarding.businessName;
   }
-  navigateTo('knowledge-base');
-  showToast("Welcome to Foxtly! Your AI strategist is getting started. ✦");
-  setTimeout(openWelcomeTourModal, 600);
+  // Fresh business from onboarding — ad accounts aren't connected yet.
+  state.integrations.meta = { status:'none' };
+  state.integrations.google = { status:'none' };
+  state.setupProgress.meta = false;
+  state.setupProgress.google = false;
+  const pa2 = state.pendingActions.find(a=>a.id==='pa2');
+  if(pa2){
+    pa2.title = "Connect your Meta and Google Ads accounts";
+    pa2.desc = "Finish setup to let AI start building and running campaigns.";
+    pa2.explain = "Connecting your ad accounts lets AI launch and optimize campaigns across Meta and Google, and report on real performance instead of estimates.";
+  }
+  navigateTo('decision-center');
+  showToast("Thanks! I'm building your strategy now — I'll let you know here as soon as it's ready. ✦");
+  setTimeout(()=>{
+    appendAIMessage('bot', "✅ Good news — your AI marketing analysis is ready! I've put together your Business Profile, Market Research, and Strategy Report. Take a look in Knowledge Base whenever you're ready.");
+    const nudge = document.getElementById('ai-nudge');
+    if(nudge) nudge.style.display = '';
+    showToast('✦ AI: Your marketing analysis is ready — see <a class="link-btn small" onclick="navigateTo(\'knowledge-base\')">Knowledge Base</a>', {success:true});
+  }, 3000);
+  setTimeout(()=>{
+    state.pendingIntegrationNudge = true;
+    updateIntegrationNudge();
+    appendAIMessage('bot', "🔌 One more step — to start running campaigns, connect your Meta and Google Ads accounts in Integrations. I'll keep this reminder up until at least one account is connected.");
+    const nudge = document.getElementById('ai-nudge');
+    if(nudge) nudge.style.display = '';
+    showToast('✦ AI: Connect your ad accounts to get started — see <a class="link-btn small" onclick="navigateTo(\'integrations\')">Integrations</a>', {success:true});
+  }, 6000);
 }
 </script>
 
