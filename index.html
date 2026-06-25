@@ -625,6 +625,7 @@ const state = {
     budget: 33,
     offer: 'Free Estimate',
     schedule: 'immediate',
+    startDate: '',
   },
   creatives: {
     uploaded: [],
@@ -1733,7 +1734,7 @@ function renderMetaStep6(){
     '<div><div style="font-weight:600; font-size:14px;">Choose a start date</div><div class="small muted">Set a specific date for the campaign to go live</div></div>' +
     '</div>' +
 
-    (!isImm ? '<div style="padding:12px 16px; background:var(--card-bg-3); border-radius:8px;"><label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">Start date</label><input type="date" style="background:var(--card-bg-3); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:var(--text); font-size:13px;"></div>' : '') +
+    (!isImm ? '<div style="padding:16px 18px; background:var(--card-bg-3); border-radius:10px; margin-top:4px;"><label style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">Start date</label><input type="date" value="'+(state.campaignBuilder.startDate||'')+'" onchange="state.campaignBuilder.startDate=this.value" style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; width:100%;"></div>' : '') +
 
     '</div>' +
     '</div>' +
