@@ -637,7 +637,7 @@ const state = {
     platform: 'meta',
     aiGenerating: false,
     aiGenDone: false,
-    selectedCreatives: [0,1,2,3,4],
+    selectedCreatives: [0,1,2],
     // Google-specific
     gCampaignType: 'search',
     gKeywords: ['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
@@ -1492,11 +1492,9 @@ function confirmAddInterest(){
 <!-- ===================== VIEW: CAMPAIGN LAUNCH WIZARD ===================== -->
 <script>
 const AI_CREATIVES = [
-  { id:'ai1', type:'image', format:'Feed · 1:1',     aspect:'1:1',  gradient:'linear-gradient(135deg,#f0883e 0%,#fbbf24 100%)', tag:'Image' },
-  { id:'ai2', type:'image', format:'Feed · 4:5',     aspect:'4:5',  gradient:'linear-gradient(135deg,#60a5fa 0%,#34d399 100%)', tag:'Image' },
-  { id:'ai3', type:'image', format:'Stories',        aspect:'9:16', gradient:'linear-gradient(165deg,#f0883e 0%,#f87171 50%,#a78bfa 100%)', tag:'Image' },
-  { id:'vid1', type:'video', format:'Feed · video',  aspect:'1:1',  gradient:'linear-gradient(135deg,#1e1e28,#2e2e3a)',         tag:'Video · 8s' },
-  { id:'vid2', type:'video', format:'Stories · video',aspect:'9:16',gradient:'linear-gradient(165deg,#1a1a24,#14141e)',          tag:'Video · 10s' },
+  { id:'ai1', type:'image', format:'Feed · 1:1',    aspect:'1:1',  gradient:'linear-gradient(135deg,#f0883e 0%,#fbbf24 100%)', tag:'Image' },
+  { id:'ai2', type:'image', format:'Feed · 4:5',    aspect:'4:5',  gradient:'linear-gradient(135deg,#60a5fa 0%,#34d399 100%)', tag:'Image' },
+  { id:'vid1', type:'video', format:'Feed · video', aspect:'1:1',  gradient:'linear-gradient(135deg,#1e1e28,#2e2e3a)',         tag:'Video · 8s' },
 ];
 
 VIEWS['campaign-launch'] = function(){
@@ -1842,10 +1840,10 @@ function renderMetaStep7(){
     return '<div class="ai-bubble mb-20">' +
       '<div class="av">✦</div>' +
       '<div class="msg"><span class="spinner" style="display:inline-block;width:13px;height:13px;margin-right:6px;vertical-align:middle;"></span>' +
-      'Generating your creatives — <strong>3 images + 2 short videos</strong> tailored to your offer and audience. Takes about 30 seconds…</div>' +
+      'Generating your creatives — <strong>2 images + 1 short video</strong> tailored to your offer and audience. Takes about 30 seconds…</div>' +
       '</div>' +
-      '<div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:24px;">' +
-      [120,144,180,120,180].map(function(h){ return '<div class="skel" style="height:'+h+'px;"></div>'; }).join('') +
+      '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px;">' +
+      [120,144,120].map(function(h){ return '<div class="skel" style="height:'+h+'px;"></div>'; }).join('') +
       '</div>' +
       '<div class="skel" style="height:52px; border-radius:10px; margin-bottom:24px;"></div>';
   }
@@ -1870,9 +1868,11 @@ function renderMetaStep7(){
   const selCount = w.selectedCreatives.length;
   return '<div class="ai-bubble mb-16">' +
     '<div class="av">✦</div>' +
-    '<div class="msg">Done! I created <strong>3 images + 2 short videos</strong> — each sized for its placement. All are pre-selected. Deselect anything you don\'t want, or add your own files.</div>' +
+    '<div class="msg">Done! I created <strong>2 images + 1 short video</strong> — each sized for its placement. All are pre-selected. Deselect anything you don\'t want, or add your own files.' +
+    '<br><button onclick="regenerateCreatives()" style="margin-top:8px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:12px; padding:4px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">↻ Generate new batch</button>' +
     '</div>' +
-    '<div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px;">' + tiles + '</div>' +
+    '</div>' +
+    '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px;">' + tiles + '</div>' +
     '<div class="card" style="border-style:dashed; padding:14px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; margin-bottom:24px;" onclick="showToast(\'Upload your own files — coming in next build\')">' +
     '<div style="font-size:24px;">📁</div>' +
     '<div><div style="font-size:13px; font-weight:500;">+ Add your own photos or videos</div>' +
@@ -2290,7 +2290,7 @@ function renderGoogleStep9(){
 // ---- Wizard helpers ----
 function resetLaunchWizard(){
   state.launchWizard = {
-    step:1, platform:'meta', aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2,3,4],
+    step:1, platform:'meta', aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2],
     gCampaignType:'search',
     gKeywords:['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
     gBudget:30,
@@ -2310,7 +2310,7 @@ function setLaunchStep(n){
       state.launchWizard.aiGenerating = false;
       state.launchWizard.aiGenDone = true;
       navigateTo('campaign-launch');
-      showToast('✦ AI: Your creatives are ready — 3 images + 2 videos', {success:true});
+      showToast('✦ AI: Your creatives are ready — 2 images + 1 video', {success:true});
     }, 2800);
   } else {
     navigateTo('campaign-launch');
@@ -2319,6 +2319,18 @@ function setLaunchStep(n){
 function setLaunchPlatform(p){
   state.launchWizard.platform = p;
   navigateTo('campaign-launch');
+}
+function regenerateCreatives(){
+  state.launchWizard.aiGenerating = true;
+  state.launchWizard.aiGenDone = false;
+  state.launchWizard.selectedCreatives = [0,1,2];
+  navigateTo('campaign-launch');
+  setTimeout(function(){
+    state.launchWizard.aiGenerating = false;
+    state.launchWizard.aiGenDone = true;
+    navigateTo('campaign-launch');
+    showToast('✦ AI: New batch of creatives is ready', {success:true});
+  }, 2800);
 }
 function toggleLaunchCreative(i){
   const idx = state.launchWizard.selectedCreatives.indexOf(i);
