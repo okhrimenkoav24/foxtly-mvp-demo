@@ -633,10 +633,18 @@ const state = {
   launchWizard: {
     step: 1,
     platform: 'meta',
-    settingsExpanded: null,
     aiGenerating: false,
     aiGenDone: false,
     selectedCreatives: [0,1,2,3,4],
+    // Google-specific
+    gCampaignType: 'search',
+    gKeywords: ['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
+    gBudget: 30,
+    gHeadlines: ['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
+    gDescriptions: ['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
+    gSitelinks: true,
+    gCall: true,
+    gLocation: true,
   },
   leads: [
     { id:'l1', name:'John Smith', phone:'(416) 555-0123', email:'john@email.com', source:'Meta', campaign:'Free Estimate — Plumbing', date:'Jun 9, 2:14 PM', status:'new', value:null, age:'2 hours ago', stale:false,
@@ -1481,61 +1489,215 @@ function confirmAddInterest(){
 <!-- ===================== VIEW: CAMPAIGN LAUNCH WIZARD ===================== -->
 <script>
 const AI_CREATIVES = [
-  { id:'ai1', type:'image', format:'Feed · 1:1', aspect:'1:1',  gradient:'linear-gradient(135deg,#f0883e 0%,#fbbf24 100%)',          tag:'Image' },
-  { id:'ai2', type:'image', format:'Feed · 4:5', aspect:'4:5',  gradient:'linear-gradient(135deg,#60a5fa 0%,#34d399 100%)',           tag:'Image' },
-  { id:'ai3', type:'image', format:'Stories',    aspect:'9:16', gradient:'linear-gradient(165deg,#f0883e 0%,#f87171 50%,#a78bfa 100%)','tag':'Image' },
-  { id:'vid1', type:'video', format:'Feed · video', aspect:'1:1', gradient:'linear-gradient(135deg,#1e1e28,#2e2e3a)',                  tag:'Video · 8s' },
-  { id:'vid2', type:'video', format:'Stories · video', aspect:'9:16', gradient:'linear-gradient(165deg,#1a1a24,#14141e)',              tag:'Video · 10s' },
+  { id:'ai1', type:'image', format:'Feed · 1:1',     aspect:'1:1',  gradient:'linear-gradient(135deg,#f0883e 0%,#fbbf24 100%)', tag:'Image' },
+  { id:'ai2', type:'image', format:'Feed · 4:5',     aspect:'4:5',  gradient:'linear-gradient(135deg,#60a5fa 0%,#34d399 100%)', tag:'Image' },
+  { id:'ai3', type:'image', format:'Stories',        aspect:'9:16', gradient:'linear-gradient(165deg,#f0883e 0%,#f87171 50%,#a78bfa 100%)', tag:'Image' },
+  { id:'vid1', type:'video', format:'Feed · video',  aspect:'1:1',  gradient:'linear-gradient(135deg,#1e1e28,#2e2e3a)',         tag:'Video · 8s' },
+  { id:'vid2', type:'video', format:'Stories · video',aspect:'9:16',gradient:'linear-gradient(165deg,#1a1a24,#14141e)',          tag:'Video · 10s' },
 ];
 
 VIEWS['campaign-launch'] = function(){
   const w = state.launchWizard;
-  const stepLabels = ['Platform','Settings','Creatives','Ad Copy','Preview','Done'];
+  const isGoogle = w.platform === 'google';
+  const metaLabels  = ['Platform','Goal','Audience','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done'];
+  const googleLabels = ['Platform','Type','Keywords','Budget','Headlines','Descriptions','Extensions','Preview','Done'];
+  const labels = isGoogle ? googleLabels : metaLabels;
+
   const progressBar = '<div class="wizard-progress">' +
-    stepLabels.map(function(s,i){
+    labels.map(function(s,i){
       const done = i+1 < w.step;
       const active = i+1 === w.step;
       const barCol = done ? 'var(--green)' : active ? 'var(--orange)' : 'var(--border)';
       const lblCol = done ? 'var(--green)' : active ? 'var(--orange)' : 'var(--text-muted)';
       return '<div class="wizard-step"><div class="wizard-step-bar" style="background:'+barCol+';"></div><span class="wizard-step-label" style="color:'+lblCol+';">'+(done?'✓ ':'')+s+'</span></div>';
-    }).join('') +
-  '</div>';
+    }).join('') + '</div>';
 
   let content = '';
-  if(w.step===1) content = renderLaunchStep1();
-  else if(w.step===2) content = renderLaunchStep2();
-  else if(w.step===3) content = renderLaunchStep3();
-  else if(w.step===4) content = renderLaunchStep4();
-  else if(w.step===5) content = renderLaunchStep5();
-  else if(w.step===6) content = renderLaunchStep6();
+  if(w.step===1){
+    content = renderLaunchStep1();
+  } else if(isGoogle){
+    if(w.step===2) content = renderGoogleStep2();
+    else if(w.step===3) content = renderGoogleStep3();
+    else if(w.step===4) content = renderGoogleStep4();
+    else if(w.step===5) content = renderGoogleStep5();
+    else if(w.step===6) content = renderGoogleStep6();
+    else if(w.step===7) content = renderGoogleStep7();
+    else if(w.step===8) content = renderGoogleStep8();
+    else if(w.step===9) content = renderGoogleStep9();
+  } else {
+    if(w.step===2) content = renderMetaStep2();
+    else if(w.step===3) content = renderMetaStep3();
+    else if(w.step===4) content = renderMetaStep4();
+    else if(w.step===5) content = renderMetaStep5();
+    else if(w.step===6) content = renderMetaStep6();
+    else if(w.step===7) content = renderMetaStep7();
+    else if(w.step===8) content = renderMetaStep8();
+    else if(w.step===9) content = renderMetaStep9();
+    else if(w.step===10) content = renderMetaStep10();
+  }
 
   return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>' +
-    progressBar + content;
+    progressBar + '<div style="max-width:640px; margin:0 auto;">' + content + '</div>';
 };
 
+// ---- SHARED: Step 1 Platform ----
 function renderLaunchStep1(){
   const w = state.launchWizard;
-  return '<div class="ai-bubble mb-16">' +
+  return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg">Based on your business profile <strong>(local plumbing, Toronto, lead gen goal)</strong>, Meta Ads will get you more leads faster. Home service searches on Facebook convert 3× better than Google under $1,000/month. I recommend starting here — we can add Google once you have performance data.</div>' +
+    '<div class="msg">Based on your profile <strong>(local plumbing, Toronto, lead gen)</strong>, Meta Ads will get you leads faster — home services convert 3× better on Facebook under $1K/month. Google is great for high-intent searches like "emergency plumber near me". Both platforms are ready to go.</div>' +
     '</div>' +
-    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">' +
-    '<div class="card" onclick="setLaunchPlatform(\'meta\')" style="cursor:pointer; border-color:' + (w.platform==='meta'?'var(--orange)':'var(--border)') + '; padding:20px; position:relative;">' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px;">' +
+
+    '<div onclick="setLaunchPlatform(\'meta\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(w.platform==='meta'?'var(--orange)':'var(--border)')+'; border-radius:14px; padding:24px 20px; position:relative;">' +
     (w.platform==='meta' ? '<span class="badge orange" style="position:absolute;top:12px;right:12px;font-size:10px;">AI pick ✓</span>' : '') +
-    '<div style="font-size:28px; margin-bottom:8px;">📘</div>' +
-    '<div style="font-weight:700; font-size:15px; margin-bottom:4px;">Meta Ads</div>' +
-    '<div class="small muted">Facebook & Instagram</div>' +
-    '<div class="small muted mt-8" style="line-height:1.5;">Best for local awareness, lead gen, home services. Visual formats. 3B+ users.</div>' +
+    '<div style="font-size:36px; margin-bottom:12px;">📘</div>' +
+    '<div style="font-weight:700; font-size:16px; margin-bottom:4px;">Meta Ads</div>' +
+    '<div class="small muted" style="margin-bottom:10px;">Facebook & Instagram</div>' +
+    '<div class="small muted" style="line-height:1.6;">Visual formats, massive reach. Best for lead gen and home service awareness.</div>' +
     '</div>' +
-    '<div class="card" onclick="showToast(\'Google Ads — coming once your account is verified\')" style="cursor:pointer; border-color:var(--border); padding:20px; opacity:0.55;">' +
-    '<div style="font-size:28px; margin-bottom:8px;">🔍</div>' +
-    '<div style="font-weight:700; font-size:15px; margin-bottom:4px;">Google Ads</div>' +
-    '<div class="small muted">Search & Performance Max</div>' +
-    '<div class="small muted mt-8" style="line-height:1.5;">Account pending API verification — available soon.</div>' +
+
+    '<div onclick="setLaunchPlatform(\'google\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(w.platform==='google'?'var(--orange)':'var(--border)')+'; border-radius:14px; padding:24px 20px; position:relative;">' +
+    (w.platform==='google' ? '<span class="badge orange" style="position:absolute;top:12px;right:12px;font-size:10px;">Selected ✓</span>' : '') +
+    '<div style="font-size:36px; margin-bottom:12px;">🔍</div>' +
+    '<div style="font-weight:700; font-size:16px; margin-bottom:4px;">Google Ads</div>' +
+    '<div class="small muted" style="margin-bottom:10px;">Search & Performance Max</div>' +
+    '<div class="small muted" style="line-height:1.6;">Capture high-intent searches. Best for emergency services and local queries.</div>' +
     '</div>' +
+
     '</div>' +
     '<div style="display:flex; justify-content:flex-end;">' +
-    '<button class="btn primary" onclick="setLaunchStep(2)">Continue with Meta Ads →</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(2)">Continue with '+(w.platform==='meta'?'Meta Ads':'Google Ads')+' →</button>' +
+    '</div>';
+}
+
+// ---- META STEPS ----
+
+function renderMetaStep2(){
+  const cb = state.campaignBuilder;
+  const goals = [
+    { val:'leads',     icon:'📋', label:'Lead Generation',  desc:'Collect contact info from interested customers. Optimized for form fills and DMs.' },
+    { val:'calls',     icon:'📞', label:'Phone Calls',       desc:'Drive direct calls to your business. Highest buyer intent.' },
+    { val:'traffic',   icon:'🌐', label:'Website Traffic',   desc:'Send people to your website to browse and learn more.' },
+    { val:'awareness', icon:'📣', label:'Brand Awareness',   desc:'Maximize reach. Lower cost per impression, less direct response.' },
+  ];
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>Recommendation: Lead Generation.</strong> Your goal is customers contacting you about plumbing work. Lead Gen campaigns optimize exactly for form fills and messages — that\'s how you get real inquiries, not just ad views.</div>' +
+    '</div>' +
+    '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">' +
+    goals.map(function(g){
+      const sel = cb.goal === g.val;
+      const isAI = g.val === 'leads';
+      return '<div onclick="state.campaignBuilder.goal=\''+g.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px;">' +
+        '<div style="font-size:26px; flex-shrink:0;">'+g.icon+'</div>' +
+        '<div style="flex:1; min-width:0;">' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+g.label+(isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span>':'')+'</div>' +
+        '<div class="small muted">'+g.desc+'</div>' +
+        '</div>' +
+        '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+        (sel?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'') +
+        '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(1)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(3)">Continue →</button>' +
+    '</div>';
+}
+
+function renderMetaStep3(){
+  const cb = state.campaignBuilder;
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+cb.ageMax+' within '+cb.radius+' miles of '+cb.location+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
+    '<div style="margin-bottom:20px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Location</label>' +
+    '<input type="text" value="'+cb.location+'" onchange="state.campaignBuilder.location=this.value" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' +
+    '</div>' +
+    '<div style="margin-bottom:20px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Radius: <span id="lw-radius-lbl">'+cb.radius+' miles</span></label>' +
+    '<input type="range" min="5" max="50" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); document.getElementById(\'lw-radius-lbl\').textContent=this.value+\' miles\'" style="width:100%;">' +
+    '<div style="display:flex; justify-content:space-between; margin-top:4px;"><span class="small muted">5 mi</span><span class="small muted">50 mi</span></div>' +
+    '</div>' +
+    '<div>' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Age range: '+cb.ageMin+'–'+cb.ageMax+'</label>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">' +
+    '<div><div class="small muted mb-4">Min age</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMin+'</div></div>' +
+    '<div><div class="small muted mb-4">Max age</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMax+'</div></div>' +
+    '</div></div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(4)">Continue →</button>' +
+    '</div>';
+}
+
+function renderMetaStep4(){
+  const cb = state.campaignBuilder;
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>$'+cb.budget+'/day is the sweet spot for local plumbing in Toronto.</strong> Below $20/day Meta can\'t optimize properly. At this level expect 3–8 qualified leads per week. Adjust after your first 7 days of data.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:32px 28px; margin-bottom:28px; text-align:center;">' +
+    '<div style="font-size:52px; font-weight:700; color:var(--orange); margin-bottom:4px;" id="lw-budget-big">$'+cb.budget+'</div>' +
+    '<div style="font-size:14px; color:var(--text-muted); margin-bottom:24px;" id="lw-budget-sub">per day · ~$'+(cb.budget*30)+'/month</div>' +
+    '<input type="range" min="15" max="100" value="'+cb.budget+'" oninput="state.campaignBuilder.budget=parseInt(this.value); document.getElementById(\'lw-budget-big\').textContent=\'$\'+this.value; document.getElementById(\'lw-budget-sub\').textContent=\'per day · ~$\'+(parseInt(this.value)*30)+\'/month\'" style="width:100%; margin-bottom:8px;">' +
+    '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$100/day</span></div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
+    '</div>';
+}
+
+function renderMetaStep5(){
+  const cb = state.campaignBuilder;
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>"Free Estimate" is a proven hook for local service businesses.</strong> It removes price anxiety and gets people to reach out before they\'re fully committed. Your competitors run "Emergency Service" — standing out with a free estimate typically drives 40–60% more clicks.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:28px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Your offer / USP</label>' +
+    '<input type="text" value="'+cb.offer+'" onchange="state.campaignBuilder.offer=this.value" placeholder="e.g. Free Estimate, Same-Day Service, No Call-Out Fee" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:12px 16px; color:var(--text); font-size:16px;">' +
+    '<div class="small muted mt-8">This becomes the headline and visual hook on your creatives.</div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(6)">Continue →</button>' +
+    '</div>';
+}
+
+function renderMetaStep6(){
+  const cb = state.campaignBuilder;
+  const isImm = cb.schedule === 'immediate';
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>Start immediately — there\'s no reason to wait.</strong> Meta\'s review takes about 24 hours. The sooner your campaign is live, the sooner you get real data. You can pause or stop anytime from your dashboard.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
+    '<div style="display:flex; flex-direction:column; gap:12px;">' +
+
+    '<div onclick="state.campaignBuilder.schedule=\'immediate\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(isImm?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; background:var(--card-bg);">' +
+    '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(isImm?'var(--orange)':'var(--border)')+';background:'+(isImm?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">'+(isImm?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'')+'</div>' +
+    '<div><div style="font-weight:600; font-size:14px;">Start after Meta approval</div><div class="small muted">Campaign goes live automatically once approved (~24 hours)</div></div>' +
+    '</div>' +
+
+    '<div onclick="state.campaignBuilder.schedule=\'scheduled\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(!isImm?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; background:var(--card-bg);">' +
+    '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(!isImm?'var(--orange)':'var(--border)')+';background:'+(!isImm?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">'+(!isImm?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'')+'</div>' +
+    '<div><div style="font-weight:600; font-size:14px;">Choose a start date</div><div class="small muted">Set a specific date for the campaign to go live</div></div>' +
+    '</div>' +
+
+    (!isImm ? '<div style="padding:12px 16px; background:var(--card-bg-3); border-radius:8px;"><label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">Start date</label><input type="date" style="background:var(--card-bg-3); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:var(--text); font-size:13px;"></div>' : '') +
+
+    '</div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(7)">Generate creatives →</button>' +
     '</div>';
 }
 
@@ -1590,14 +1752,14 @@ function renderLaunchStep2(){
     '</div>';
 }
 
-function renderLaunchStep3(){
+function renderMetaStep7(){
   const w = state.launchWizard;
   const cb = state.campaignBuilder;
   if(w.aiGenerating){
     return '<div class="ai-bubble mb-20">' +
       '<div class="av">✦</div>' +
       '<div class="msg"><span class="spinner" style="display:inline-block;width:13px;height:13px;margin-right:6px;vertical-align:middle;"></span>' +
-      'Generating your creatives — <strong>3 images and 2 short videos</strong> tailored to your offer and audience. This takes about 30 seconds…</div>' +
+      'Generating your creatives — <strong>3 images + 2 short videos</strong> tailored to your offer and audience. Takes about 30 seconds…</div>' +
       '</div>' +
       '<div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:24px;">' +
       [120,144,180,120,180].map(function(h){ return '<div class="skel" style="height:'+h+'px;"></div>'; }).join('') +
@@ -1625,73 +1787,78 @@ function renderLaunchStep3(){
   const selCount = w.selectedCreatives.length;
   return '<div class="ai-bubble mb-16">' +
     '<div class="av">✦</div>' +
-    '<div class="msg">Done! I created <strong>3 images + 2 short videos</strong> — each sized and cropped for its placement. All are pre-selected. Deselect anything you don\'t want, or add your own files below.</div>' +
+    '<div class="msg">Done! I created <strong>3 images + 2 short videos</strong> — each sized for its placement. All are pre-selected. Deselect anything you don\'t want, or add your own files.</div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px;">' + tiles + '</div>' +
     '<div class="card" style="border-style:dashed; padding:14px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; margin-bottom:24px;" onclick="showToast(\'Upload your own files — coming in next build\')">' +
     '<div style="font-size:24px;">📁</div>' +
     '<div><div style="font-size:13px; font-weight:500;">+ Add your own photos or videos</div>' +
-    '<div class="small muted">JPG, PNG, MP4 · system auto-formats for each placement</div></div>' +
+    '<div class="small muted">JPG, PNG, MP4 · auto-formatted for each placement</div></div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(4)">Continue with ' + selCount + ' creative' + (selCount===1?'':'s') + ' →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(6)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(8)">Continue with '+selCount+' creative'+(selCount===1?'':'s')+' →</button>' +
     '</div>';
 }
 
-function renderLaunchStep4(){
+function renderMetaStep8(){
   const ad = state.adCopy;
   const CTAs = ['Get Quote','Learn More','Call Now','Contact Us','Sign Up'];
   const ctaOptions = CTAs.map(function(c){ return '<option value="'+c+'" '+(ad.cta===c?'selected':'')+'>'+c+'</option>'; }).join('');
 
   const fields =
-    '<div style="display:flex; flex-direction:column; gap:12px;">' +
-    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--orange-dim);color:var(--orange);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">①</span><strong>Primary text</strong> <span class="muted small">— appears above the image</span></div>' +
-    '<textarea rows="3" onchange="state.adCopy.primaryText=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;font-family:inherit;">' + ad.primaryText + '</textarea>' +
-    '<div class="small muted" style="text-align:right;">' + ad.primaryText.length + ' / 125 recommended</div></div>' +
-    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--blue-dim);color:var(--blue);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">②</span><strong>Headline</strong> <span class="muted small">— bold text below the image</span></div>' +
-    '<input type="text" value="' + ad.headline + '" onchange="state.adCopy.headline=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;">' +
-    '<div class="small muted" style="text-align:right;">' + ad.headline.length + ' / 40</div></div>' +
-    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">' +
-    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--green-dim);color:var(--green);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">③</span><strong>CTA Button</strong></div>' +
-    '<select onchange="state.adCopy.cta=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;">' + ctaOptions + '</select></div>' +
-    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(156,163,175,0.12);color:var(--text-muted);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">④</span><strong>Destination URL</strong></div>' +
-    '<input type="text" value="' + ad.url + '" onchange="state.adCopy.url=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;"></div>' +
-    '</div></div>';
+    '<div style="display:flex; flex-direction:column; gap:14px;">' +
+    '<div>' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">① Primary text <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-muted);">— above the image</span></div>' +
+    '<textarea rows="3" onchange="state.adCopy.primaryText=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;resize:vertical;font-family:inherit;">'+ad.primaryText+'</textarea>' +
+    '<div class="small muted" style="text-align:right;">'+ad.primaryText.length+' / 125</div>' +
+    '</div>' +
+    '<div>' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">② Headline <span style="font-weight:400; text-transform:none; letter-spacing:0;">— below the image</span></div>' +
+    '<input type="text" value="'+ad.headline+'" onchange="state.adCopy.headline=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;">' +
+    '<div class="small muted" style="text-align:right;">'+ad.headline.length+' / 40</div>' +
+    '</div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">' +
+    '<div><div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">③ CTA Button</div>' +
+    '<select onchange="state.adCopy.cta=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;">'+ctaOptions+'</select></div>' +
+    '<div><div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">④ Destination URL</div>' +
+    '<input type="text" value="'+ad.url+'" onchange="state.adCopy.url=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;"></div>' +
+    '</div>' +
+    '</div>';
 
   const mockup =
-    '<div style="width:200px; flex-shrink:0;">' +
-    '<div style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); text-align:center; margin-bottom:8px;">Preview in Meta Feed</div>' +
+    '<div style="width:180px; flex-shrink:0;">' +
+    '<div style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); text-align:center; margin-bottom:8px;">Preview</div>' +
     '<div style="background:#fff; border-radius:10px; overflow:hidden; border:1px solid #ddd;">' +
     '<div style="padding:8px 10px; display:flex; align-items:center; gap:6px;">' +
-    '<div style="width:28px;height:28px;border-radius:50%;background:' + state.creatives.branding.color + ';flex-shrink:0;"></div>' +
+    '<div style="width:28px;height:28px;border-radius:50%;background:'+state.creatives.branding.color+';flex-shrink:0;"></div>' +
     '<div><div style="font-size:10px;font-weight:700;color:#1a1a1a;">Mike\'s Plumbing</div><div style="font-size:9px;color:#888;">Sponsored</div></div>' +
     '</div>' +
-    '<div style="font-size:9px; color:#333; padding:0 10px 6px; line-height:1.4;">' + (ad.primaryText.length > 60 ? ad.primaryText.slice(0,60)+'…' : ad.primaryText) + '</div>' +
+    '<div style="font-size:9px; color:#333; padding:0 10px 6px; line-height:1.4;">'+(ad.primaryText.length > 60 ? ad.primaryText.slice(0,60)+'…' : ad.primaryText)+'</div>' +
     '<div style="height:80px; background:linear-gradient(135deg,'+state.creatives.branding.color+',#fbbf24); position:relative;">' +
-    '<span style="position:absolute;bottom:4px;left:6px;font-size:8px;background:rgba(0,0,0,0.5);color:#fff;padding:1px 5px;border-radius:3px;">' + state.campaignBuilder.offer + '</span>' +
+    '<span style="position:absolute;bottom:4px;left:6px;font-size:8px;background:rgba(0,0,0,0.5);color:#fff;padding:1px 5px;border-radius:3px;">'+state.campaignBuilder.offer+'</span>' +
     '</div>' +
     '<div style="padding:6px 10px 8px; background:#f5f5f5;">' +
-    '<div style="font-size:8px;color:#888;margin-bottom:2px;">' + (ad.url.replace('https://','').split('/')[0]) + '</div>' +
+    '<div style="font-size:8px;color:#888;margin-bottom:2px;">'+(ad.url.replace('https://','').split('/')[0])+'</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;">' + (ad.headline.length>25?ad.headline.slice(0,25)+'…':ad.headline) + '</div>' +
-    '<div style="font-size:9px;background:' + state.creatives.branding.color + ';color:#fff;padding:3px 7px;border-radius:4px;font-weight:600;">' + ad.cta + '</div>' +
+    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;">'+(ad.headline.length>20?ad.headline.slice(0,20)+'…':ad.headline)+'</div>' +
+    '<div style="font-size:8px;background:'+state.creatives.branding.color+';color:#fff;padding:3px 6px;border-radius:3px;font-weight:600;">'+ad.cta+'</div>' +
     '</div></div></div></div>';
 
   return '<div class="ai-bubble mb-16">' +
     '<div class="av">✦</div>' +
-    '<div class="msg">I wrote your ad copy based on your offer and what works best in your niche. <strong>Review and tweak anything</strong> — the mockup on the right updates as you type.</div>' +
+    '<div class="msg">I wrote your ad copy based on your offer and what converts in home services. <strong>Review and tweak</strong> — the mini-preview updates with your edits.</div>' +
     '</div>' +
-    '<div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:start; margin-bottom:24px;">' +
+    '<div style="display:grid; grid-template-columns:1fr auto; gap:20px; align-items:start; margin-bottom:28px;">' +
     fields + mockup +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(5)">Looks good — preview my ad →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(7)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(9)">Preview my ad →</button>' +
     '</div>';
 }
 
-function renderLaunchStep5(){
+function renderMetaStep9(){
   const ad = state.adCopy;
   const cb = state.campaignBuilder;
   const bc = state.creatives.branding.color;
@@ -1730,9 +1897,9 @@ function renderLaunchStep5(){
 
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg">Here\'s exactly how your ad will look on mobile — <strong>Feed (left) and Stories (right).</strong> Everything looks great. Ready to send for review?</div>' +
+    '<div class="msg">Here\'s exactly how your ad will look on mobile — <strong>Feed (left) and Stories (right).</strong> Everything looks great. Ready to launch?</div>' +
     '</div>' +
-    '<div style="display:flex; gap:32px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-bottom:28px;">' +
+    '<div style="display:flex; gap:28px; justify-content:center; align-items:flex-start; margin-bottom:28px;">' +
     '<div style="text-align:center;">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Feed</div>' +
     feedMockup + '</div>' +
@@ -1741,36 +1908,252 @@ function renderLaunchStep5(){
     storiesMockup + '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(8)">← Back</button>' +
     '<button class="btn primary" onclick="submitLaunchCampaign()">Send for review →</button>' +
     '</div>';
 }
 
-function renderLaunchStep6(){
+function renderMetaStep10(){
   const cb = state.campaignBuilder;
   return '<div style="text-align:center; padding:8px 0 24px;">' +
-    '<div style="font-size:48px; margin-bottom:12px;">🚀</div>' +
+    '<div style="font-size:52px; margin-bottom:12px;">🚀</div>' +
     '<h2 style="font-size:22px; margin-bottom:8px;">Campaign sent for review</h2>' +
-    '<p class="muted" style="font-size:14px; max-width:400px; margin:0 auto 28px;">Your "'+cb.offer+'" campaign is now in Meta\'s review queue. They typically approve ads within 24 hours — I\'ll notify you as soon as it goes live.</p>' +
+    '<p class="muted" style="font-size:14px; max-width:400px; margin:0 auto 28px;">Your "'+cb.offer+'" campaign is in Meta\'s review queue. Ads typically approve within 24 hours — I\'ll notify you as soon as it goes live.</p>' +
     '</div>' +
     '<div class="card mb-24" style="padding:20px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:16px;">What happens next</div>' +
     '<div style="display:flex; flex-direction:column; gap:0;">' +
     [
-      { icon:'⏳', title:'Now', desc:'Campaign submitted to Meta\'s automated review system', done:true },
-      { icon:'✅', title:'~24 hours', desc:'Meta approves and campaign goes live automatically', done:false },
-      { icon:'📊', title:'48–72 hours', desc:'First performance data appears in your dashboard', done:false },
-      { icon:'🔔', title:'7 days', desc:'I send you a performance report and budget recommendation', done:false },
-    ].map(function(r, i, arr){
+      { icon:'⏳', title:'Now',         desc:'Campaign submitted to Meta\'s automated review system' },
+      { icon:'✅', title:'~24 hours',   desc:'Meta approves and campaign goes live automatically' },
+      { icon:'📊', title:'48–72 hours', desc:'First performance data appears in your dashboard' },
+      { icon:'🔔', title:'7 days',      desc:'I send you a performance report and budget recommendation' },
+    ].map(function(r,i,arr){
       return '<div style="display:flex; gap:14px; align-items:flex-start;">' +
         '<div style="display:flex; flex-direction:column; align-items:center;">' +
-        '<div style="width:32px;height:32px;border-radius:50%;background:'+(r.done?'var(--green-dim)':'var(--card-bg-2)')+';color:'+(r.done?'var(--green)':'var(--text-muted)')+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+r.icon+'</div>' +
+        '<div style="width:32px;height:32px;border-radius:50%;background:'+(i===0?'var(--green-dim)':'var(--card-bg-2)')+';color:'+(i===0?'var(--green)':'var(--text-muted)')+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+r.icon+'</div>' +
         (i<arr.length-1 ? '<div style="width:2px;height:24px;background:var(--border);margin:4px 0;"></div>' : '') +
         '</div>' +
-        '<div style="padding-top:6px; padding-bottom:'+(i<arr.length-1?'0':'0')+'px;">' +
-        '<div style="font-weight:600; font-size:13px;">'+r.title+'</div>' +
-        '<div class="small muted">'+r.desc+'</div>' +
-        '</div></div>';
+        '<div style="padding-top:6px;"><div style="font-weight:600; font-size:13px;">'+r.title+'</div><div class="small muted">'+r.desc+'</div></div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '</div>' +
+    '<div style="display:flex; gap:10px; justify-content:center;">' +
+    '<button class="btn" onclick="navigateTo(\'advertising\')">View in Campaigns</button>' +
+    '<button class="btn primary" onclick="navigateTo(\'dashboard\')">Back to Dashboard</button>' +
+    '</div>';
+}
+
+// ---- GOOGLE STEPS ----
+
+function renderGoogleStep2(){
+  const w = state.launchWizard;
+  const types = [
+    { val:'search', icon:'🔍', label:'Search Campaign',   desc:'Show text ads to people actively searching for your services. Best for capturing high-intent queries like "plumber near me" or "emergency plumbing Toronto".' },
+    { val:'pmax',   icon:'⚡', label:'Performance Max',   desc:'AI-driven ads across all Google channels — Search, Display, YouTube, Maps, Gmail. Best for scale once you have conversion data.' },
+  ];
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>Recommendation: Search Campaign.</strong> You\'re capturing people who are actively looking for a plumber right now — that\'s the highest intent you can buy. Performance Max works great at scale, but Search gives you more control and transparency early on.</div>' +
+    '</div>' +
+    '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom:28px;">' +
+    types.map(function(t){
+      const sel = w.gCampaignType === t.val;
+      const isAI = t.val === 'search';
+      return '<div onclick="state.launchWizard.gCampaignType=\''+t.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:20px 18px; display:flex; gap:14px; align-items:flex-start;">' +
+        '<div style="font-size:28px; flex-shrink:0;">'+t.icon+'</div>' +
+        '<div style="flex:1;">' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:6px;">'+t.label+(isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span>':'')+'</div>' +
+        '<div class="small muted" style="line-height:1.6;">'+t.desc+'</div>' +
+        '</div>' +
+        '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;">' +
+        (sel?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'') +
+        '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(1)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(3)">Continue →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep3(){
+  const w = state.launchWizard;
+  const chips = w.gKeywords.map(function(kw,i){
+    return '<div style="display:inline-flex; align-items:center; gap:6px; background:var(--card-bg-2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; cursor:pointer; margin:4px;" onclick="removeGoogleKeyword('+i+')">'+kw+' <span style="color:var(--text-muted); font-size:10px;">✕</span></div>';
+  }).join('');
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>I selected 4 high-intent keywords your competitors are actively bidding on.</strong> These are searched hundreds of times monthly in Toronto and signal strong buying intent. Remove any that don\'t fit, or add your own.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Keywords ('+w.gKeywords.length+')</div>' +
+    '<div style="margin-bottom:16px;">'+chips+'</div>' +
+    '<div style="display:flex; gap:8px;">' +
+    '<input type="text" id="lw-kw-input" placeholder="Add a keyword…" style="flex:1; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px;" onkeydown="if(event.key===\'Enter\'){addGoogleKeyword();}" />' +
+    '<button class="btn" onclick="addGoogleKeyword()" style="flex-shrink:0; padding:8px 16px;">+ Add</button>' +
+    '</div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(4)">Continue →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep4(){
+  const w = state.launchWizard;
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>$'+w.gBudget+'/day is a solid starting point for local search in Toronto.</strong> At this budget you\'ll get 15–25 clicks per day on your top keywords. Google recommends at least $20/day to give the algorithm enough data. Adjust after 7 days once you see actual cost-per-click.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:32px 28px; margin-bottom:28px; text-align:center;">' +
+    '<div style="font-size:52px; font-weight:700; color:var(--orange); margin-bottom:4px;" id="lw-gbudget-big">$'+w.gBudget+'</div>' +
+    '<div style="font-size:14px; color:var(--text-muted); margin-bottom:24px;" id="lw-gbudget-sub">per day · ~$'+(w.gBudget*30)+'/month</div>' +
+    '<input type="range" min="15" max="150" value="'+w.gBudget+'" oninput="state.launchWizard.gBudget=parseInt(this.value); document.getElementById(\'lw-gbudget-big\').textContent=\'$\'+this.value; document.getElementById(\'lw-gbudget-sub\').textContent=\'per day · ~$\'+(parseInt(this.value)*30)+\'/month\'" style="width:100%; margin-bottom:8px;">' +
+    '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$150/day</span></div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep5(){
+  const w = state.launchWizard;
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>I wrote 3 headlines for your Responsive Search Ad.</strong> Google mixes and matches them automatically — each must make sense on its own. I focused on your USP (free estimate), location (Toronto), and urgency (emergency). Max 30 characters each.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Headlines <span style="font-weight:400; text-transform:none; letter-spacing:0;">— max 30 chars each</span></div>' +
+    w.gHeadlines.map(function(h,i){
+      return '<div style="margin-bottom:12px;">' +
+        '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Headline '+(i+1)+'</span><span class="small muted">'+h.length+' / 30</span></div>' +
+        '<input type="text" value="'+h+'" maxlength="30" onchange="state.launchWizard.gHeadlines['+i+']=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px;">' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(6)">Continue →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep6(){
+  const w = state.launchWizard;
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>Descriptions expand on your headlines and drive the click.</strong> Google shows up to 2 at a time, mixed and matched. I focused on credibility (licensed & insured), service area (Toronto & GTA), and social proof. Max 90 characters each.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Descriptions <span style="font-weight:400; text-transform:none; letter-spacing:0;">— max 90 chars each</span></div>' +
+    w.gDescriptions.map(function(d,i){
+      return '<div style="margin-bottom:12px;">' +
+        '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Description '+(i+1)+'</span><span class="small muted">'+d.length+' / 90</span></div>' +
+        '<textarea rows="2" maxlength="90" onchange="state.launchWizard.gDescriptions['+i+']=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px; resize:none; font-family:inherit;">'+d+'</textarea>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(7)">Continue →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep7(){
+  const w = state.launchWizard;
+  const exts = [
+    { key:'gSitelinks', icon:'🔗', label:'Sitelinks',         desc:'Show 4 extra links below your ad (e.g. "Book a Call", "Our Services"). Increases CTR by 10–20%.' },
+    { key:'gCall',      icon:'📞', label:'Call Extension',     desc:'Show your phone number in the ad. One-tap calling on mobile. Critical for service businesses.' },
+    { key:'gLocation',  icon:'📍', label:'Location Extension', desc:'Show your address and a map pin. Builds local trust and helps people find you.' },
+  ];
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>I turned on all three extensions.</strong> They\'re free and increase your ad real estate. In local service categories, ads with call extensions convert 2× better than those without. No reason to leave them off.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
+    '<div style="display:flex; flex-direction:column; gap:16px;">' +
+    exts.map(function(e){
+      const on = w[e.key];
+      return '<div style="display:flex; align-items:flex-start; gap:14px;">' +
+        '<div style="font-size:24px; flex-shrink:0; margin-top:2px;">'+e.icon+'</div>' +
+        '<div style="flex:1;">' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+e.label+'</div>' +
+        '<div class="small muted" style="line-height:1.6;">'+e.desc+'</div>' +
+        '</div>' +
+        '<div onclick="state.launchWizard.'+e.key+'=!state.launchWizard.'+e.key+'; navigateTo(\'campaign-launch\')" style="cursor:pointer; width:44px; height:24px; border-radius:12px; background:'+(on?'var(--orange)':'var(--border)')+'; position:relative; flex-shrink:0; margin-top:2px;">' +
+        '<div style="position:absolute; top:3px; '+(on?'right:3px':'left:3px')+'; width:18px; height:18px; border-radius:50%; background:#fff;"></div>' +
+        '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(6)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(8)">Preview →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep8(){
+  const w = state.launchWizard;
+  const h1 = w.gHeadlines[0] || 'Fast Plumbing — Free Estimate';
+  const h2 = w.gHeadlines[1] || 'Licensed Plumber in Toronto';
+  const h3 = w.gHeadlines[2] || 'Emergency Plumbing Service';
+  const d1 = w.gDescriptions[0] || '';
+  const d2 = w.gDescriptions[1] || '';
+
+  const serpMockup =
+    '<div style="background:#fff; border-radius:12px; padding:20px 22px; border:1px solid #e0e0e0; font-family:Arial,sans-serif;">' +
+    '<div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">' +
+    '<div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#4285f4,#34a853); flex-shrink:0;"></div>' +
+    '<div><div style="font-size:12px; color:#333; font-weight:500;">mikeaplumbing.ca</div></div>' +
+    '</div>' +
+    '<div style="background:#e8f0fe; color:#1558d6; font-size:10px; padding:1px 6px; border-radius:3px; display:inline-block; margin-bottom:8px; font-weight:600; letter-spacing:0.3px;">Ad</div>' +
+    '<div style="font-size:17px; color:#1558d6; margin-bottom:6px; line-height:1.3;">'+h1+' | '+h2+' | '+h3+'</div>' +
+    '<div style="font-size:12px; color:#444; line-height:1.6; margin-bottom:12px;">'+d1+(d2 ? ' '+d2 : '')+'</div>' +
+    (w.gSitelinks ? '<div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:10px;">'+['Book a Free Estimate','Our Services','Service Areas','Call Us Now'].map(function(s){ return '<span style="font-size:12px; color:#1558d6; border-bottom:1px solid #1558d6;">'+s+'</span>'; }).join('')+'</div>' : '') +
+    (w.gCall ? '<div style="font-size:12px; color:#444; margin-top:4px;">📞 (416) 555-0100</div>' : '') +
+    (w.gLocation ? '<div style="font-size:12px; color:#444; margin-top:3px;">📍 123 Main St, Toronto, ON</div>' : '') +
+    '</div>';
+
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg">Here\'s exactly how your ad will appear in Google Search results. The headline combination, description, and extensions all look strong. Ready to submit?</div>' +
+    '</div>' +
+    '<div style="margin-bottom:28px;">' +
+    '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:12px; text-align:center;">Google Search Preview</div>' +
+    serpMockup +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(7)">← Back</button>' +
+    '<button class="btn primary" onclick="submitGoogleCampaign()">Send for review →</button>' +
+    '</div>';
+}
+
+function renderGoogleStep9(){
+  return '<div style="text-align:center; padding:8px 0 24px;">' +
+    '<div style="font-size:52px; margin-bottom:12px;">🚀</div>' +
+    '<h2 style="font-size:22px; margin-bottom:8px;">Campaign sent for review</h2>' +
+    '<p class="muted" style="font-size:14px; max-width:400px; margin:0 auto 28px;">Your Google Search campaign is in Google\'s review queue. Approval typically takes 1–3 business days — I\'ll notify you as soon as it\'s live.</p>' +
+    '</div>' +
+    '<div class="card mb-24" style="padding:20px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:16px;">What happens next</div>' +
+    '<div style="display:flex; flex-direction:column; gap:0;">' +
+    [
+      { icon:'⏳', title:'Now',                 desc:'Campaign submitted to Google Ads review system' },
+      { icon:'✅', title:'1–3 business days',   desc:'Google approves and campaign goes live' },
+      { icon:'📊', title:'48–72 hours live',    desc:'First click and impression data appears in your dashboard' },
+      { icon:'🔔', title:'7 days',              desc:'I send you a performance report and keyword bid recommendations' },
+    ].map(function(r,i,arr){
+      return '<div style="display:flex; gap:14px; align-items:flex-start;">' +
+        '<div style="display:flex; flex-direction:column; align-items:center;">' +
+        '<div style="width:32px;height:32px;border-radius:50%;background:'+(i===0?'var(--green-dim)':'var(--card-bg-2)')+';color:'+(i===0?'var(--green)':'var(--text-muted)')+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+r.icon+'</div>' +
+        (i<arr.length-1 ? '<div style="width:2px;height:24px;background:var(--border);margin:4px 0;"></div>' : '') +
+        '</div>' +
+        '<div style="padding-top:6px;"><div style="font-weight:600; font-size:13px;">'+r.title+'</div><div class="small muted">'+r.desc+'</div></div>' +
+        '</div>';
     }).join('') +
     '</div>' +
     '</div>' +
@@ -1782,12 +2165,20 @@ function renderLaunchStep6(){
 
 // ---- Wizard helpers ----
 function resetLaunchWizard(){
-  state.launchWizard = { step:1, platform:'meta', settingsExpanded:null, aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2,3,4] };
+  state.launchWizard = {
+    step:1, platform:'meta', aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2,3,4],
+    gCampaignType:'search',
+    gKeywords:['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
+    gBudget:30,
+    gHeadlines:['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
+    gDescriptions:['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
+    gSitelinks:true, gCall:true, gLocation:true,
+  };
   navigateTo('campaign-launch');
 }
 function setLaunchStep(n){
   state.launchWizard.step = n;
-  if(n===3 && !state.launchWizard.aiGenDone){
+  if(n===7 && state.launchWizard.platform==='meta' && !state.launchWizard.aiGenDone){
     state.launchWizard.aiGenerating = true;
     navigateTo('campaign-launch');
     setTimeout(function(){
@@ -1804,19 +2195,29 @@ function setLaunchPlatform(p){
   state.launchWizard.platform = p;
   navigateTo('campaign-launch');
 }
-function toggleLaunchSetting(key){
-  state.launchWizard.settingsExpanded = state.launchWizard.settingsExpanded===key ? null : key;
-  navigateTo('campaign-launch');
-}
 function toggleLaunchCreative(i){
   const idx = state.launchWizard.selectedCreatives.indexOf(i);
   if(idx===-1) state.launchWizard.selectedCreatives.push(i);
   else state.launchWizard.selectedCreatives.splice(idx,1);
   navigateTo('campaign-launch');
 }
+function addGoogleKeyword(){
+  const inp = document.getElementById('lw-kw-input');
+  if(!inp || !inp.value.trim()) return;
+  state.launchWizard.gKeywords.push(inp.value.trim());
+  navigateTo('campaign-launch');
+}
+function removeGoogleKeyword(i){
+  state.launchWizard.gKeywords.splice(i,1);
+  navigateTo('campaign-launch');
+}
 function submitLaunchCampaign(){
-  setLaunchStep(6);
+  setLaunchStep(10);
   showToast('Campaign submitted to Meta for review ✓', {success:true});
+}
+function submitGoogleCampaign(){
+  setLaunchStep(9);
+  showToast('Campaign submitted to Google Ads for review ✓', {success:true});
 }
 </script>
 
