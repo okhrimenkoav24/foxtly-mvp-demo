@@ -315,6 +315,26 @@
   .toast.success{ border-color: rgba(52,211,153,0.4); }
   .toast.success .ic{ color:var(--green); }
   @keyframes toast-in{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
+  @keyframes pulse-sk{ 0%,100%{opacity:0.4;} 50%{opacity:0.8;} }
+
+  /* ============ CAMPAIGN LAUNCH WIZARD ============ */
+  .wizard-progress{ display:flex; gap:6px; margin-bottom:28px; }
+  .wizard-step{ flex:1; text-align:center; }
+  .wizard-step-bar{ height:3px; border-radius:2px; margin-bottom:5px; }
+  .wizard-step-label{ font-size:10px; }
+  .ai-bubble{ display:flex; gap:10px; align-items:flex-start; background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .ai-bubble .av{ width:28px; height:28px; border-radius:8px; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+  .ai-bubble .msg{ font-size:13px; line-height:1.6; color:var(--text-secondary); }
+  .ai-bubble .msg strong{ color:var(--text); }
+  .setting-row{ background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; }
+  .setting-row:hover{ border-color:var(--border-light); }
+  .setting-row.open{ border-color:var(--orange); }
+  .creative-tile{ border-radius:10px; overflow:hidden; border:2px solid var(--border); cursor:pointer; position:relative; transition:border-color 0.15s; }
+  .creative-tile.sel{ border-color:var(--orange); }
+  .creative-tile .check{ position:absolute; top:6px; right:6px; width:20px; height:20px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#000; }
+  .skel{ background:var(--card-bg-2); border-radius:10px; animation:pulse-sk 1.5s ease-in-out infinite; }
+  .preview-phone{ width:220px; background:#1a1a2e; border-radius:22px; overflow:hidden; border:3px solid #2a2a3e; box-shadow:0 12px 40px rgba(0,0,0,0.5); margin:0 auto; }
+  .preview-phone .notch{ height:8px; background:#111; border-radius:0 0 8px 8px; width:60px; margin:0 auto; }
 
   /* ============ AI ASSISTANT ============ */
   @keyframes fab-shimmer{ 0%{background-position:0% 50%;box-shadow:0 4px 20px rgba(240,136,62,0.5)} 50%{background-position:100% 50%;box-shadow:0 4px 32px rgba(240,80,20,0.85),0 0 0 6px rgba(240,136,62,0.18)} 100%{background-position:0% 50%;box-shadow:0 4px 20px rgba(240,136,62,0.5)} }
@@ -538,6 +558,7 @@ const PROTO_SCREENS = [
     {id:'knowledge-base', label:'03 · Knowledge Base', mode:'app'},
     {id:'integrations', label:'04 · Integrations', mode:'app'},
     {id:'campaign-strategy', label:'05 · Campaign Strategy', mode:'app'},
+    {id:'campaign-launch', label:'Launch a Campaign', mode:'app'},
     {id:'creative-studio', label:'06 · Creative Studio', mode:'app'},
     {id:'approvals', label:'07 · Approval Queue', mode:'app'},
     {id:'settings', label:'08 · Notification Settings', mode:'app'},
@@ -609,6 +630,14 @@ const state = {
     uploaded: [],
     generated: [],
   },
+  launchWizard: {
+    step: 1,
+    platform: 'meta',
+    settingsExpanded: null,
+    aiGenerating: false,
+    aiGenDone: false,
+    selectedCreatives: [0,1,2,3,4],
+  },
   leads: [
     { id:'l1', name:'John Smith', phone:'(416) 555-0123', email:'john@email.com', source:'Meta', campaign:'Free Estimate — Plumbing', date:'Jun 9, 2:14 PM', status:'new', value:null, age:'2 hours ago', stale:false,
       message:"Hi, I have a leaking pipe under my kitchen sink. Can someone come take a look this week? Saw your free estimate ad on Facebook." },
@@ -641,6 +670,7 @@ const ROUTE_MAP = {
   'knowledge-base': { type:'view', id:'knowledge-base' },
   'integrations': { type:'view', id:'integrations' },
   'campaign-strategy': { type:'view', id:'campaign-strategy' },
+  'campaign-launch': { type:'view', id:'campaign-launch' },
   'creative-studio': { type:'view', id:'creative-studio' },
   'approvals': { type:'view', id:'approvals' },
   'settings': { type:'view', id:'settings' },
@@ -810,7 +840,7 @@ VIEWS['decision-center'] = function(){
     {key:'profile', label:'Complete business profile', view:'knowledge-base', cta:'Edit profile'},
     {key:'meta', label:'Connect Meta Ads account', view:'integrations', cta:'Connect'},
     {key:'google', label:'Connect Google Ads account', view:'integrations', cta:'Connect'},
-    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-strategy', cta:'Start'},
+    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-launch', cta:'Start'},
   ];
   const done = progressItems.filter(i=>state.setupProgress[i.key]).length;
   const pct = Math.round(done/progressItems.length*100);
@@ -1162,7 +1192,7 @@ function renderKbStrategy(){
       </div>
     </div>
     <div style="text-align:center;">
-      <button class="btn primary" style="padding:12px 28px;" onclick="navigateTo('campaign-strategy')">Looks good — let's set up your campaign</button>
+      <button class="btn primary" style="padding:12px 28px;" onclick="navigateTo('campaign-launch')">Looks good — let's set up your campaign</button>
     </div>
   `;
 }
@@ -1197,6 +1227,19 @@ VIEWS['integrations'] = function(){
           </div>
         </div>
       </div>
+      ${meta.status==='connected' ? `
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <label style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:8px;">Facebook Page <span style="color:var(--red);">*</span> <span style="font-weight:400; color:var(--text-muted);">— required for publishing ads</span></label>
+        <select onchange="setFacebookPage(this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid ${meta.facebookPage ? 'var(--green)' : 'var(--yellow)'}; border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; cursor:pointer;">
+          <option value="" ${!meta.facebookPage?'selected':''}>— Select a Facebook Page —</option>
+          <option value="mikes_plumbing" ${meta.facebookPage==='mikes_plumbing'?'selected':''}>Mike's Plumbing Services</option>
+          <option value="mikes_plumbing_toronto" ${meta.facebookPage==='mikes_plumbing_toronto'?'selected':''}>Mike's Plumbing Toronto</option>
+          <option value="mikes_plumbing_gta" ${meta.facebookPage==='mikes_plumbing_gta'?'selected':''}>Mike's Plumbing — GTA</option>
+        </select>
+        ${meta.facebookPage
+          ? `<div class="small mt-6" style="color:var(--green);">✓ Ads will publish from this page</div>`
+          : `<div class="small mt-6" style="color:var(--yellow);">⚠ Select a page to enable ad publishing — required for Meta App Review</div>`}
+      </div>` : ''}
     </div>
 
     <div class="card mb-16" data-tour="integrations-google">
@@ -1252,6 +1295,11 @@ VIEWS['integrations'] = function(){
   `;
 };
 
+function setFacebookPage(val){
+  state.integrations.meta.facebookPage = val;
+  navigateTo('integrations');
+  if(val) showToast('Facebook Page selected. ✓', {success:true});
+}
 function toggleSecurityNote(){
   const note = document.getElementById('security-note');
   const btn = document.getElementById('security-toggle');
@@ -1409,11 +1457,11 @@ VIEWS['campaign-strategy'] = function(){
 
 function setBuilderField(key, value, skipRerender){
   state.campaignBuilder[key] = value;
-  if(!skipRerender) navigateTo('campaign-strategy');
+  if(!skipRerender) navigateTo('campaign-launch');
 }
 function removeInterest(i){
   state.campaignBuilder.interests = state.campaignBuilder.interests.filter(x=>x!==i);
-  navigateTo('campaign-strategy');
+  navigateTo('campaign-launch');
 }
 function addInterest(){
   openModal(`
@@ -1426,7 +1474,349 @@ function confirmAddInterest(){
   const val = document.getElementById('new-interest-input').value.trim();
   if(val) state.campaignBuilder.interests.push(val);
   closeModal();
-  navigateTo('campaign-strategy');
+  navigateTo('campaign-launch');
+}
+</script>
+
+<!-- ===================== VIEW: CAMPAIGN LAUNCH WIZARD ===================== -->
+<script>
+const AI_CREATIVES = [
+  { id:'ai1', type:'image', format:'Feed · 1:1', aspect:'1:1',  gradient:'linear-gradient(135deg,#f0883e 0%,#fbbf24 100%)',          tag:'Image' },
+  { id:'ai2', type:'image', format:'Feed · 4:5', aspect:'4:5',  gradient:'linear-gradient(135deg,#60a5fa 0%,#34d399 100%)',           tag:'Image' },
+  { id:'ai3', type:'image', format:'Stories',    aspect:'9:16', gradient:'linear-gradient(165deg,#f0883e 0%,#f87171 50%,#a78bfa 100%)','tag':'Image' },
+  { id:'vid1', type:'video', format:'Feed · video', aspect:'1:1', gradient:'linear-gradient(135deg,#1e1e28,#2e2e3a)',                  tag:'Video · 8s' },
+  { id:'vid2', type:'video', format:'Stories · video', aspect:'9:16', gradient:'linear-gradient(165deg,#1a1a24,#14141e)',              tag:'Video · 10s' },
+];
+
+VIEWS['campaign-launch'] = function(){
+  const w = state.launchWizard;
+  const stepLabels = ['Platform','Settings','Creatives','Ad Copy','Preview','Done'];
+  const progressBar = '<div class="wizard-progress">' +
+    stepLabels.map(function(s,i){
+      const done = i+1 < w.step;
+      const active = i+1 === w.step;
+      const barCol = done ? 'var(--green)' : active ? 'var(--orange)' : 'var(--border)';
+      const lblCol = done ? 'var(--green)' : active ? 'var(--orange)' : 'var(--text-muted)';
+      return '<div class="wizard-step"><div class="wizard-step-bar" style="background:'+barCol+';"></div><span class="wizard-step-label" style="color:'+lblCol+';">'+(done?'✓ ':'')+s+'</span></div>';
+    }).join('') +
+  '</div>';
+
+  let content = '';
+  if(w.step===1) content = renderLaunchStep1();
+  else if(w.step===2) content = renderLaunchStep2();
+  else if(w.step===3) content = renderLaunchStep3();
+  else if(w.step===4) content = renderLaunchStep4();
+  else if(w.step===5) content = renderLaunchStep5();
+  else if(w.step===6) content = renderLaunchStep6();
+
+  return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>' +
+    progressBar + content;
+};
+
+function renderLaunchStep1(){
+  const w = state.launchWizard;
+  return '<div class="ai-bubble mb-16">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg">Based on your business profile <strong>(local plumbing, Toronto, lead gen goal)</strong>, Meta Ads will get you more leads faster. Home service searches on Facebook convert 3× better than Google under $1,000/month. I recommend starting here — we can add Google once you have performance data.</div>' +
+    '</div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">' +
+    '<div class="card" onclick="setLaunchPlatform(\'meta\')" style="cursor:pointer; border-color:' + (w.platform==='meta'?'var(--orange)':'var(--border)') + '; padding:20px; position:relative;">' +
+    (w.platform==='meta' ? '<span class="badge orange" style="position:absolute;top:12px;right:12px;font-size:10px;">AI pick ✓</span>' : '') +
+    '<div style="font-size:28px; margin-bottom:8px;">📘</div>' +
+    '<div style="font-weight:700; font-size:15px; margin-bottom:4px;">Meta Ads</div>' +
+    '<div class="small muted">Facebook & Instagram</div>' +
+    '<div class="small muted mt-8" style="line-height:1.5;">Best for local awareness, lead gen, home services. Visual formats. 3B+ users.</div>' +
+    '</div>' +
+    '<div class="card" onclick="showToast(\'Google Ads — coming once your account is verified\')" style="cursor:pointer; border-color:var(--border); padding:20px; opacity:0.55;">' +
+    '<div style="font-size:28px; margin-bottom:8px;">🔍</div>' +
+    '<div style="font-weight:700; font-size:15px; margin-bottom:4px;">Google Ads</div>' +
+    '<div class="small muted">Search & Performance Max</div>' +
+    '<div class="small muted mt-8" style="line-height:1.5;">Account pending API verification — available soon.</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:flex-end;">' +
+    '<button class="btn primary" onclick="setLaunchStep(2)">Continue with Meta Ads →</button>' +
+    '</div>';
+}
+
+function renderLaunchStep2(){
+  const cb = state.campaignBuilder;
+  const w = state.launchWizard;
+  const settings = [
+    { key:'goal',     icon:'🎯', label:'Campaign goal',    value:'Lead generation',
+      why:'You want calls and form fills — Lead Gen campaigns optimize exactly for this on Meta. Awareness or traffic campaigns would be cheaper but won\'t get you phone calls.' },
+    { key:'audience', icon:'👥', label:'Target audience',   value:'Homeowners ' + cb.ageMin + '–' + cb.ageMax + ', within ' + cb.radius + ' miles of ' + cb.location,
+      why:'Homeowners are 4× more likely to hire a plumber than renters. I kept the radius tight ('+cb.radius+' mi) to lower your cost-per-lead — too wide and you pay for clicks you can\'t service.' },
+    { key:'budget',   icon:'💰', label:'Daily budget',      value:'$' + cb.budget + '/day  (~$' + (cb.budget*30) + '/month)',
+      why:'$'+cb.budget+'/day is the minimum effective spend for local service leads in Toronto. Below $20/day Meta doesn\'t have enough data to optimize. You can adjust after 7 days.' },
+    { key:'offer',    icon:'🎁', label:'Offer / USP',       value:'"' + cb.offer + '"',
+      why:'Your top 3 competitors advertise "Emergency Service" — leading with a free estimate reduces friction and typically drives 40–60% more clicks in the home services category.' },
+    { key:'schedule', icon:'📅', label:'Schedule',          value:'Start immediately after Meta approval',
+      why:'No reason to wait — Meta review takes ~24h and you can pause anytime. The sooner it goes live, the sooner you get data.' },
+  ];
+
+  let rows = '';
+  settings.forEach(function(s){
+    const open = w.settingsExpanded === s.key;
+    let editField = '';
+    if(s.key==='budget')   editField = '<input type="range" min="15" max="100" value="'+cb.budget+'" oninput="state.campaignBuilder.budget=parseInt(this.value); document.getElementById(\'lw-budget\').textContent=\'$\'+this.value+\'/day (~$\'+(parseInt(this.value)*30)+\'/month\')" style="width:100%; margin-top:8px;"><div id="lw-budget" class="small muted mt-4">$'+cb.budget+'/day (~$'+(cb.budget*30)+'/month)</div>';
+    else if(s.key==='offer') editField = '<input type="text" value="'+cb.offer+'" onchange="state.campaignBuilder.offer=this.value" style="width:100%; margin-top:8px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:6px; padding:7px 10px; color:var(--text);">';
+    else if(s.key==='audience') editField = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;"><div><label class="field-label">Location</label><input type="text" value="'+cb.location+'" onchange="state.campaignBuilder.location=this.value" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:6px; padding:7px 10px; color:var(--text);"></div><div><label class="field-label">Radius: '+cb.radius+' mi</label><input type="range" min="5" max="50" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); document.getElementById(\'lw-radius\').textContent=\'Radius: \'+this.value+\' mi\'" style="width:100%;"><span id="lw-radius" class="small muted">Radius: '+cb.radius+' mi</span></div></div>';
+
+    rows += '<div class="setting-row mb-8 ' + (open?'open':'') + '" onclick="toggleLaunchSetting(\'' + s.key + '\')">' +
+      '<div style="display:flex; align-items:center; gap:12px;">' +
+      '<div style="font-size:20px; flex-shrink:0;">' + s.icon + '</div>' +
+      '<div style="flex:1; min-width:0;">' +
+      '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:2px;">' + s.label + '</div>' +
+      '<div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + s.value + '</div>' +
+      '</div>' +
+      '<div style="font-size:11px; color:var(--text-muted); flex-shrink:0;">' + (open ? '▴' : 'Edit ▾') + '</div>' +
+      '</div>' +
+      (open ? '<div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">' +
+        '<div class="small muted mb-6" style="line-height:1.6;"><strong>Why this setting?</strong> ' + s.why + '</div>' +
+        editField +
+        '</div>' : '') +
+      '</div>';
+  });
+
+  return '<div class="ai-bubble mb-16">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg">I\'ve set up your campaign using your business profile and onboarding data. <strong>Everything looks ready to go.</strong> Review each setting — tap any row to see my reasoning or make changes.</div>' +
+    '</div>' +
+    rows +
+    '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(1)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(3)">Looks good — add creatives →</button>' +
+    '</div>';
+}
+
+function renderLaunchStep3(){
+  const w = state.launchWizard;
+  const cb = state.campaignBuilder;
+  if(w.aiGenerating){
+    return '<div class="ai-bubble mb-20">' +
+      '<div class="av">✦</div>' +
+      '<div class="msg"><span class="spinner" style="display:inline-block;width:13px;height:13px;margin-right:6px;vertical-align:middle;"></span>' +
+      'Generating your creatives — <strong>3 images and 2 short videos</strong> tailored to your offer and audience. This takes about 30 seconds…</div>' +
+      '</div>' +
+      '<div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:24px;">' +
+      [120,144,180,120,180].map(function(h){ return '<div class="skel" style="height:'+h+'px;"></div>'; }).join('') +
+      '</div>' +
+      '<div class="skel" style="height:52px; border-radius:10px; margin-bottom:24px;"></div>';
+  }
+
+  let tiles = '';
+  AI_CREATIVES.forEach(function(c,i){
+    const sel = w.selectedCreatives.indexOf(i) !== -1;
+    const h = c.aspect==='9:16' ? 180 : c.aspect==='4:5' ? 144 : 120;
+    tiles += '<div class="creative-tile ' + (sel?'sel':'') + '" onclick="toggleLaunchCreative(' + i + ')">' +
+      '<div style="background:' + c.gradient + '; height:' + h + 'px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">' +
+      (c.type==='video' ? '<div style="width:30px;height:30px;background:rgba(0,0,0,0.55);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;">▶</div>' :
+        '<div style="font-size:10px;background:rgba(0,0,0,0.5);color:#fff;padding:2px 6px;border-radius:3px;position:absolute;bottom:6px;left:6px;">'+cb.offer+'</div>') +
+      '</div>' +
+      '<div style="padding:7px 9px; background:var(--card-bg-2);">' +
+      '<div style="font-size:10px; color:var(--text-muted);">' + (c.type==='video'?'🎬 ':'📷 ') + c.tag + '</div>' +
+      '<div style="font-size:11px; font-weight:500; margin-top:1px;">' + c.format + '</div>' +
+      '</div>' +
+      (sel ? '<div class="check">✓</div>' : '') +
+      '</div>';
+  });
+
+  const selCount = w.selectedCreatives.length;
+  return '<div class="ai-bubble mb-16">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg">Done! I created <strong>3 images + 2 short videos</strong> — each sized and cropped for its placement. All are pre-selected. Deselect anything you don\'t want, or add your own files below.</div>' +
+    '</div>' +
+    '<div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px;">' + tiles + '</div>' +
+    '<div class="card" style="border-style:dashed; padding:14px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; margin-bottom:24px;" onclick="showToast(\'Upload your own files — coming in next build\')">' +
+    '<div style="font-size:24px;">📁</div>' +
+    '<div><div style="font-size:13px; font-weight:500;">+ Add your own photos or videos</div>' +
+    '<div class="small muted">JPG, PNG, MP4 · system auto-formats for each placement</div></div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(4)">Continue with ' + selCount + ' creative' + (selCount===1?'':'s') + ' →</button>' +
+    '</div>';
+}
+
+function renderLaunchStep4(){
+  const ad = state.adCopy;
+  const CTAs = ['Get Quote','Learn More','Call Now','Contact Us','Sign Up'];
+  const ctaOptions = CTAs.map(function(c){ return '<option value="'+c+'" '+(ad.cta===c?'selected':'')+'>'+c+'</option>'; }).join('');
+
+  const fields =
+    '<div style="display:flex; flex-direction:column; gap:12px;">' +
+    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--orange-dim);color:var(--orange);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">①</span><strong>Primary text</strong> <span class="muted small">— appears above the image</span></div>' +
+    '<textarea rows="3" onchange="state.adCopy.primaryText=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;resize:vertical;font-family:inherit;">' + ad.primaryText + '</textarea>' +
+    '<div class="small muted" style="text-align:right;">' + ad.primaryText.length + ' / 125 recommended</div></div>' +
+    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--blue-dim);color:var(--blue);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">②</span><strong>Headline</strong> <span class="muted small">— bold text below the image</span></div>' +
+    '<input type="text" value="' + ad.headline + '" onchange="state.adCopy.headline=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;">' +
+    '<div class="small muted" style="text-align:right;">' + ad.headline.length + ' / 40</div></div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">' +
+    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--green-dim);color:var(--green);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">③</span><strong>CTA Button</strong></div>' +
+    '<select onchange="state.adCopy.cta=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;">' + ctaOptions + '</select></div>' +
+    '<div><div style="font-size:11px; margin-bottom:4px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(156,163,175,0.12);color:var(--text-muted);text-align:center;font-size:10px;font-weight:700;line-height:18px;margin-right:6px;">④</span><strong>Destination URL</strong></div>' +
+    '<input type="text" value="' + ad.url + '" onchange="state.adCopy.url=this.value" style="width:100%;background:var(--card-bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;"></div>' +
+    '</div></div>';
+
+  const mockup =
+    '<div style="width:200px; flex-shrink:0;">' +
+    '<div style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); text-align:center; margin-bottom:8px;">Preview in Meta Feed</div>' +
+    '<div style="background:#fff; border-radius:10px; overflow:hidden; border:1px solid #ddd;">' +
+    '<div style="padding:8px 10px; display:flex; align-items:center; gap:6px;">' +
+    '<div style="width:28px;height:28px;border-radius:50%;background:' + state.creatives.branding.color + ';flex-shrink:0;"></div>' +
+    '<div><div style="font-size:10px;font-weight:700;color:#1a1a1a;">Mike\'s Plumbing</div><div style="font-size:9px;color:#888;">Sponsored</div></div>' +
+    '</div>' +
+    '<div style="font-size:9px; color:#333; padding:0 10px 6px; line-height:1.4;">' + (ad.primaryText.length > 60 ? ad.primaryText.slice(0,60)+'…' : ad.primaryText) + '</div>' +
+    '<div style="height:80px; background:linear-gradient(135deg,'+state.creatives.branding.color+',#fbbf24); position:relative;">' +
+    '<span style="position:absolute;bottom:4px;left:6px;font-size:8px;background:rgba(0,0,0,0.5);color:#fff;padding:1px 5px;border-radius:3px;">' + state.campaignBuilder.offer + '</span>' +
+    '</div>' +
+    '<div style="padding:6px 10px 8px; background:#f5f5f5;">' +
+    '<div style="font-size:8px;color:#888;margin-bottom:2px;">' + (ad.url.replace('https://','').split('/')[0]) + '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<div style="font-size:10px;font-weight:700;color:#1a1a1a;">' + (ad.headline.length>25?ad.headline.slice(0,25)+'…':ad.headline) + '</div>' +
+    '<div style="font-size:9px;background:' + state.creatives.branding.color + ';color:#fff;padding:3px 7px;border-radius:4px;font-weight:600;">' + ad.cta + '</div>' +
+    '</div></div></div></div>';
+
+  return '<div class="ai-bubble mb-16">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg">I wrote your ad copy based on your offer and what works best in your niche. <strong>Review and tweak anything</strong> — the mockup on the right updates as you type.</div>' +
+    '</div>' +
+    '<div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:start; margin-bottom:24px;">' +
+    fields + mockup +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(5)">Looks good — preview my ad →</button>' +
+    '</div>';
+}
+
+function renderLaunchStep5(){
+  const ad = state.adCopy;
+  const cb = state.campaignBuilder;
+  const bc = state.creatives.branding.color;
+
+  const feedMockup =
+    '<div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4); width:240px;">' +
+    '<div style="padding:10px 12px; display:flex; align-items:center; gap:8px;">' +
+    '<div style="width:32px;height:32px;border-radius:50%;background:'+bc+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">M</div>' +
+    '<div><div style="font-size:11px;font-weight:700;color:#1a1a1a;">Mike\'s Plumbing Services</div><div style="font-size:9px;color:#888;">Sponsored · 🌐</div></div>' +
+    '<div style="margin-left:auto;font-size:16px;color:#bbb;">…</div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:#333;padding:0 12px 8px;line-height:1.5;">' + ad.primaryText.slice(0,80) + (ad.primaryText.length>80?'…':'') + '</div>' +
+    '<div style="height:200px;background:linear-gradient(135deg,'+bc+' 0%,#fbbf24 100%);position:relative;display:flex;align-items:flex-end;padding:10px;">' +
+    '<div style="background:rgba(0,0,0,0.55);border-radius:6px;padding:6px 10px;">' +
+    '<div style="font-size:11px;font-weight:700;color:#fff;">'+cb.offer+'</div>' +
+    '<div style="font-size:9px;color:rgba(255,255,255,0.75);">Mike\'s Plumbing · Toronto</div>' +
+    '</div></div>' +
+    '<div style="padding:10px 12px;background:#f0f2f5;">' +
+    '<div style="font-size:9px;color:#888;margin-bottom:4px;">'+ad.url.replace('https://','').split('/')[0]+'</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<div style="font-size:12px;font-weight:700;color:#1a1a1a;">'+ad.headline+'</div>' +
+    '<div style="font-size:10px;background:'+bc+';color:#fff;padding:5px 10px;border-radius:5px;font-weight:700;white-space:nowrap;">'+ad.cta+'</div>' +
+    '</div></div></div>';
+
+  const storiesMockup =
+    '<div style="background:#000;border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);width:130px;height:240px;position:relative;display:flex;flex-direction:column;justify-content:flex-end;">' +
+    '<div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(165deg,'+bc+' 0%,#f87171 50%,#a78bfa 100%);"></div>' +
+    '<div style="position:relative;padding:0 10px 14px;">' +
+    '<div style="background:rgba(255,255,255,0.2);border-radius:20px;padding:6px 12px;text-align:center;">' +
+    '<div style="font-size:10px;font-weight:700;color:#fff;">'+ad.cta+' →</div>' +
+    '</div></div>' +
+    '<div style="position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(to bottom,rgba(0,0,0,0.3),transparent);display:flex;align-items:flex-start;padding:8px;">' +
+    '<div style="width:16px;height:16px;border-radius:50%;background:'+bc+';margin-right:6px;flex-shrink:0;"></div>' +
+    '<div style="font-size:8px;color:#fff;font-weight:600;">Mike\'s Plumbing</div>' +
+    '</div></div>';
+
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg">Here\'s exactly how your ad will look on mobile — <strong>Feed (left) and Stories (right).</strong> Everything looks great. Ready to send for review?</div>' +
+    '</div>' +
+    '<div style="display:flex; gap:32px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-bottom:28px;">' +
+    '<div style="text-align:center;">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Feed</div>' +
+    feedMockup + '</div>' +
+    '<div style="text-align:center;">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Stories</div>' +
+    storiesMockup + '</div>' +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
+    '<button class="btn primary" onclick="submitLaunchCampaign()">Send for review →</button>' +
+    '</div>';
+}
+
+function renderLaunchStep6(){
+  const cb = state.campaignBuilder;
+  return '<div style="text-align:center; padding:8px 0 24px;">' +
+    '<div style="font-size:48px; margin-bottom:12px;">🚀</div>' +
+    '<h2 style="font-size:22px; margin-bottom:8px;">Campaign sent for review</h2>' +
+    '<p class="muted" style="font-size:14px; max-width:400px; margin:0 auto 28px;">Your "'+cb.offer+'" campaign is now in Meta\'s review queue. They typically approve ads within 24 hours — I\'ll notify you as soon as it goes live.</p>' +
+    '</div>' +
+    '<div class="card mb-24" style="padding:20px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:16px;">What happens next</div>' +
+    '<div style="display:flex; flex-direction:column; gap:0;">' +
+    [
+      { icon:'⏳', title:'Now', desc:'Campaign submitted to Meta\'s automated review system', done:true },
+      { icon:'✅', title:'~24 hours', desc:'Meta approves and campaign goes live automatically', done:false },
+      { icon:'📊', title:'48–72 hours', desc:'First performance data appears in your dashboard', done:false },
+      { icon:'🔔', title:'7 days', desc:'I send you a performance report and budget recommendation', done:false },
+    ].map(function(r, i, arr){
+      return '<div style="display:flex; gap:14px; align-items:flex-start;">' +
+        '<div style="display:flex; flex-direction:column; align-items:center;">' +
+        '<div style="width:32px;height:32px;border-radius:50%;background:'+(r.done?'var(--green-dim)':'var(--card-bg-2)')+';color:'+(r.done?'var(--green)':'var(--text-muted)')+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+r.icon+'</div>' +
+        (i<arr.length-1 ? '<div style="width:2px;height:24px;background:var(--border);margin:4px 0;"></div>' : '') +
+        '</div>' +
+        '<div style="padding-top:6px; padding-bottom:'+(i<arr.length-1?'0':'0')+'px;">' +
+        '<div style="font-weight:600; font-size:13px;">'+r.title+'</div>' +
+        '<div class="small muted">'+r.desc+'</div>' +
+        '</div></div>';
+    }).join('') +
+    '</div>' +
+    '</div>' +
+    '<div style="display:flex; gap:10px; justify-content:center;">' +
+    '<button class="btn" onclick="navigateTo(\'advertising\')">View in Campaigns</button>' +
+    '<button class="btn primary" onclick="navigateTo(\'dashboard\')">Back to Dashboard</button>' +
+    '</div>';
+}
+
+// ---- Wizard helpers ----
+function resetLaunchWizard(){
+  state.launchWizard = { step:1, platform:'meta', settingsExpanded:null, aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2,3,4] };
+  navigateTo('campaign-launch');
+}
+function setLaunchStep(n){
+  state.launchWizard.step = n;
+  if(n===3 && !state.launchWizard.aiGenDone){
+    state.launchWizard.aiGenerating = true;
+    navigateTo('campaign-launch');
+    setTimeout(function(){
+      state.launchWizard.aiGenerating = false;
+      state.launchWizard.aiGenDone = true;
+      navigateTo('campaign-launch');
+      showToast('✦ AI: Your creatives are ready — 3 images + 2 videos', {success:true});
+    }, 2800);
+  } else {
+    navigateTo('campaign-launch');
+  }
+}
+function setLaunchPlatform(p){
+  state.launchWizard.platform = p;
+  navigateTo('campaign-launch');
+}
+function toggleLaunchSetting(key){
+  state.launchWizard.settingsExpanded = state.launchWizard.settingsExpanded===key ? null : key;
+  navigateTo('campaign-launch');
+}
+function toggleLaunchCreative(i){
+  const idx = state.launchWizard.selectedCreatives.indexOf(i);
+  if(idx===-1) state.launchWizard.selectedCreatives.push(i);
+  else state.launchWizard.selectedCreatives.splice(idx,1);
+  navigateTo('campaign-launch');
+}
+function submitLaunchCampaign(){
+  setLaunchStep(6);
+  showToast('Campaign submitted to Meta for review ✓', {success:true});
 }
 </script>
 
@@ -1674,7 +2064,7 @@ VIEWS['creative-studio'] = function(){
 
     <!-- ── BOTTOM BAR ── -->
     <div class="card mt-16" style="position:sticky; bottom:16px; display:flex; justify-content:space-between; align-items:center; border-color:var(--border-light); box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-      <button class="link-btn muted" onclick="navigateTo('campaign-strategy')">← Back to strategy</button>
+      <button class="link-btn muted" onclick="navigateTo('campaign-launch')">← Back to strategy</button>
       <div style="display:flex; align-items:center; gap:12px;">
         ${all.length===0 ? '<span class="small muted">Add at least 1 creative to continue</span>' : `<span class="small" style="color:var(--green);">✓ ${all.length} creative${all.length>1?'s':''} selected</span>`}
         <button class="btn primary" ${all.length===0?'disabled':''} onclick="continueToReview()">Continue to review →</button>
@@ -2446,7 +2836,7 @@ function renderCampaignsList(){
         <div class="period-toggle">
           ${['today','7d','30d'].map(p=>`<button class="${state.campaignsPeriod===p?'active':''}" onclick="setCampaignsPeriod('${p}')">${p==='today'?'Today':p==='7d'?'7 days':'30 days'}</button>`).join('')}
         </div>
-        <button class="btn primary" onclick="navigateTo('campaign-strategy')">+ New Campaign</button>
+        <button class="btn primary" onclick="resetLaunchWizard()">+ New Campaign</button>
       </div>
     </div>
     <div class="table-card">
@@ -3887,7 +4277,7 @@ function finishOnboarding(){
     state.businessProfile.name = state.onboarding.businessName;
   }
   // Fresh business from onboarding — ad accounts aren't connected yet.
-  state.integrations.meta = { status:'none' };
+  state.integrations.meta = { status:'none', facebookPage:'' };
   state.integrations.google = { status:'none' };
   state.setupProgress.meta = false;
   state.setupProgress.google = false;
