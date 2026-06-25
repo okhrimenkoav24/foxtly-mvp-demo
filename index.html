@@ -626,6 +626,7 @@ const state = {
     offer: 'Free Estimate',
     schedule: 'immediate',
     startDate: '',
+    duration: 30,
   },
   creatives: {
     uploaded: [],
@@ -646,6 +647,7 @@ const state = {
     gSitelinks: true,
     gCall: true,
     gLocation: true,
+    gDuration: 30,
   },
   leads: [
     { id:'l1', name:'John Smith', phone:'(416) 555-0123', email:'john@email.com', source:'Meta', campaign:'Free Estimate — Plumbing', date:'Jun 9, 2:14 PM', status:'new', value:null, age:'2 hours ago', stale:false,
@@ -1681,16 +1683,54 @@ function renderMetaStep3(){
 
 function renderMetaStep4(){
   const cb = state.campaignBuilder;
+  const dur = cb.duration || 30;
+  const total = cb.budget * dur;
+  const cpmLow = 8, cpmHigh = 15;
+  const leadsLow = Math.round(total / cpmHigh);
+  const leadsHigh = Math.round(total / cpmLow);
+  const durOptions = [7,14,30,60,90];
+
+  const durationChips = durOptions.map(function(d){
+    const sel = dur === d;
+    return '<div onclick="state.campaignBuilder.duration='+d+'; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(sel?'600':'400')+'; border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">'+d+' days</div>';
+  }).join('') +
+  '<div onclick="state.campaignBuilder.duration=0; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(dur===0?'600':'400')+'; border:2px solid '+(dur===0?'var(--orange)':'var(--border)')+'; background:'+(dur===0?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(dur===0?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">Custom</div>';
+
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>$'+cb.budget+'/day is the sweet spot for local plumbing in Toronto.</strong> Below $20/day Meta can\'t optimize properly. At this level expect 3–8 qualified leads per week. Adjust after your first 7 days of data.</div>' +
+    '<div class="msg"><strong>$'+cb.budget+'/day is the sweet spot for local plumbing in Toronto.</strong> Set your daily budget and duration — I\'ll show you the total spend and estimated leads so you can make an informed decision.</div>' +
     '</div>' +
-    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:32px 28px; margin-bottom:28px; text-align:center;">' +
-    '<div style="font-size:52px; font-weight:700; color:var(--orange); margin-bottom:4px;" id="lw-budget-big">$'+cb.budget+'</div>' +
-    '<div style="font-size:14px; color:var(--text-muted); margin-bottom:24px;" id="lw-budget-sub">per day · ~$'+(cb.budget*30)+'/month</div>' +
-    '<input type="range" min="15" max="100" value="'+cb.budget+'" oninput="state.campaignBuilder.budget=parseInt(this.value); document.getElementById(\'lw-budget-big\').textContent=\'$\'+this.value; document.getElementById(\'lw-budget-sub\').textContent=\'per day · ~$\'+(parseInt(this.value)*30)+\'/month\'" style="width:100%; margin-bottom:8px;">' +
+
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
+
+    '<div style="margin-bottom:24px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Daily budget</div>' +
+    '<div style="text-align:center; margin-bottom:16px;">' +
+    '<span style="font-size:52px; font-weight:700; color:var(--orange);" id="lw-mb-day">$'+cb.budget+'</span>' +
+    '<span style="font-size:16px; color:var(--text-muted); margin-left:6px;">/ day</span>' +
+    '</div>' +
+    '<input type="range" min="15" max="100" value="'+cb.budget+'" oninput="state.campaignBuilder.budget=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:6px;">' +
     '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$100/day</span></div>' +
     '</div>' +
+
+    '<div style="margin-bottom:24px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Campaign duration</div>' +
+    '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">' + durationChips + '</div>' +
+    (dur===0 ? '<input type="number" min="1" max="365" placeholder="Enter days…" oninput="state.campaignBuilder.duration=parseInt(this.value)||0; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '') +
+    '</div>' +
+
+    '<div style="background:var(--card-bg-2); border-radius:10px; padding:18px 20px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px;">Estimate</div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--text);">$'+total+'</div><div class="small muted" style="margin-top:3px;">Total spend</div></div>' +
+    '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--text);">'+(dur||'—')+'</div><div class="small muted" style="margin-top:3px;">Days</div></div>' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--green);">'+(total?leadsLow+'–'+leadsHigh:'—')+'</div><div class="small muted" style="margin-top:3px;">Est. leads</div></div>' +
+    '</div>' +
+    '<div class="small muted mt-10" style="text-align:center; line-height:1.5;">Based on avg. CPL $8–$15 for plumbing in Toronto · adjust after first 7 days</div>' +
+    '</div>' +
+
+    '</div>' +
+
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
     '<button class="btn primary" onclick="setLaunchStep(6)">Continue →</button>' +
@@ -2047,16 +2087,57 @@ function renderGoogleStep3(){
 
 function renderGoogleStep4(){
   const w = state.launchWizard;
+  const total = w.gBudget * w.gDuration;
+  const cpcLow = 8, cpcHigh = 15;
+  const clicksLow = Math.round(total / cpcHigh);
+  const clicksHigh = Math.round(total / cpcLow);
+  const durOptions = [7,14,30,60,90];
+
+  const durationChips = durOptions.map(function(d){
+    const sel = w.gDuration === d;
+    return '<div onclick="state.launchWizard.gDuration='+d+'; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(sel?'600':'400')+'; border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">'+d+' days</div>';
+  }).join('') +
+  '<div onclick="state.launchWizard.gDuration=0; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(w.gDuration===0?'600':'400')+'; border:2px solid '+(w.gDuration===0?'var(--orange)':'var(--border)')+'; background:'+(w.gDuration===0?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(w.gDuration===0?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">Custom</div>';
+
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>$'+w.gBudget+'/day is a solid starting point for local search in Toronto.</strong> At this budget you\'ll get 15–25 clicks per day on your top keywords. Google recommends at least $20/day to give the algorithm enough data. Adjust after 7 days once you see actual cost-per-click.</div>' +
+    '<div class="msg"><strong>$'+w.gBudget+'/day is a solid starting point for local search in Toronto.</strong> Set your daily budget and campaign duration — I\'ll calculate your total spend and estimated clicks so you know exactly what to expect before committing.</div>' +
     '</div>' +
-    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:32px 28px; margin-bottom:28px; text-align:center;">' +
-    '<div style="font-size:52px; font-weight:700; color:var(--orange); margin-bottom:4px;" id="lw-gbudget-big">$'+w.gBudget+'</div>' +
-    '<div style="font-size:14px; color:var(--text-muted); margin-bottom:24px;" id="lw-gbudget-sub">per day · ~$'+(w.gBudget*30)+'/month</div>' +
-    '<input type="range" min="15" max="150" value="'+w.gBudget+'" oninput="state.launchWizard.gBudget=parseInt(this.value); document.getElementById(\'lw-gbudget-big\').textContent=\'$\'+this.value; document.getElementById(\'lw-gbudget-sub\').textContent=\'per day · ~$\'+(parseInt(this.value)*30)+\'/month\'" style="width:100%; margin-bottom:8px;">' +
+
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
+
+    // Daily budget
+    '<div style="margin-bottom:24px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Daily budget</div>' +
+    '<div style="text-align:center; margin-bottom:16px;">' +
+    '<span style="font-size:52px; font-weight:700; color:var(--orange);" id="lw-gb-day">$'+w.gBudget+'</span>' +
+    '<span style="font-size:16px; color:var(--text-muted); margin-left:6px;">/ day</span>' +
+    '</div>' +
+    '<input type="range" min="15" max="150" value="'+w.gBudget+'" oninput="state.launchWizard.gBudget=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:6px;">' +
     '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$150/day</span></div>' +
     '</div>' +
+
+    // Duration
+    '<div style="margin-bottom:24px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Campaign duration</div>' +
+    '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">' + durationChips + '</div>' +
+    (w.gDuration===0 ?
+      '<input type="number" min="1" max="365" placeholder="Enter days…" oninput="state.launchWizard.gDuration=parseInt(this.value)||0; updateGoogleBudgetCalc()" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '') +
+    '</div>' +
+
+    // Calculator result
+    '<div style="background:var(--card-bg-2); border-radius:10px; padding:18px 20px;" id="lw-gb-calc">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px;">Estimate</div>' +
+    '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--text);" id="lw-gb-total">$'+total+'</div><div class="small muted" style="margin-top:3px;">Total spend</div></div>' +
+    '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--text);" id="lw-gb-days">'+(w.gDuration||'—')+'</div><div class="small muted" style="margin-top:3px;">Days</div></div>' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--green);" id="lw-gb-clicks">'+clicksLow+'–'+clicksHigh+'</div><div class="small muted" style="margin-top:3px;">Est. clicks</div></div>' +
+    '</div>' +
+    '<div class="small muted mt-10" style="text-align:center; line-height:1.5;" id="lw-gb-note">Based on avg. CPC $8–$15 for plumbing in Toronto · adjust after first 7 days</div>' +
+    '</div>' +
+
+    '</div>' +
+
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
     '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
@@ -2216,6 +2297,7 @@ function resetLaunchWizard(){
     gHeadlines:['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
     gDescriptions:['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
     gSitelinks:true, gCall:true, gLocation:true,
+    gDuration:30,
   };
   navigateTo('campaign-launch');
 }
@@ -2243,6 +2325,25 @@ function toggleLaunchCreative(i){
   if(idx===-1) state.launchWizard.selectedCreatives.push(i);
   else state.launchWizard.selectedCreatives.splice(idx,1);
   navigateTo('campaign-launch');
+}
+function updateGoogleBudgetCalc(){
+  const w = state.launchWizard;
+  const total = w.gBudget * (w.gDuration || 0);
+  const cpcLow = 8, cpcHigh = 15;
+  const clicksLow = total ? Math.round(total / cpcHigh) : 0;
+  const clicksHigh = total ? Math.round(total / cpcLow) : 0;
+  const dayEl = document.getElementById('lw-gb-day');
+  const totEl = document.getElementById('lw-gb-total');
+  const daysEl = document.getElementById('lw-gb-days');
+  const clkEl = document.getElementById('lw-gb-clicks');
+  if(dayEl)  dayEl.textContent  = '$'+w.gBudget;
+  if(totEl)  totEl.textContent  = '$'+total;
+  if(daysEl) daysEl.textContent = w.gDuration || '—';
+  if(clkEl)  clkEl.textContent  = total ? clicksLow+'–'+clicksHigh : '—';
+  // re-render only if chip selection changed (duration buttons)
+  const needsRerender = !document.getElementById('lw-gb-calc');
+  if(needsRerender) navigateTo('campaign-launch');
+  else navigateTo('campaign-launch');
 }
 function addGoogleKeyword(){
   const inp = document.getElementById('lw-kw-input');
