@@ -1539,8 +1539,10 @@ VIEWS['campaign-launch'] = function(){
     else if(w.step===11) content = renderMetaStep10();
   }
 
+  const isWide = isGoogle && (w.step===5 || w.step===6);
+  const maxW = isWide ? '960px' : '640px';
   return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>' +
-    progressBar + '<div style="max-width:640px; margin:0 auto;">' + content + '</div>';
+    progressBar + '<div style="max-width:'+maxW+'; margin:0 auto;">' + content + '</div>';
 };
 
 // ---- SHARED: Step 1 Platform ----
@@ -2031,6 +2033,45 @@ function renderMetaStep10(){
 
 // ---- GOOGLE STEPS ----
 
+function buildGoogleSerpMiniPreview(h1,h2,h3,d1,d2,sl,call,loc){
+  var headline = (h1||'Headline 1')+' | '+(h2||'Headline 2')+' | '+(h3||'Headline 3');
+  var desc = (d1||'Description 1 will appear here.')+' '+(d2||'');
+  return '<div style="background:#fff;border-radius:10px;padding:18px 20px;border:1px solid #e0e0e0;font-family:Arial,sans-serif;">' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+    '<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#4285f4,#34a853);flex-shrink:0;"></div>' +
+    '<div style="font-size:11px;color:#555;">mikeaplumbing.ca</div>' +
+    '</div>' +
+    '<span style="background:#e8f0fe;color:#1558d6;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;letter-spacing:0.3px;">Ad</span>' +
+    '<div style="font-size:15px;color:#1558d6;margin:6px 0 5px;line-height:1.35;">'+headline+'</div>' +
+    '<div style="font-size:12px;color:#444;line-height:1.6;margin-bottom:10px;">'+desc+'</div>' +
+    (sl!==false?'<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;">'+['Book a Free Estimate','Our Services','Call Us Now','Service Areas'].map(function(s){return '<span style="font-size:11px;color:#1558d6;border-bottom:1px solid #1558d6;">'+s+'</span>';}).join('')+'</div>':'')+
+    (call!==false?'<div style="font-size:11px;color:#444;margin-top:2px;">📞 (416) 555-0100</div>':'')+
+    (loc!==false?'<div style="font-size:11px;color:#444;margin-top:2px;">📍 123 Main St, Toronto, ON</div>':'')+
+    '</div>';
+}
+function updateGoogleAdPreview(){
+  var w = state.launchWizard;
+  var h1 = document.getElementById('g-h1'); h1 = h1 ? h1.value : w.gHeadlines[0];
+  var h2 = document.getElementById('g-h2'); h2 = h2 ? h2.value : w.gHeadlines[1];
+  var h3 = document.getElementById('g-h3'); h3 = h3 ? h3.value : w.gHeadlines[2];
+  var d1 = document.getElementById('g-d1'); d1 = d1 ? d1.value : w.gDescriptions[0];
+  var d2 = document.getElementById('g-d2'); d2 = d2 ? d2.value : w.gDescriptions[1];
+  var el = document.getElementById('g-serp-preview');
+  if(el) el.innerHTML = buildGoogleSerpMiniPreview(h1,h2,h3,d1,d2,w.gSitelinks,w.gCall,w.gLocation);
+}
+function onGHeadlineInput(i,val){
+  state.launchWizard.gHeadlines[i]=val;
+  var cnt=document.getElementById('g-hcnt'+i);
+  if(cnt) cnt.textContent=val.length+' / 30';
+  updateGoogleAdPreview();
+}
+function onGDescInput(i,val){
+  state.launchWizard.gDescriptions[i]=val;
+  var cnt=document.getElementById('g-dcnt'+i);
+  if(cnt) cnt.textContent=val.length+' / 90';
+  updateGoogleAdPreview();
+}
+
 function googlePlatformBanner(){
   return '<div style="display:flex; align-items:center; gap:10px; background:#e8f0fe; border:1px solid #c5d9f8; border-radius:10px; padding:10px 16px; margin-bottom:20px;">' +
     '<div style="width:28px;height:28px;border-radius:6px;background:#4285F4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
@@ -2171,19 +2212,27 @@ function renderGoogleStep4(){
 
 function renderGoogleStep5(){
   const w = state.launchWizard;
+  const inputs = w.gHeadlines.map(function(h,i){
+    return '<div style="margin-bottom:12px;">' +
+      '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Headline '+(i+1)+'</span><span class="small muted" id="g-hcnt'+i+'">'+h.length+' / 30</span></div>' +
+      '<input type="text" id="g-h'+(i+1)+'" value="'+h+'" maxlength="30" oninput="onGHeadlineInput('+i+',this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px;">' +
+      '</div>';
+  }).join('');
+  const preview = buildGoogleSerpMiniPreview(w.gHeadlines[0],w.gHeadlines[1],w.gHeadlines[2],w.gDescriptions[0],w.gDescriptions[1],w.gSitelinks,w.gCall,w.gLocation);
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>I wrote 3 headlines for your Responsive Search Ad.</strong> Google mixes and matches them automatically — each must make sense on its own. I focused on your USP (free estimate), location (Toronto), and urgency (emergency). Max 30 characters each.</div>' +
+    '<div class="msg"><strong>I wrote 3 headlines for your Responsive Search Ad.</strong> Google mixes and matches them automatically — each must make sense on its own. Max 30 chars each. The preview updates as you type.</div>' +
     '</div>' +
-    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Headlines <span style="font-weight:400; text-transform:none; letter-spacing:0;">— max 30 chars each</span></div>' +
-    w.gHeadlines.map(function(h,i){
-      return '<div style="margin-bottom:12px;">' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Headline '+(i+1)+'</span><span class="small muted">'+h.length+' / 30</span></div>' +
-        '<input type="text" value="'+h+'" maxlength="30" onchange="state.launchWizard.gHeadlines['+i+']=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px;">' +
-        '</div>';
-    }).join('') +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; align-items:start;">' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:22px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Headlines</div>' +
+    inputs +
+    '</div>' +
+    '<div>' +
+    '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#34a853;display:inline-block;"></span>Live preview</div>' +
+    '<div id="g-serp-preview">'+preview+'</div>' +
+    '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
@@ -2193,19 +2242,27 @@ function renderGoogleStep5(){
 
 function renderGoogleStep6(){
   const w = state.launchWizard;
+  const inputs = w.gDescriptions.map(function(d,i){
+    return '<div style="margin-bottom:12px;">' +
+      '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Description '+(i+1)+'</span><span class="small muted" id="g-dcnt'+i+'">'+d.length+' / 90</span></div>' +
+      '<textarea id="g-d'+(i+1)+'" rows="3" maxlength="90" oninput="onGDescInput('+i+',this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px; resize:none; font-family:inherit;">'+d+'</textarea>' +
+      '</div>';
+  }).join('');
+  const preview = buildGoogleSerpMiniPreview(w.gHeadlines[0],w.gHeadlines[1],w.gHeadlines[2],w.gDescriptions[0],w.gDescriptions[1],w.gSitelinks,w.gCall,w.gLocation);
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>Descriptions expand on your headlines and drive the click.</strong> Google shows up to 2 at a time, mixed and matched. I focused on credibility (licensed & insured), service area (Toronto & GTA), and social proof. Max 90 characters each.</div>' +
+    '<div class="msg"><strong>Descriptions expand on your headlines and drive the click.</strong> Google shows up to 2 at a time. I focused on credibility, service area, and social proof. Max 90 chars each. Preview updates as you type.</div>' +
     '</div>' +
-    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Descriptions <span style="font-weight:400; text-transform:none; letter-spacing:0;">— max 90 chars each</span></div>' +
-    w.gDescriptions.map(function(d,i){
-      return '<div style="margin-bottom:12px;">' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Description '+(i+1)+'</span><span class="small muted">'+d.length+' / 90</span></div>' +
-        '<textarea rows="2" maxlength="90" onchange="state.launchWizard.gDescriptions['+i+']=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px; resize:none; font-family:inherit;">'+d+'</textarea>' +
-        '</div>';
-    }).join('') +
+    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; align-items:start;">' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:22px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Descriptions</div>' +
+    inputs +
+    '</div>' +
+    '<div>' +
+    '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#34a853;display:inline-block;"></span>Live preview</div>' +
+    '<div id="g-serp-preview">'+preview+'</div>' +
+    '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
