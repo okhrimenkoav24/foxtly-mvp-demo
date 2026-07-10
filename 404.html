@@ -4327,10 +4327,26 @@ function renderTourStep(){
     spot.style.height = (r.height+pad*2)+'px';
     spot.style.borderRadius = Math.min(14, r.height/2+4)+'px';
 
-    let ttTop = r.top;
-    let ttLeft = r.right + 20;
-    if(ttLeft + 316 > window.innerWidth){ ttLeft = Math.max(12, r.left); ttTop = r.bottom + 14; }
-    if(ttTop + 180 > window.innerHeight) ttTop = window.innerHeight - 210;
+    var TT_W = 316, TT_H = 180, GAP = 14;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var ttTop, ttLeft;
+    // Try right
+    if(r.right + GAP + TT_W <= vw){
+      ttLeft = r.right + GAP;
+      ttTop = Math.min(Math.max(12, r.top), vh - TT_H - 12);
+    // Try left
+    } else if(r.left - GAP - TT_W >= 0){
+      ttLeft = r.left - GAP - TT_W;
+      ttTop = Math.min(Math.max(12, r.top), vh - TT_H - 12);
+    // Try above
+    } else if(r.top - GAP - TT_H >= 0){
+      ttTop = r.top - GAP - TT_H;
+      ttLeft = Math.min(Math.max(12, r.left), vw - TT_W - 12);
+    // Fallback: below or centered
+    } else {
+      ttTop = Math.min(r.bottom + GAP, vh - TT_H - 12);
+      ttLeft = Math.min(Math.max(12, r.left), vw - TT_W - 12);
+    }
     tooltip.style.top = Math.max(12, ttTop)+'px';
     tooltip.style.left = Math.max(12, ttLeft)+'px';
   } else {
