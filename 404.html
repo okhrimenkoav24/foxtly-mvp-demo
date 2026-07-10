@@ -667,6 +667,7 @@ const state = {
     platform: 'meta',
     goal: 'leads',
     location: 'Toronto, ON',
+    cities: ['Toronto, ON'],
     radius: 15,
     ageMin: 25, ageMax: 65,
     interests: ['Home improvement', 'Homeownership', 'DIY'],
@@ -1889,32 +1890,85 @@ function renderMetaStep2(){
     '</div>';
 }
 
+var CB_CITIES = [
+  'Toronto, ON','Mississauga, ON','Brampton, ON','Vaughan, ON','Markham, ON',
+  'Richmond Hill, ON','Oakville, ON','Burlington, ON','Pickering, ON','Ajax, ON',
+  'Whitby, ON','Oshawa, ON','Milton, ON','Newmarket, ON','Aurora, ON',
+  'North York, ON','Scarborough, ON','Etobicoke, ON','East York, ON','York, ON',
+];
+function addCampaignCity(){
+  var sel = document.getElementById('cb-city-select');
+  if(!sel) return;
+  var city = sel.value;
+  if(!city) return;
+  if(state.campaignBuilder.cities.indexOf(city)===-1){
+    state.campaignBuilder.cities.push(city);
+  }
+  navigateTo('campaign-launch');
+}
+function removeCampaignCity(idx){
+  state.campaignBuilder.cities.splice(idx,1);
+  navigateTo('campaign-launch');
+}
+
 function renderMetaStep3(){
   const cb = state.campaignBuilder;
+  if(!cb.cities) cb.cities = [cb.location || 'Toronto, ON'];
+  const cityList = cb.cities;
+  const available = CB_CITIES.filter(function(c){ return cityList.indexOf(c)===-1; });
+  const cityLabel = cityList.length===1 ? cityList[0] : cityList.length+' cities';
+
+  const chips = cityList.map(function(c,i){
+    return '<div style="display:inline-flex; align-items:center; gap:6px; background:var(--orange-dim); border:1px solid var(--orange); color:var(--orange); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; white-space:nowrap;">'+
+      c+
+      '<button onclick="removeCampaignCity('+i+')" style="background:none; border:none; color:var(--orange); cursor:pointer; font-size:13px; padding:0; line-height:1; opacity:0.7; margin-left:2px;">&times;</button>'+
+    '</div>';
+  }).join('');
+
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+cb.ageMax+' within '+cb.radius+' miles of '+cb.location+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
+    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+cb.ageMax+' within '+cb.radius+' km of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
     '</div>' +
+
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
-    '<div style="margin-bottom:20px;">' +
-    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Location</label>' +
-    '<input type="text" value="'+cb.location+'" onchange="state.campaignBuilder.location=this.value" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' +
+
+    // Cities
+    '<div style="margin-bottom:22px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Cities <span style="font-weight:400; text-transform:none; letter-spacing:0;">(up to 10)</span></label>' +
+    '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; min-height:32px;">' +
+    (chips || '<span style="font-size:12px; color:var(--text-muted);">No cities selected</span>') +
     '</div>' +
-    '<div style="margin-bottom:20px;">' +
-    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Radius: <span id="lw-radius-lbl">'+cb.radius+' miles</span></label>' +
-    '<input type="range" min="5" max="50" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); document.getElementById(\'lw-radius-lbl\').textContent=this.value+\' miles\'" style="width:100%;">' +
-    '<div style="display:flex; justify-content:space-between; margin-top:4px;"><span class="small muted">5 mi</span><span class="small muted">50 mi</span></div>' +
+    (available.length > 0 && cityList.length < 10 ?
+      '<div style="display:flex; gap:8px; align-items:center;">' +
+      '<select id="cb-city-select" style="flex:1; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; cursor:pointer;">' +
+      '<option value="">— Add a city —</option>' +
+      available.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('') +
+      '</select>' +
+      '<button class="btn small primary" onclick="addCampaignCity()" style="white-space:nowrap; flex-shrink:0;">+ Add</button>' +
+      '</div>'
+    : '<div style="font-size:12px; color:var(--text-muted);">'+(cityList.length>=10?'Maximum 10 cities selected':'All available cities added')+'</div>'
+    ) +
     '</div>' +
+
+    // Radius
+    '<div style="margin-bottom:22px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Radius per city: <span id="lw-radius-lbl">'+cb.radius+' km</span></label>' +
+    '<input type="range" min="5" max="80" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); document.getElementById(\'lw-radius-lbl\').textContent=this.value+\' km\'" style="width:100%;">' +
+    '<div style="display:flex; justify-content:space-between; margin-top:4px;"><span class="small muted">5 km</span><span class="small muted">80 km</span></div>' +
+    '</div>' +
+
+    // Age range
     '<div>' +
     '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Age range: '+cb.ageMin+'–'+cb.ageMax+'</label>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">' +
     '<div><div class="small muted mb-4">Min age</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMin+'</div></div>' +
     '<div><div class="small muted mb-4">Max age</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMax+'</div></div>' +
     '</div></div>' +
+
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(5)" '+(cityList.length===0?'disabled style="opacity:0.5;cursor:not-allowed;"':'')+'>Continue →</button>' +
     '</div>';
 }
 
