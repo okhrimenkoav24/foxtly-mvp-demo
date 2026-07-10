@@ -363,10 +363,16 @@
   #tour-overlay{ position:fixed; inset:0; z-index:400; display:none; pointer-events:none; }
   #tour-overlay.open{ display:block; }
   #tour-dim{ position:absolute; inset:0; background:rgba(4,4,8,0.4); }
-  #tour-spotlight{ position:absolute; border-radius:12px; box-shadow:0 0 0 4000px rgba(4,4,8,0.4); transition:all .35s ease; background:transparent; }
-  #tour-tooltip{ position:absolute; background:var(--card-bg-3); border:1px solid var(--orange); border-radius:12px; padding:16px; width:300px; pointer-events:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5); transition:all .35s ease; }
-  #tour-tooltip .tt-title{ font-weight:700; font-size:13.5px; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
-  #tour-tooltip .tt-body{ font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:14px; }
+  @keyframes tour-ring-pulse{
+    0%  { box-shadow:0 0 0 4000px rgba(4,4,8,0.58), 0 0 0 2px var(--orange), 0 0 0 5px rgba(255,140,0,0.25); }
+    50% { box-shadow:0 0 0 4000px rgba(4,4,8,0.58), 0 0 0 2px var(--orange), 0 0 0 10px rgba(255,140,0,0.45); }
+    100%{ box-shadow:0 0 0 4000px rgba(4,4,8,0.58), 0 0 0 2px var(--orange), 0 0 0 5px rgba(255,140,0,0.25); }
+  }
+  #tour-spotlight{ position:absolute; border-radius:12px; animation:tour-ring-pulse 1.6s ease-in-out infinite; transition:top .3s ease, left .3s ease, width .3s ease, height .3s ease; background:transparent; pointer-events:none; }
+  .tour-el-glow{ position:relative; z-index:402 !important; border-radius:8px; }
+  #tour-tooltip{ position:absolute; background:var(--card-bg-3); border:1px solid var(--orange); border-radius:12px; padding:18px; width:300px; pointer-events:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5); transition:top .3s ease, left .3s ease; }
+  #tour-tooltip .tt-title{ font-weight:700; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:6px; color:var(--text); }
+  #tour-tooltip .tt-body{ font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:16px; }
   #tour-tooltip .tt-foot{ display:flex; justify-content:space-between; align-items:center; }
   #tour-tooltip .tt-step{ font-size:11px; color:var(--text-muted); }
   #tour-modal{ position:fixed; inset:0; z-index:401; display:none; align-items:center; justify-content:center; background:rgba(4,4,8,0.75); pointer-events:auto; }
@@ -4237,11 +4243,11 @@ function getAIResponse(text){
 
 // ---------- Product Tour ----------
 const TOUR_STEPS = [
-  { target:'[data-tour="action-queue"]', title:'✦ Your Action Queue', body:"This is where I propose changes — like adjusting budgets or pausing underperforming ads. Nothing happens automatically: you review and approve or reject each one." },
-  { target:'[data-tour="nav-approvals"]', title:'☑ Approval Queue', body:"Every change I want to make — big or small — shows up here first, with an explanation and reversibility level. Nothing happens without your OK." },
-  { target:'[data-tour="nav-knowledge-base"]', title:'◐ Knowledge Base', body:"This is everything I know about your business: your profile, market research, and the strategy I'm using to run your ads." },
-  { target:'[data-tour="nav-integrations"]', title:'⎆ Integrations', body:"Connect your ad accounts and CRM here so I can manage campaigns and sync your leads automatically." },
-  { target:'[data-tour="ai-fab"]', title:'✦ Your AI Assistant', body:"And I'm always right here in the corner — click anytime to ask about your campaigns, leads, or strategy." },
+  { target:'[data-tour="action-queue"]',      title:'✦ Action Queue',    body:"I surface changes here — pausing ads, adjusting budgets. Nothing runs until you approve." },
+  { target:'[data-tour="nav-approvals"]',     title:'☑ Approval Queue',  body:"Every AI suggestion lands here with a full explanation. Approve or reject — your call." },
+  { target:'[data-tour="nav-knowledge-base"]',title:'◐ Knowledge Base',  body:"Your business profile, market research and strategy live here. This is how I make decisions." },
+  { target:'[data-tour="nav-integrations"]',  title:'⎆ Integrations',    body:"Connect Meta, Google Ads and your CRM so I can manage campaigns and sync leads automatically." },
+  { target:'[data-tour="ai-fab"]',            title:'✦ AI Assistant',    body:"I'm one click away — ask me anything about your campaigns, results or next steps." },
 ];
 
 function openWelcomeTourModal(){
@@ -4273,6 +4279,7 @@ function replayTour(){
 function nextTourStep(){
   state.tour.step++;
   if(state.tour.step >= TOUR_STEPS.length){
+    clearTourGlow();
     document.getElementById('tour-overlay').classList.remove('open');
     state.tour.active = false;
     setTimeout(showQuestionnairePrompt, 3000);
@@ -4301,25 +4308,31 @@ function startQuestionnaire(){
   state.onboarding.step = 1;
   navigateAuth('onboarding');
 }
+function clearTourGlow(){
+  document.querySelectorAll('.tour-el-glow').forEach(function(e){ e.classList.remove('tour-el-glow'); });
+}
 function renderTourStep(){
+  clearTourGlow();
   const step = TOUR_STEPS[state.tour.step];
   const el = document.querySelector(step.target);
   const spot = document.getElementById('tour-spotlight');
   const tooltip = document.getElementById('tour-tooltip');
   if(el){
+    el.classList.add('tour-el-glow');
     const r = el.getBoundingClientRect();
-    const pad = 6;
+    const pad = 8;
     spot.style.top = (r.top-pad)+'px';
     spot.style.left = (r.left-pad)+'px';
     spot.style.width = (r.width+pad*2)+'px';
     spot.style.height = (r.height+pad*2)+'px';
+    spot.style.borderRadius = Math.min(14, r.height/2+4)+'px';
 
-    let top = r.top;
-    let left = r.right + 16;
-    if(left + 312 > window.innerWidth){ left = Math.max(12, r.left); top = r.bottom + 12; }
-    if(top + 180 > window.innerHeight) top = window.innerHeight - 200;
-    tooltip.style.top = Math.max(12, top)+'px';
-    tooltip.style.left = Math.max(12, left)+'px';
+    let ttTop = r.top;
+    let ttLeft = r.right + 20;
+    if(ttLeft + 316 > window.innerWidth){ ttLeft = Math.max(12, r.left); ttTop = r.bottom + 14; }
+    if(ttTop + 180 > window.innerHeight) ttTop = window.innerHeight - 210;
+    tooltip.style.top = Math.max(12, ttTop)+'px';
+    tooltip.style.left = Math.max(12, ttLeft)+'px';
   } else {
     spot.style.width = '0px';
     spot.style.height = '0px';
@@ -4328,8 +4341,8 @@ function renderTourStep(){
   }
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;
-  document.getElementById('tour-step-label').textContent = `Step ${state.tour.step+1} of ${TOUR_STEPS.length}`;
-  document.getElementById('tour-next-btn').textContent = state.tour.step === TOUR_STEPS.length-1 ? 'Done' : 'Next';
+  document.getElementById('tour-step-label').textContent = 'Step '+(state.tour.step+1)+' of '+TOUR_STEPS.length;
+  document.getElementById('tour-next-btn').textContent = state.tour.step === TOUR_STEPS.length-1 ? 'Done ✓' : 'Next →';
 }
 </script>
 
