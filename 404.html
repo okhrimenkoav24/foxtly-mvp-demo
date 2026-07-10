@@ -297,6 +297,26 @@
   /* progress */
   .progress-track{ height:6px; border-radius:99px; background:var(--card-bg-2); overflow:hidden; }
   .progress-fill{ height:100%; background:var(--orange); border-radius:99px; transition: width .4s; }
+  #setup-widget{
+    position:fixed; top:20px; right:24px; z-index:300;
+    background:var(--card-bg-3); border:1px solid var(--border-light);
+    border-radius:14px; padding:14px 16px; width:230px;
+    box-shadow:0 6px 24px rgba(0,0,0,0.35);
+    display:none; flex-direction:column; gap:10px;
+    animation: sw-in .25s ease;
+  }
+  @keyframes sw-in{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
+  #setup-widget.visible{ display:flex; }
+  #setup-widget .sw-head{ display:flex; align-items:center; justify-content:space-between; }
+  #setup-widget .sw-title{ font-size:12px; font-weight:700; color:var(--text); }
+  #setup-widget .sw-count{ font-size:11px; color:var(--orange); font-weight:700; }
+  #setup-widget .sw-items{ display:flex; flex-direction:column; gap:7px; }
+  #setup-widget .sw-item{ display:flex; align-items:center; gap:8px; font-size:12px; }
+  #setup-widget .sw-item .sw-dot{ width:16px; height:16px; border-radius:50%; border:1.5px solid var(--border-light); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; }
+  #setup-widget .sw-item.done .sw-dot{ background:var(--orange); border-color:var(--orange); color:#fff; }
+  #setup-widget .sw-item .sw-label{ color:var(--text-secondary); }
+  #setup-widget .sw-item.done .sw-label{ color:var(--text-muted); text-decoration:line-through; }
+  #setup-widget .sw-cta{ width:100%; margin-top:2px; }
 
   /* ============ MODAL ============ */
   .modal-overlay{ position:fixed; inset:0; background:rgba(5,5,8,0.7); display:none; align-items:center; justify-content:center; z-index:200; padding:20px; }
@@ -538,6 +558,17 @@
   </div>
 </div>
 
+<!-- ============ SETUP WIDGET ============ -->
+<div id="setup-widget">
+  <div class="sw-head">
+    <span class="sw-title">Setup checklist</span>
+    <span class="sw-count" id="sw-count">0 / 4</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="sw-bar" style="width:0%"></div></div>
+  <div class="sw-items" id="sw-items"></div>
+  <button class="btn primary small sw-cta" id="sw-cta-btn" onclick="setupWidgetContinue()">Continue setup →</button>
+</div>
+
 <!-- ============ GENERIC MODAL ============ -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-box"></div>
@@ -765,6 +796,8 @@ function navigateTo(viewId, opts){
   updateIntegrationNudge();
   closeProtoPanel();
   if(!opts.skipPush) updateUrl('view', viewId);
+  if(viewId==='decision-center'){ setTimeout(renderSetupWidget, 0); }
+  else { hideSetupWidget(); }
 }
 
 function updateIntegrationNudge(){
@@ -852,14 +885,6 @@ const REVERS_LABEL = {
 
 VIEWS['decision-center'] = function(){
   const pending = state.pendingActions.filter(a=>a.status!=='done' && a.status!=='rejected');
-  const progressItems = [
-    {key:'profile', label:'Complete business profile', view:'knowledge-base', cta:'Edit profile'},
-    {key:'meta', label:'Connect Meta Ads account', view:'integrations', cta:'Connect'},
-    {key:'google', label:'Connect Google Ads account', view:'integrations', cta:'Connect'},
-    {key:'firstCampaign', label:'Launch your first campaign', view:'campaign-launch', cta:'Start'},
-  ];
-  const done = progressItems.filter(i=>state.setupProgress[i.key]).length;
-  const pct = Math.round(done/progressItems.length*100);
 
   const kpis = [
     { label:'Spend', value: state.period==='7d'?'$1,940':'$284', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div>` },
@@ -944,26 +969,6 @@ VIEWS['decision-center'] = function(){
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-head">
-        <div><h2>Setup progress</h2><p>${done} of ${progressItems.length} steps complete</p></div>
-      </div>
-      <div class="card card-narrow">
-        <div class="progress-track mb-12"><div class="progress-fill" style="width:${pct}%"></div></div>
-        ${progressItems.map(i=>{
-          const isDone = state.setupProgress[i.key];
-          return `
-          <div class="flex items-center justify-between gap-12 mb-8">
-            <label class="checkbox-row" style="cursor:pointer; flex:1;">
-              <input type="checkbox" ${isDone?'checked':''} onchange="toggleSetupItem('${i.key}')">
-              <span style="${isDone?'text-decoration:line-through;color:var(--text-muted);':''}">${i.label}</span>
-            </label>
-            ${!isDone ? `<button class="btn small" onclick="navigateTo('${i.view}')">${i.cta}</button>` : ''}
-          </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
   `;
 };
 
@@ -1003,6 +1008,44 @@ function setPeriod(p){ state.period = p; navigateTo('decision-center'); }
 function toggleSetupItem(key){
   state.setupProgress[key] = !state.setupProgress[key];
   navigateTo('decision-center');
+}
+
+var SETUP_ITEMS = [
+  {key:'profile',       label:'Complete business profile', view:'knowledge-base'},
+  {key:'meta',          label:'Connect Meta Ads',          view:'integrations'},
+  {key:'google',        label:'Connect Google Ads',        view:'integrations'},
+  {key:'firstCampaign', label:'Launch first campaign',     view:'campaign-launch'},
+];
+function renderSetupWidget(){
+  var w = document.getElementById('setup-widget');
+  if(!w) return;
+  var done = SETUP_ITEMS.filter(function(i){ return state.setupProgress[i.key]; }).length;
+  var total = SETUP_ITEMS.length;
+  var allDone = done === total;
+  if(allDone){ w.classList.remove('visible'); return; }
+  w.classList.add('visible');
+  document.getElementById('sw-count').textContent = done+' / '+total+' complete';
+  document.getElementById('sw-bar').style.width = Math.round(done/total*100)+'%';
+  var html = SETUP_ITEMS.map(function(i){
+    var isDone = state.setupProgress[i.key];
+    return '<div class="sw-item'+(isDone?' done':'')+'">'+
+      '<div class="sw-dot">'+(isDone?'✓':'')+'</div>'+
+      '<span class="sw-label">'+i.label+'</span>'+
+    '</div>';
+  }).join('');
+  document.getElementById('sw-items').innerHTML = html;
+  var next = SETUP_ITEMS.find(function(i){ return !state.setupProgress[i.key]; });
+  document.getElementById('sw-cta-btn').textContent = next ? 'Continue setup →' : 'View setup →';
+  w._nextView = next ? next.view : 'knowledge-base';
+}
+function setupWidgetContinue(){
+  var w = document.getElementById('setup-widget');
+  var view = (w && w._nextView) ? w._nextView : 'integrations';
+  navigateTo(view);
+}
+function hideSetupWidget(){
+  var w = document.getElementById('setup-widget');
+  if(w) w.classList.remove('visible');
 }
 
 function openActionModal(id){
