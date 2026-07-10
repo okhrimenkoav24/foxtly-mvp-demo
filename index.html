@@ -298,7 +298,7 @@
   .progress-track{ height:6px; border-radius:99px; background:var(--card-bg-2); overflow:hidden; }
   .progress-fill{ height:100%; background:var(--orange); border-radius:99px; transition: width .4s; }
   #setup-widget{
-    position:fixed; top:20px; right:24px; z-index:300;
+    position:fixed; top:72px; right:24px; z-index:300;
     background:var(--card-bg-3); border:1px solid var(--border-light);
     border-radius:14px; padding:14px 16px; width:230px;
     box-shadow:0 6px 24px rgba(0,0,0,0.35);
@@ -307,9 +307,15 @@
   }
   @keyframes sw-in{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
   #setup-widget.visible{ display:flex; }
-  #setup-widget .sw-head{ display:flex; align-items:center; justify-content:space-between; }
+  /* Collapsed state — pill only */
+  #setup-widget.sw-collapsed{ width:auto; min-width:0; padding:10px 14px; gap:0; cursor:pointer; border-color:var(--orange); }
+  #setup-widget.sw-collapsed .sw-body{ display:none; }
+  #setup-widget.sw-collapsed .sw-expand-icon{ display:inline; }
+  #setup-widget .sw-expand-icon{ display:none; font-size:10px; color:var(--text-muted); margin-left:8px; }
+  #setup-widget .sw-head{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
   #setup-widget .sw-title{ font-size:12px; font-weight:700; color:var(--text); }
   #setup-widget .sw-count{ font-size:11px; color:var(--orange); font-weight:700; }
+  #setup-widget .sw-toggle{ background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; padding:0 0 0 8px; line-height:1; flex-shrink:0; }
   #setup-widget .sw-items{ display:flex; flex-direction:column; gap:7px; }
   #setup-widget .sw-item{ display:flex; align-items:center; gap:8px; font-size:12px; }
   #setup-widget .sw-item .sw-dot{ width:16px; height:16px; border-radius:50%; border:1.5px solid var(--border-light); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; }
@@ -560,13 +566,19 @@
 
 <!-- ============ SETUP WIDGET ============ -->
 <div id="setup-widget">
-  <div class="sw-head">
+  <div class="sw-head" onclick="toggleSetupWidget()">
     <span class="sw-title">Setup checklist</span>
-    <span class="sw-count" id="sw-count">0 / 4</span>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <span class="sw-count" id="sw-count">0 / 4</span>
+      <span class="sw-expand-icon">▲</span>
+      <button class="sw-toggle" id="sw-toggle-btn" onclick="event.stopPropagation(); toggleSetupWidget()">▾</button>
+    </div>
   </div>
-  <div class="progress-track"><div class="progress-fill" id="sw-bar" style="width:0%"></div></div>
-  <div class="sw-items" id="sw-items"></div>
-  <button class="btn primary small sw-cta" id="sw-cta-btn" onclick="setupWidgetContinue()">Continue setup →</button>
+  <div class="sw-body">
+    <div class="progress-track"><div class="progress-fill" id="sw-bar" style="width:0%"></div></div>
+    <div class="sw-items" id="sw-items"></div>
+    <button class="btn primary small sw-cta" id="sw-cta-btn" onclick="setupWidgetContinue()">Continue setup →</button>
+  </div>
 </div>
 
 <!-- ============ GENERIC MODAL ============ -->
@@ -612,6 +624,7 @@ const PROTO_SCREENS = [
 const state = {
   currentView: 'decision-center',
   kpiEmptyDemo: false,
+  swCollapsed: true,
   setupProgress: { profile:true, meta:true, google:false, firstCampaign:false },
   pendingIntegrationNudge: false,
   pendingActions: [
@@ -1025,8 +1038,9 @@ function renderSetupWidget(){
   var allDone = done === total;
   if(allDone){ w.classList.remove('visible'); return; }
   w.classList.add('visible');
-  document.getElementById('sw-count').textContent = done+' / '+total+' complete';
-  document.getElementById('sw-bar').style.width = Math.round(done/total*100)+'%';
+  document.getElementById('sw-count').textContent = done+' / '+total;
+  var bar = document.getElementById('sw-bar');
+  if(bar) bar.style.width = Math.round(done/total*100)+'%';
   var html = SETUP_ITEMS.map(function(i){
     var isDone = state.setupProgress[i.key];
     return '<div class="sw-item'+(isDone?' done':'')+'">'+
@@ -1034,10 +1048,25 @@ function renderSetupWidget(){
       '<span class="sw-label">'+i.label+'</span>'+
     '</div>';
   }).join('');
-  document.getElementById('sw-items').innerHTML = html;
+  var items = document.getElementById('sw-items');
+  if(items) items.innerHTML = html;
   var next = SETUP_ITEMS.find(function(i){ return !state.setupProgress[i.key]; });
-  document.getElementById('sw-cta-btn').textContent = next ? 'Continue setup →' : 'View setup →';
+  var ctaBtn = document.getElementById('sw-cta-btn');
+  if(ctaBtn) ctaBtn.textContent = next ? 'Continue setup →' : 'View setup →';
   w._nextView = next ? next.view : 'knowledge-base';
+  // Respect collapsed state
+  var btn = document.getElementById('sw-toggle-btn');
+  if(state.swCollapsed){
+    w.classList.add('sw-collapsed');
+    if(btn) btn.textContent = '▴';
+  } else {
+    w.classList.remove('sw-collapsed');
+    if(btn) btn.textContent = '▾';
+  }
+}
+function toggleSetupWidget(){
+  state.swCollapsed = !state.swCollapsed;
+  renderSetupWidget();
 }
 function setupWidgetContinue(){
   var w = document.getElementById('setup-widget');
