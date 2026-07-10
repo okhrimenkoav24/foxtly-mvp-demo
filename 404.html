@@ -670,6 +670,7 @@ const state = {
   launchWizard: {
     step: 1,
     platform: 'meta',
+    prefilled: false,
     aiGenerating: false,
     aiGenDone: false,
     selectedCreatives: [0,1,2],
@@ -1274,7 +1275,7 @@ function renderKbResearch(){
 
     <!-- CTA -->
     <div style="display:flex; justify-content:center; padding-bottom:16px;">
-      <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="navigateTo('campaign-launch')">Launch Campaign based on this →</button>
+      <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="state.launchWizard.prefilled=true; navigateTo('campaign-launch')">Launch Campaign based on this →</button>
     </div>
   `;
 }
@@ -1282,42 +1283,83 @@ function renderKbResearch(){
 function renderKbStrategy(){
   return `
     <div class="section-head">
-      <div><h2>Your AI Marketing Strategy</h2><p>Generated Jun 5, 2026 · based on your business profile and market research</p></div>
-      <div class="flex gap-8"><button class="btn" onclick="showToast('Refreshing strategy report…')">Refresh</button><button class="btn" onclick="showToast('Generating PDF…')">Download PDF</button></div>
-    </div>
-    <div class="card mb-16">
-      <h2 class="mb-8">1. Market & Niche Analysis</h2>
-      <p class="small muted" style="line-height:1.7;">Demand for plumbing services in Toronto, ON is strong and growing (~12,000 monthly searches, +8% YoY), with seasonal peaks in spring (burst pipes, renovations) and winter (frozen/burst pipes, emergency calls). Your 15-mile service radius covers a dense residential population with high homeownership rates — a strong fit for "free estimate" and routine-service offers.</p>
-    </div>
-    <div class="card mb-16">
-      <h2 class="mb-12">2. Competitor Analysis</h2>
-      <table>
-        <thead><tr><th>Competitor</th><th>Channels</th><th>Positioning</th></tr></thead>
-        <tbody>
-          <tr><td>Rotorooter Toronto</td><td>Meta + Google</td><td>24/7 emergency, premium pricing</td></tr>
-          <tr><td>Mr. Plumber</td><td>Meta</td><td>Residential repairs, financing offers</td></tr>
-          <tr><td>Toronto Pro Plumbing</td><td>Google</td><td>Renovations, water heaters</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="card mb-16" style="border-color:var(--orange);">
-      <div class="badge orange mb-8">Recommended channel</div>
-      <h2 class="mb-8">3. We recommend starting with Meta Ads</h2>
-      <p class="small muted" style="line-height:1.7;">Lower cost per lead for residential services in your area, and faster to launch while your Google Ads account verification completes. Once Google Ads is available, we'll expand your reach there too.</p>
-    </div>
-    <div class="grid-2 mb-16">
-      <div class="card">
-        <h2 class="mb-8">4. Expected Cost per Lead</h2>
-        <div class="kpi-value mb-8">$18 – $28</div>
-        <p class="small muted">Estimates based on market data; actual results may vary and will be refined after your first campaigns run.</p>
-      </div>
-      <div class="card">
-        <h2 class="mb-8">5. Recommended Strategy Summary</h2>
-        <p class="small muted" style="line-height:1.7;">Based on your goals (more leads, $1,000/month budget), we recommend launching a Meta Ads campaign focused on "Free Estimate" offers targeting homeowners within 15 miles of Toronto, with Google Ads added once your account is verified.</p>
+      <div><h2>AI Marketing Strategy</h2><p style="color:var(--text-secondary); font-size:13px;">Generated Jun 5, 2026 · based on your business profile and market research</p></div>
+      <div class="flex gap-8">
+        <button class="btn small" onclick="showToast('Refreshing strategy…')">↻ Refresh</button>
+        <button class="btn small" onclick="showToast('Generating PDF…')">↓ PDF</button>
       </div>
     </div>
-    <div style="text-align:center;">
-      <button class="btn primary" style="padding:12px 28px;" onclick="navigateTo('campaign-launch')">Looks good — let's set up your campaign</button>
+
+    <!-- Position summary -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">📍 Your Position</div>
+    <div class="grid-2 mb-20">
+      <div class="card">
+        <div class="small muted mb-8">Market demand</div>
+        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">Strong</div>
+        <div class="kpi-delta up" style="margin-bottom:8px;">↑ 8% YoY · ~12,000 searches/month</div>
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">Seasonal peaks in spring (renovations) and winter (frozen pipes). Your service radius covers dense residential homeownership.</div>
+      </div>
+      <div class="card">
+        <div class="small muted mb-8">Competitive density</div>
+        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">Moderate</div>
+        <div style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:10px;">3 active competitors all focused on emergency keywords. Routine-service segment is under-served — your "Free Estimate" offer fits this gap.</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="badge blue">Meta gap</span><span class="badge green">Google gap</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Channel recommendation -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">📢 Recommended Channel</div>
+    <div class="card mb-20" style="border-color:var(--orange); background:var(--orange-dim);">
+      <div style="display:flex; align-items:flex-start; gap:16px;">
+        <div style="font-size:36px; flex-shrink:0;">📘</div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:15px; font-weight:700;">Start with Meta Ads</span>
+            <span class="badge orange" style="font-size:10px;">AI pick</span>
+          </div>
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:12px;">Home services under $1K/month convert 3× better on Meta than Google. Faster to launch — Google Ads verification takes 3–5 days. Once Google is active, we expand there for high-intent "emergency plumber" searches.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Expected CPL</div>
+              <div style="font-weight:700; font-size:16px;">$18 – $28</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Est. leads / mo ($1K)</div>
+              <div style="font-weight:700; font-size:16px;">36 – 55</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 90-day plan -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🗓 90-Day Action Plan</div>
+    <div class="card mb-20">
+      ${[
+        { phase:'Week 1–2',  color:'var(--orange)',  title:'Launch Meta Ads', desc:'Free Estimate campaign targeting homeowners 25–65, 15 mi radius. AI generates creatives and copy.' },
+        { phase:'Week 3–4',  color:'var(--blue)',    title:'Optimize & learn', desc:'AI reviews first 100 leads, adjusts targeting and ad creative based on what\'s converting.' },
+        { phase:'Month 2',   color:'var(--green)',   title:'Add Google Search', desc:'Launch "emergency plumber" keywords as your Google account activates. Multi-channel reach.' },
+        { phase:'Month 3',   color:'var(--purple, var(--orange))', title:'Scale what works', desc:'Increase budget on top-performing ad sets. AI proposes a new service offer based on lead data.' },
+      ].map((s,i,a)=>`
+        <div style="display:flex; gap:14px; padding-bottom:${i<a.length-1?'20px':'0'};">
+          <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+            <div style="width:32px; height:32px; border-radius:50%; background:${s.color}22; border:2px solid ${s.color}; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:${s.color};">${i+1}</div>
+            ${i<a.length-1?`<div style="width:2px; flex:1; background:var(--border-light); margin:4px 0;"></div>`:''}
+          </div>
+          <div style="padding-top:4px;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">${s.phase}</div>
+            <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${s.title}</div>
+            <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">${s.desc}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- CTA -->
+    <div style="display:flex; justify-content:center; padding-bottom:16px;">
+      <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="state.launchWizard.prefilled=true; navigateTo('campaign-launch')">Launch your first campaign →</button>
     </div>
   `;
 }
@@ -1611,7 +1653,50 @@ const AI_CREATIVES = [
   { id:'vid1', type:'video', format:'Feed · video', aspect:'1:1',  gradient:'linear-gradient(135deg,#1e1e28,#2e2e3a)',         tag:'Video · 8s' },
 ];
 
+function renderCampaignBlurScreen(){
+  return `
+    <div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>
+    <div style="position:relative; max-width:640px; margin:0 auto;">
+
+      <!-- Blurred wizard preview -->
+      <div style="filter:blur(6px); pointer-events:none; user-select:none; opacity:0.45;">
+        <div style="height:12px; background:var(--card-bg-2); border-radius:6px; margin-bottom:10px; width:100%;"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+          <div style="height:160px; background:var(--card-bg-2); border-radius:14px;"></div>
+          <div style="height:160px; background:var(--card-bg-2); border-radius:14px;"></div>
+        </div>
+        <div style="height:80px; background:var(--card-bg-2); border-radius:14px; margin-bottom:14px;"></div>
+        <div style="height:80px; background:var(--card-bg-2); border-radius:14px; margin-bottom:14px;"></div>
+        <div style="height:120px; background:var(--card-bg-2); border-radius:14px;"></div>
+      </div>
+
+      <!-- Lock overlay -->
+      <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+        <div style="background:var(--card-bg-3); border:1px solid var(--border-light); border-radius:20px; padding:36px 32px; text-align:center; max-width:360px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <div style="font-size:42px; margin-bottom:16px;">🔌</div>
+          <div style="font-size:18px; font-weight:700; margin-bottom:10px;">Connect an ad account first</div>
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:24px;">To launch campaigns, Foxtly needs access to your Meta or Google Ads account. Connect once — AI handles the rest.</p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button class="btn primary" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="navigateTo('integrations')">
+              <span style="font-size:16px;">📘</span> Connect Meta Ads
+            </button>
+            <button class="btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="navigateTo('integrations')">
+              <span style="font-size:16px;">🔍</span> Connect Google Ads
+            </button>
+          </div>
+          <div style="margin-top:16px; font-size:12px; color:var(--text-muted);">You can disconnect anytime in Settings</div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
 VIEWS['campaign-launch'] = function(){
+  const metaOk = state.integrations.meta.status === 'connected';
+  const googleOk = state.integrations.google.status === 'connected';
+  if(!metaOk && !googleOk){ return renderCampaignBlurScreen(); }
+
   const w = state.launchWizard;
   const isGoogle = w.platform === 'google';
   const metaLabels  = ['Platform','FB Page','Goal','Audience','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done'];
@@ -1661,7 +1746,16 @@ VIEWS['campaign-launch'] = function(){
 // ---- SHARED: Step 1 Platform ----
 function renderLaunchStep1(){
   const w = state.launchWizard;
-  return '<div class="ai-bubble mb-20">' +
+  const prefilledBanner = w.prefilled ?
+    '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 16px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">' +
+    '<span style="font-size:18px; flex-shrink:0; margin-top:1px;">✦</span>' +
+    '<div>' +
+    '<div style="font-weight:700; font-size:13px; color:var(--orange); margin-bottom:6px;">Campaign pre-filled from your research</div>' +
+    '<div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">Platform: <strong>Meta Ads</strong> · Goal: <strong>Lead Generation</strong> · Location: <strong>Toronto, ON · 15 mi</strong> · Budget: <strong>$1,000/month</strong> · Offer: <strong>Free Estimate</strong></div>' +
+    '</div>' +
+    '</div>' : '';
+  return prefilledBanner +
+    '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
     '<div class="msg">Based on your profile <strong>(local plumbing, Toronto, lead gen)</strong>, Meta Ads will get you leads faster — home services convert 3× better on Facebook under $1K/month. Google is great for high-intent searches like "emergency plumber near me". Both platforms are ready to go.</div>' +
     '</div>' +
@@ -2489,7 +2583,7 @@ function renderGoogleStep9(){
 // ---- Wizard helpers ----
 function resetLaunchWizard(){
   state.launchWizard = {
-    step:1, platform:'meta', aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2],
+    step:1, platform:'meta', prefilled:false, aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2],
     gCampaignType:'search',
     gKeywords:['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
     gMatchTypes:['exact','phrase','broad','broad'],
@@ -4548,6 +4642,13 @@ function renderTourStep(){
 .ob-final .emoji{ font-size:44px; margin-bottom:16px; }
 .ob-final h1{ margin-bottom:12px; }
 .ob-final p{ color:var(--text-secondary); font-size:14px; margin-bottom:28px; max-width:440px; margin-left:auto; margin-right:auto; line-height:1.6; }
+@keyframes ob-mark-spin{ 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
+@keyframes ob-step-in{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes ob-pulse-ring{ 0%,100%{ transform:scale(1); opacity:0.8; } 50%{ transform:scale(1.12); opacity:1; } }
+.ob-build-step{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:10px; background:var(--card-bg-2); border:1px solid var(--border-light); opacity:0; animation:ob-step-in .4s ease forwards; }
+.ob-build-step.done .ob-step-icon{ color:var(--green); }
+.ob-build-step .ob-step-text{ font-size:14px; color:var(--text-secondary); flex:1; }
+.ob-build-step.done .ob-step-text{ color:var(--text); }
 .competitor-row{ display:flex; gap:8px; margin-bottom:8px; }
 .competitor-row input{ flex:1; }
 
@@ -5072,15 +5173,61 @@ function onboardingSkip(){
 }
 function renderObFinal(){
   const ob = state.onboarding;
+  const steps = [
+    { icon:'📍', text:'Analyzing your local market in '+( ob.location||'your area')+'…',       delay:'0.1s',  doneDelay:'0.9s'  },
+    { icon:'🏁', text:'Scanning competitors and their ad strategies…',                          delay:'0.7s',  doneDelay:'1.8s'  },
+    { icon:'📊', text:'Building your personalized marketing strategy…',                         delay:'1.4s',  doneDelay:'2.7s'  },
+    { icon:'✦',  text:'Generating campaign recommendations and forecasts…',                     delay:'2.1s',  doneDelay:'3.6s'  },
+  ];
   return `
   <div class="mkt">
-    <div class="ob-shell ob-final">
-      <div class="emoji">🎉</div>
-      <h1>Thanks, ${ob.businessName || 'there'}!</h1>
-      <p>I'm putting this together with market research to build your strategy. This usually takes a few minutes — I'll let you know in the Dashboard as soon as it's ready.</p>
-      <button class="btn primary" onclick="finishOnboarding()">Go to Dashboard</button>
+    <div class="ob-shell ob-final" style="padding-top:48px;">
+      <div style="display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; border-radius:18px; background:var(--orange-dim); margin-bottom:20px; animation:ob-pulse-ring 2s ease-in-out infinite;">
+        <span style="font-size:28px; color:var(--orange);">✦</span>
+      </div>
+      <h1 style="font-size:22px; margin-bottom:8px;">Building your strategy, ${ob.businessName ? ob.businessName.split(' ')[0] : 'there'}…</h1>
+      <p style="margin-bottom:28px; font-size:13px;">I'm analyzing your market and preparing everything. This takes about 10 seconds.</p>
+
+      <div style="display:flex; flex-direction:column; gap:10px; text-align:left; margin-bottom:32px;">
+        ${steps.map(s=>`
+          <div class="ob-build-step" style="animation-delay:${s.delay};" id="obs-${s.delay.replace('.','_')}">
+            <span class="ob-step-icon" style="font-size:18px; flex-shrink:0; transition:color .3s;">${s.icon}</span>
+            <span class="ob-step-text">${s.text}</span>
+            <span class="ob-step-check" style="font-size:14px; color:var(--green); opacity:0; transition:opacity .3s;">✓</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div id="ob-final-cta" style="opacity:0; transition:opacity .5s;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--green-dim, var(--card-bg-2)); border:1px solid var(--green); border-radius:10px; padding:12px 16px; margin-bottom:24px;">
+          <span style="color:var(--green); font-size:16px;">✅</span>
+          <span style="font-size:14px; font-weight:600; color:var(--green);">Your strategy is ready!</span>
+        </div>
+        <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="finishOnboarding()">Go to Dashboard →</button>
+      </div>
     </div>
   </div>
+  <script>
+  (function(){
+    var delays = [${steps.map(s=>parseFloat(s.doneDelay)*1000).join(',')}];
+    var steps = document.querySelectorAll('.ob-build-step');
+    delays.forEach(function(d,i){
+      setTimeout(function(){
+        if(steps[i]){
+          steps[i].classList.add('done');
+          var chk = steps[i].querySelector('.ob-step-check');
+          if(chk) chk.style.opacity='1';
+        }
+        if(i===delays.length-1){
+          setTimeout(function(){
+            var cta = document.getElementById('ob-final-cta');
+            if(cta) cta.style.opacity='1';
+          }, 600);
+        }
+      }, d);
+    });
+  })();
+  <\/script>
   `;
 }
 function finishOnboarding(){
