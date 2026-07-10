@@ -1184,31 +1184,97 @@ function refreshStrategy(){
 
 function renderKbResearch(){
   return `
-    <div class="section-head"><div><h2>Your market at a glance</h2><p>Based on local search data, Meta Ad Library, and your business profile.</p></div></div>
-    <div class="grid-2 mb-16">
+    <div class="section-head">
+      <div><h2>Market Research</h2><p style="color:var(--text-secondary); font-size:13px;">Based on local search data, Meta Ad Library, and your business profile · Updated Jun 5, 2026</p></div>
+      <button class="btn small" onclick="showToast('Refreshing market research…')">↻ Refresh</button>
+    </div>
+
+    <!-- Section 1: Demand -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">📈 Local Demand</div>
+    <div class="grid-2 mb-20">
       <div class="card">
-        <div class="small muted mb-8">📈 Local demand</div>
-        <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Plumbing searches in Toronto, ON</div>
-        <div class="kpi-value mb-4">~12,000<span class="small muted" style="font-weight:400;">/month</span></div>
-        <div class="kpi-delta up">↑ 8% YoY</div>
+        <div class="small muted mb-8">Plumbing searches · Toronto, ON</div>
+        <div style="font-size:32px; font-weight:800; letter-spacing:-1px; margin-bottom:4px;">~12,000</div>
+        <div class="small muted">searches / month</div>
+        <div class="kpi-delta up" style="margin-top:8px;">↑ 8% year-over-year</div>
       </div>
       <div class="card">
-        <div class="small muted mb-8">💡 Your opportunity</div>
-        <p class="small" style="line-height:1.6;">Most competitors focus on "emergency plumbing" — your "free estimate" offer could stand out for routine service searches, where there's less ad competition and lower expected cost per click.</p>
+        <div class="small muted mb-10">Top search terms in your area</div>
+        ${[
+          {kw:'plumber toronto',      vol:'3,400', cpc:'$6.20', hot:true},
+          {kw:'emergency plumber',    vol:'2,100', cpc:'$9.80', hot:false},
+          {kw:'drain cleaning toronto',vol:'1,600', cpc:'$4.10', hot:false},
+          {kw:'free estimate plumber', vol:'890',  cpc:'$3.50', hot:true},
+        ].map(k=>`
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-light); font-size:13px;">
+            <span>${k.hot ? '<span style="color:var(--orange);">🔥</span> ' : ''}${k.kw}</span>
+            <div style="display:flex; gap:12px; color:var(--text-muted); font-size:12px; flex-shrink:0;">
+              <span>${k.vol}/mo</span><span>${k.cpc} CPC</span>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
-    <div class="card">
-      <div class="small muted mb-12">🏁 Top competitors</div>
-      <div class="table-card" style="border:none; padding:0;">
-        <table>
-          <thead><tr><th>Competitor</th><th>Offering</th><th>Est. ad activity</th><th>Platforms</th></tr></thead>
-          <tbody>
-            <tr><td><strong>Rotorooter Toronto</strong><br><span class="small muted">rotorooter-toronto.ca</span></td><td>24/7 emergency plumbing & drain</td><td>High</td><td><span class="badge blue">Active on Meta</span> <span class="badge green">Active on Google</span></td></tr>
-            <tr><td><strong>Mr. Plumber</strong><br><span class="small muted">mrplumber.ca</span></td><td>Residential repairs, financing offers</td><td>Medium</td><td><span class="badge blue">Active on Meta</span></td></tr>
-            <tr><td><strong>Toronto Pro Plumbing</strong><br><span class="small muted">torontoproplumbing.com</span></td><td>Renovations, water heaters</td><td>Low</td><td><span class="badge green">Active on Google</span></td></tr>
-          </tbody>
-        </table>
+
+    <!-- Section 2: Competitors -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🏁 Competitor Landscape</div>
+    <div class="card mb-20">
+      <table>
+        <thead><tr><th>Competitor</th><th>Positioning</th><th>Ad activity</th><th>Platforms</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Rotorooter Toronto</strong><br><span class="small muted">rotorooter-toronto.ca</span></td>
+            <td style="font-size:13px;">24/7 emergency plumbing & drain</td>
+            <td><span class="badge orange">High</span></td>
+            <td><span class="badge blue">Meta</span> <span class="badge green">Google</span></td>
+          </tr>
+          <tr>
+            <td><strong>Mr. Plumber</strong><br><span class="small muted">mrplumber.ca</span></td>
+            <td style="font-size:13px;">Residential repairs, financing</td>
+            <td><span class="badge" style="background:rgba(255,255,255,0.07); color:var(--text-muted);">Medium</span></td>
+            <td><span class="badge blue">Meta</span></td>
+          </tr>
+          <tr>
+            <td><strong>Toronto Pro Plumbing</strong><br><span class="small muted">torontoproplumbing.com</span></td>
+            <td style="font-size:13px;">Renovations, water heaters</td>
+            <td><span class="badge" style="background:rgba(255,255,255,0.07); color:var(--text-muted);">Low</span></td>
+            <td><span class="badge green">Google</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 3: Opportunity -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">💡 Your Opportunity</div>
+    <div class="card mb-20" style="border-color:var(--orange); background:var(--orange-dim);">
+      <div style="font-size:14px; font-weight:700; color:var(--orange); margin-bottom:8px;">Gap identified: routine service searches</div>
+      <p style="font-size:13px; line-height:1.65; color:var(--text-secondary);">All three competitors are bidding heavily on "emergency plumbing" keywords — where CPCs run $8–$12. The "free estimate" and drain-cleaning segments have significantly lower competition and a $3–$5 CPC range. Starting there gives you more leads per dollar while you build your ad history.</p>
+    </div>
+
+    <!-- Section 4: Forecast -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🎯 Estimated Results · $1,000 / month budget</div>
+    <div class="grid-3 mb-20" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Cost per Lead</div>
+        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">$18–28</div>
+        <div style="font-size:12px; color:var(--text-muted);">based on local CPCs</div>
       </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Leads / month</div>
+        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">36–55</div>
+        <div style="font-size:12px; color:var(--text-muted);">phone calls & form fills</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Revenue / month</div>
+        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; color:var(--orange);">$5–9K</div>
+        <div style="font-size:12px; color:var(--text-muted);">at ~25% close rate, $600 avg job</div>
+      </div>
+    </div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:-12px; margin-bottom:24px; line-height:1.5;">Estimates based on Toronto market data. Actual results vary and will be refined after your first campaigns run.</div>
+
+    <!-- CTA -->
+    <div style="display:flex; justify-content:center; padding-bottom:16px;">
+      <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="navigateTo('campaign-launch')">Launch Campaign based on this →</button>
     </div>
   `;
 }
@@ -4506,6 +4572,11 @@ state.onboarding = {
   targetCpl: '',
   budget: '500-1000',
   budgetFlexible: true,
+  serviceRadius: '20 km',
+  priceMin: '',
+  priceMax: '',
+  margin: '',
+  financialGoal: '',
   competitors: [],
   brandNote: '',
   logoUploaded: false,
@@ -4825,24 +4896,25 @@ function renderObStep(step){
   if(step===2){
     return `
       <h1>Where do you operate?</h1>
-      <p class="ob-sub">We'll use this to research your local market and competitors.</p>
+      <p class="ob-sub">We'll use this to research your local market and target the right audience.</p>
       <div class="ob-block field">
-        <label class="field-label">Where is your business located?</label>
-        <input id="ob-location" type="text" placeholder="City, State / Province" value="${ob.location}">
+        <label class="field-label">What city is your business based in?</label>
+        <input id="ob-location" type="text" placeholder="e.g. Toronto, ON" value="${ob.location}">
       </div>
       <div class="ob-block field">
-        <label class="field-label">What's your service area?</label>
-        <select id="ob-serviceArea" onchange="state.onboarding.serviceArea=this.value">
-          ${['This city only','Metro area','Multiple cities/regions','Statewide'].map(o=>`<option ${ob.serviceArea===o?'selected':''}>${o}</option>`).join('')}
-        </select>
+        <label class="field-label">How far do you serve customers from your location?</label>
+        <div class="chip-group" style="flex-wrap:wrap;">
+          ${['5 km','10 km','20 km','40 km','60 km+'].map(r=>`<span class="chip ${(ob.serviceRadius||'20 km')===r?'selected':''}" onclick="state.onboarding.serviceRadius='${r}'; navigateAuth('onboarding')">${r}</span>`).join('')}
+        </div>
+        <div class="small muted mt-8" style="line-height:1.5;">Selecting the right radius helps us target the right audience and estimate your local competition.</div>
       </div>
     `;
   }
   if(step===3){
     const opts = SERVICE_OPTIONS[ob.industry] || SERVICE_OPTIONS.Other;
     return `
-      <h1>Services &amp; offers</h1>
-      <p class="ob-sub">Optional, but helps AI tailor your campaigns.</p>
+      <h1>Services &amp; pricing</h1>
+      <p class="ob-sub">Helps AI build the right strategy and estimate your ROI.</p>
       <div class="ob-block">
         <label class="field-label">What services do you offer?</label>
         <div class="chip-group">
@@ -4850,22 +4922,40 @@ function renderObStep(step){
         </div>
       </div>
       <div class="ob-block field">
-        <label class="field-label">Do you have a special offer for new customers?</label>
-        <input id="ob-offer" type="text" placeholder="e.g. Free estimate, $50 off first service, Same-day service" value="${ob.offer}">
+        <label class="field-label">What's your average service price? <span class="muted">(optional)</span></label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="ob-priceMin" type="number" placeholder="From" style="width:90px;" value="${ob.priceMin||''}">
+          <span class="muted">–</span>
+          <input id="ob-priceMax" type="number" placeholder="To" style="width:90px;" value="${ob.priceMax||''}">
+          <span class="muted small">$</span>
+        </div>
+        <div class="small muted mt-6">We use this to estimate ROI and recommend the right ad budget.</div>
+      </div>
+      <div class="ob-block field">
+        <label class="field-label">What's your approximate margin? <span class="muted">(optional)</span></label>
+        <div class="chip-group">
+          ${['<20%','20–35%','35–50%','50%+'].map(m=>`<span class="chip ${(ob.margin||'')===m?'selected':''}" onclick="state.onboarding.margin='${m}'; navigateAuth('onboarding')">${m}</span>`).join('')}
+        </div>
+      </div>
+      <div class="ob-block field">
+        <label class="field-label">Do you have a special offer for new customers? <span class="muted">(optional)</span></label>
+        <input id="ob-offer" type="text" placeholder="e.g. Free estimate, $50 off first service, Same-day guarantee" value="${ob.offer}">
       </div>
     `;
   }
   if(step===4){
     const goals = [
-      {id:'leads', icon:'📈', label:'Get more leads / calls'},
-      {id:'fill_schedule', icon:'📅', label:'Fill my schedule for next week'},
-      {id:'new_service', icon:'🛠️', label:'Grow a new service line'},
-      {id:'lead_quality', icon:'🎯', label:'Improve lead quality'},
+      {id:'leads',          icon:'📈', label:'Get more leads & calls'},
+      {id:'sales',          icon:'💰', label:'Grow revenue / sales'},
+      {id:'start_growing',  icon:'🚀', label:'Start growing from scratch'},
+      {id:'fill_schedule',  icon:'📅', label:'Fill my schedule'},
+      {id:'new_service',    icon:'🛠️', label:'Launch a new service'},
+      {id:'lead_quality',   icon:'🎯', label:'Improve lead quality'},
     ];
     return `
       <h1>What's your main goal right now?</h1>
-      <p class="ob-sub">We'll prioritize your strategy around this.</p>
-      <div class="ob-block choice-grid">
+      <p class="ob-sub">We'll build your strategy around this.</p>
+      <div class="ob-block choice-grid" style="grid-template-columns:repeat(2,1fr);">
         ${goals.map(g=>`
           <div class="choice-card ${ob.goal===g.id?'selected':''}" onclick="state.onboarding.goal='${g.id}'; navigateAuth('onboarding')">
             <div class="ico">${g.icon}</div>
@@ -4874,8 +4964,8 @@ function renderObStep(step){
         `).join('')}
       </div>
       <div class="ob-block field">
-        <label class="field-label">Do you have a target Cost per Lead in mind? <span class="muted">(optional)</span></label>
-        <input id="ob-targetCpl" type="number" placeholder="Not sure? AI will recommend one based on your market." value="${ob.targetCpl}">
+        <label class="field-label">What result would you like in 3–6 months? <span class="muted">(optional)</span></label>
+        <textarea id="ob-financialGoal" rows="2" placeholder="e.g. I want to reach $20k/month revenue or get 30 new clients per month" style="resize:none;">${ob.financialGoal||''}</textarea>
       </div>
     `;
   }
@@ -4900,17 +4990,18 @@ function renderObStep(step){
   }
   if(step===6){
     return `
-      <h1>Any competitors we should look at?</h1>
-      <p class="ob-sub">Optional — not sure? Skip and AI will find your top local competitors automatically.</p>
+      <h1>Any competitors we should know about?</h1>
+      <p class="ob-sub">Optional — AI will also find top competitors automatically based on your location and niche.</p>
       <div class="ob-block">
+        <label class="field-label" style="margin-bottom:10px;">Competitor website <span class="muted">(up to 5)</span></label>
         ${ob.competitors.map((c,i)=>`
-          <div class="competitor-row">
-            <input placeholder="Business name" value="${c.name}" onchange="state.onboarding.competitors[${i}].name=this.value">
-            <input placeholder="Website or social link" value="${c.url}" onchange="state.onboarding.competitors[${i}].url=this.value">
+          <div class="competitor-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+            <input placeholder="https://competitorsite.com" value="${c.url}" onchange="state.onboarding.competitors[${i}].url=this.value" style="flex:1;">
             <button class="btn small" onclick="removeCompetitor(${i})">✕</button>
           </div>
         `).join('')}
-        ${ob.competitors.length < 5 ? `<button class="btn small mt-8" onclick="addCompetitor()">+ Add competitor</button>` : ''}
+        ${ob.competitors.length < 5 ? `<button class="btn small mt-4" onclick="addCompetitor()">+ Add another</button>` : ''}
+        <div class="small muted mt-10" style="line-height:1.5;">We'll analyze their ads, offers, and positioning to find gaps you can win.</div>
       </div>
     `;
   }
@@ -4923,12 +5014,6 @@ function renderObStep(step){
         ${ob.logoUploaded
           ? `<div class="card tight small">✅ logo-mikesplumbing.png uploaded</div>`
           : `<button class="btn small" onclick="state.onboarding.logoUploaded=true; navigateAuth('onboarding')">Upload logo</button>`}
-      </div>
-      <div class="ob-block">
-        <label class="field-label">Do you have any photos or videos of your work?</label>
-        ${ob.photosUploaded>0
-          ? `<div class="card tight small">✅ ${ob.photosUploaded} file(s) uploaded</div>`
-          : `<button class="btn small" onclick="state.onboarding.photosUploaded=3; navigateAuth('onboarding')">Upload photos</button>`}
       </div>
       <div class="ob-block field">
         <label class="field-label">Anything else AI should know about your business?</label>
@@ -4958,7 +5043,8 @@ function syncObFields(){
   const map = {
     'ob-businessName':'businessName', 'ob-industryOther':'industryOther', 'ob-teamSize':'teamSize',
     'ob-location':'location', 'ob-serviceArea':'serviceArea', 'ob-offer':'offer',
-    'ob-targetCpl':'targetCpl', 'ob-brandNote':'brandNote',
+    'ob-priceMin':'priceMin', 'ob-priceMax':'priceMax', 'ob-financialGoal':'financialGoal',
+    'ob-brandNote':'brandNote',
   };
   Object.entries(map).forEach(([id,key])=>{
     const el = document.getElementById(id);
