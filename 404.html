@@ -371,10 +371,10 @@
   #tour-tooltip .tt-step{ font-size:11px; color:var(--text-muted); }
   #tour-modal{ position:fixed; inset:0; z-index:401; display:none; align-items:center; justify-content:center; background:rgba(4,4,8,0.75); pointer-events:auto; }
   #tour-modal.open{ display:flex; }
-  #tour-modal .box{ background:var(--card-bg); border:1px solid var(--border-light); border-radius:14px; padding:28px; max-width:420px; text-align:center; }
-  #tour-modal .box .emoji{ font-size:36px; margin-bottom:12px; }
-  #tour-modal .box h3{ font-size:18px; margin-bottom:10px; }
-  #tour-modal .box p{ font-size:13.5px; color:var(--text-secondary); margin-bottom:20px; line-height:1.6; }
+  #tour-modal .box{ background:var(--card-bg); border:1px solid var(--border-light); border-radius:18px; padding:44px 40px; max-width:480px; text-align:center; }
+  #tour-modal .box .emoji{ font-size:52px; margin-bottom:18px; }
+  #tour-modal .box h3{ font-size:26px; font-weight:700; margin-bottom:14px; letter-spacing:-0.3px; }
+  #tour-modal .box p{ font-size:16px; color:var(--text-secondary); margin-bottom:32px; line-height:1.65; }
   #tour-modal .box .row{ display:flex; gap:10px; justify-content:center; }
 
   /* ============ PROTOTYPE NAV ============ */
@@ -522,14 +522,13 @@
     </div>
   </div>
 </div>
-<div id="tour-modal">
+<div id="tour-modal" onclick="event.stopPropagation()">
   <div class="box">
-    <div class="emoji">👋</div>
-    <h3>Hi, I'm your Foxtly AI</h3>
-    <p>I'll be managing your ads, watching your numbers, and asking for your approval before I make any changes. Let me show you around so you know where everything is.</p>
+    <div class="emoji">✦</div>
+    <h3>Your AI ad manager is ready</h3>
+    <p>I'll run your Meta and Google campaigns, monitor results 24/7, and ask for your approval before making any changes. Let me quickly show you around.</p>
     <div class="row">
-      <button class="btn" onclick="skipTour()">Skip for now</button>
-      <button class="btn primary" onclick="startTourSteps()">Show me around</button>
+      <button class="btn primary" style="padding:12px 36px; font-size:16px;" onclick="startTourSteps()">Start →</button>
     </div>
   </div>
 </div>
