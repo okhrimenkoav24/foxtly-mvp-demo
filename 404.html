@@ -676,7 +676,10 @@ const state = {
     offer: 'Free Estimate',
     schedule: 'immediate',
     startDate: '',
-    duration: 30,
+    service: '',
+    leadDestination: 'instant_form',
+    audienceDescription: '',
+    monthlyBudget: 1000,
   },
   creatives: {
     uploaded: [],
@@ -1809,8 +1812,11 @@ VIEWS['campaign-launch'] = function(){
   if(!metaOk && !googleOk){ return renderCampaignBlurScreen(); }
 
   const w = state.launchWizard;
+  const cb = state.campaignBuilder;
   const isGoogle = w.platform === 'google';
-  const metaLabels  = ['Platform','FB Page','Goal','Audience','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done'];
+  const metaLabels  = cb.goal === 'leads'
+    ? ['Platform','FB Page','Goal','Destination','Location','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done']
+    : ['Platform','FB Page','Goal','Location','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done'];
   const googleLabels = ['Platform','Type','Keywords','Budget','Headlines','Descriptions','Extensions','Preview','Done'];
   const labels = isGoogle ? googleLabels : metaLabels;
 
@@ -1838,14 +1844,15 @@ VIEWS['campaign-launch'] = function(){
   } else {
     if(w.step===2)  content = renderMetaFBPage();
     else if(w.step===3)  content = renderMetaStep2();
-    else if(w.step===4)  content = renderMetaStep3();
-    else if(w.step===5)  content = renderMetaStep4();
-    else if(w.step===6)  content = renderMetaStep5();
-    else if(w.step===7)  content = renderMetaStep6();
-    else if(w.step===8)  content = renderMetaStep7();
-    else if(w.step===9)  content = renderMetaStep8();
-    else if(w.step===10) content = renderMetaStep9();
-    else if(w.step===11) content = renderMetaStep10();
+    else if(w.step===4)  content = renderMetaLeadDestination();
+    else if(w.step===5)  content = renderMetaStep3();
+    else if(w.step===6)  content = renderMetaStep4();
+    else if(w.step===7)  content = renderMetaStep5();
+    else if(w.step===8)  content = renderMetaStep6();
+    else if(w.step===9)  content = renderMetaStep7();
+    else if(w.step===10) content = renderMetaStep8();
+    else if(w.step===11) content = renderMetaStep9();
+    else if(w.step===12) content = renderMetaStep10();
   }
 
   const isWide = isGoogle && (w.step===5 || w.step===6);
@@ -1940,14 +1947,23 @@ function renderMetaFBPage(){
 function renderMetaStep2(){
   const cb = state.campaignBuilder;
   const goals = [
-    { val:'leads',     icon:'📋', label:'Lead Generation',  desc:'Collect contact info from interested customers. Optimized for form fills and DMs.' },
-    { val:'calls',     icon:'📞', label:'Phone Calls',       desc:'Drive direct calls to your business. Highest buyer intent.' },
-    { val:'traffic',   icon:'🌐', label:'Website Traffic',   desc:'Send people to your website to browse and learn more.' },
-    { val:'awareness', icon:'📣', label:'Brand Awareness',   desc:'Maximize reach. Lower cost per impression, less direct response.' },
+    { val:'leads',     icon:'📋', label:'Lead Generation',  desc:'Collect contact info via forms and messages. AI pick for local services.' },
+    { val:'sales',     icon:'💰', label:'Sales',             desc:'Drive purchases or bookings. Optimized for high-intent conversions.' },
+    { val:'awareness', icon:'📣', label:'Brand Awareness',   desc:'Maximize reach and visibility. Lower cost-per-impression, wider audience.' },
   ];
+  const serviceOptions = ['Plumbing Repair','Emergency Plumbing','Water Heater Installation','Drain Cleaning','Pipe Repair'];
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
     '<div class="msg"><strong>Recommendation: Lead Generation.</strong> Your goal is customers contacting you about plumbing work. Lead Gen campaigns optimize exactly for form fills and messages — that\'s how you get real inquiries, not just ad views.</div>' +
+    '</div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Which service are you promoting? <span style="color:var(--red);">*</span></label>' +
+    '<select onchange="state.campaignBuilder.service=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:11px 14px; color:var(--text); font-size:14px; cursor:pointer;">' +
+    '<option value="">— Select a service —</option>' +
+    serviceOptions.map(function(s){ return '<option value="'+s+'"'+(cb.service===s?' selected':'')+'>'+s+'</option>'; }).join('') +
+    '<option value="other"'+(cb.service==='other'?' selected':'')+'>Other (custom)</option>' +
+    '</select>' +
+    (cb.service==='other' ? '<input type="text" placeholder="Enter your service…" onchange="state.campaignBuilder.service=this.value" style="width:100%; margin-top:10px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '') +
     '</div>' +
     '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">' +
     goals.map(function(g){
@@ -1967,7 +1983,40 @@ function renderMetaStep2(){
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(4)">Continue →</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(state.campaignBuilder.goal===\'leads\'?4:5)">Continue →</button>' +
+    '</div>';
+}
+
+function renderMetaLeadDestination(){
+  const cb = state.campaignBuilder;
+  const destinations = [
+    { val:'instant_form', icon:'📋', label:'Instant Form (Facebook)', desc:'Native Facebook lead form — pre-filled with user data. Highest completion rate. No landing page needed.', isAI: true },
+    { val:'instagram_dm', icon:'📸', label:'Instagram Direct', desc:'Leads message you on Instagram. Great for visual services and younger audiences.' },
+    { val:'messenger',    icon:'💬', label:'Messenger', desc:'Leads start a conversation in Messenger. Works well for quote requests and Q&A.' },
+    { val:'website',      icon:'🌐', label:'Website (landing page form)', desc:'Send users to your website form. Requires a working landing page.' },
+  ];
+  return '<div class="ai-bubble mb-20">' +
+    '<div class="av">✦</div>' +
+    '<div class="msg"><strong>Instant Form is our default recommendation</strong> for lead generation. Facebook pre-fills the form with the user\'s name, email, and phone — so leads come in with zero friction. No landing page needed.</div>' +
+    '</div>' +
+    '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">' +
+    destinations.map(function(d){
+      const sel = cb.leadDestination === d.val;
+      return '<div onclick="state.campaignBuilder.leadDestination=\''+d.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px;">' +
+        '<div style="font-size:26px; flex-shrink:0;">'+d.icon+'</div>' +
+        '<div style="flex:1; min-width:0;">' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+d.label+(d.isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span>':'')+'</div>' +
+        '<div class="small muted">'+d.desc+'</div>' +
+        '</div>' +
+        '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+        (sel?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'') +
+        '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
     '</div>';
 }
 
@@ -2046,57 +2095,80 @@ function renderMetaStep3(){
     '<div><div class="small muted mb-4">Max age</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMax+'</div></div>' +
     '</div></div>' +
 
+    // Audience description
+    '<div style="margin-top:22px;">' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Describe your target audience <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-muted);">(optional)</span></label>' +
+    '<textarea placeholder="e.g. Homeowners worried about old pipes, families with children…" onchange="state.campaignBuilder.audienceDescription=this.value" rows="2" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px; resize:vertical; font-family:inherit;">'+cb.audienceDescription+'</textarea>' +
+    '<div class="small muted mt-6">AI uses this to refine interest targeting and creative copy.</div>' +
+    '</div>' +
+
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(5)" '+(cityList.length===0?'disabled style="opacity:0.5;cursor:not-allowed;"':'')+'>Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(state.campaignBuilder.goal===\'leads\'?4:3)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(6)" '+(cityList.length===0?'disabled style="opacity:0.5;cursor:not-allowed;"':'')+'>Continue →</button>' +
     '</div>';
+}
+
+function calcRecommendedDaily(monthly){
+  if(monthly >= 8000) return 100;
+  if(monthly >= 4000) return 70;
+  if(monthly >= 2500) return 50;
+  if(monthly >= 1500) return 30;
+  if(monthly >= 1000) return 25;
+  if(monthly >= 500)  return 20;
+  return 15;
 }
 
 function renderMetaStep4(){
   const cb = state.campaignBuilder;
-  const dur = cb.duration || 30;
-  const total = cb.budget * dur;
-  const cpmLow = 8, cpmHigh = 15;
-  const leadsLow = Math.round(total / cpmHigh);
-  const leadsHigh = Math.round(total / cpmLow);
-  const durOptions = [7,14,30,60,90];
-
-  const durationChips = durOptions.map(function(d){
-    const sel = dur === d;
-    return '<div onclick="state.campaignBuilder.duration='+d+'; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(sel?'600':'400')+'; border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">'+d+' days</div>';
-  }).join('') +
-  '<div onclick="state.campaignBuilder.duration=0; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(dur===0?'600':'400')+'; border:2px solid '+(dur===0?'var(--orange)':'var(--border)')+'; background:'+(dur===0?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(dur===0?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">Custom</div>';
+  const monthly = cb.monthlyBudget || 1000;
+  const recDaily = calcRecommendedDaily(monthly);
+  // Use cb.budget if it was manually overridden, otherwise sync to recommendation
+  if(!cb._budgetOverridden) cb.budget = recDaily;
+  const daily = cb.budget;
+  const monthEstimate = daily * 30;
+  const cplLow = 8, cplHigh = 15;
+  const leadsLow = Math.round(monthEstimate / cplHigh);
+  const leadsHigh = Math.round(monthEstimate / cplLow);
 
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>$'+cb.budget+'/day is the sweet spot for local plumbing in Toronto.</strong> Set your daily budget and duration — I\'ll show you the total spend and estimated leads so you can make an informed decision.</div>' +
+    '<div class="msg"><strong>New campaign = test phase.</strong> We start conservatively and scale +20–30% every 3–4 days when CPL is good. Enter your monthly budget and I\'ll calculate the right daily spend to start.</div>' +
     '</div>' +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
 
     '<div style="margin-bottom:24px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Daily budget</div>' +
-    '<div style="text-align:center; margin-bottom:16px;">' +
-    '<span style="font-size:52px; font-weight:700; color:var(--orange);" id="lw-mb-day">$'+cb.budget+'</span>' +
-    '<span style="font-size:16px; color:var(--text-muted); margin-left:6px;">/ day</span>' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Monthly budget</div>' +
+    '<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">' +
+    '<span style="font-size:20px; color:var(--text-muted);">$</span>' +
+    '<input type="number" min="300" max="50000" value="'+monthly+'" oninput="state.campaignBuilder.monthlyBudget=parseInt(this.value)||300; state.campaignBuilder._budgetOverridden=false; state.campaignBuilder.budget=calcRecommendedDaily(state.campaignBuilder.monthlyBudget); navigateTo(\'campaign-launch\')" style="flex:1; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:11px 14px; color:var(--text); font-size:20px; font-weight:700;">' +
+    '<span style="font-size:14px; color:var(--text-muted); white-space:nowrap;">/ month</span>' +
     '</div>' +
-    '<input type="range" min="15" max="100" value="'+cb.budget+'" oninput="state.campaignBuilder.budget=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:6px;">' +
-    '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$100/day</span></div>' +
+    '<div style="display:flex; justify-content:space-between;"><span class="small muted">Min $300/mo</span><span class="small muted">No upper limit</span></div>' +
     '</div>' +
 
-    '<div style="margin-bottom:24px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Campaign duration</div>' +
-    '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">' + durationChips + '</div>' +
-    (dur===0 ? '<input type="number" min="1" max="365" placeholder="Enter days…" oninput="state.campaignBuilder.duration=parseInt(this.value)||0; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '') +
+    '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:10px; padding:16px 20px; margin-bottom:20px;">' +
+    '<div style="font-size:11px; font-weight:600; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommended daily budget</div>' +
+    '<div style="font-size:36px; font-weight:700; color:var(--orange); margin-bottom:4px;">$'+recDaily+'/day</div>' +
+    '<div class="small" style="color:var(--text-secondary); line-height:1.5;">Conservative start for a $'+monthly+'/mo budget. We scale up +20–30% every 3–4 days when your CPL is on target.</div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:20px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Override daily budget <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optional — min $15)</span></div>' +
+    '<div style="display:flex; align-items:center; gap:10px;">' +
+    '<span style="font-size:16px; color:var(--text-muted);">$</span>' +
+    '<input type="number" min="15" value="'+daily+'" oninput="state.campaignBuilder.budget=Math.max(15,parseInt(this.value)||15); state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="width:120px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:16px; font-weight:600;">' +
+    '<span class="small muted">/ day</span>' +
+    '</div>' +
     '</div>' +
 
     '<div style="background:var(--card-bg-2); border-radius:10px; padding:18px 20px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px;">Estimate</div>' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px;">Monthly estimate</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">' +
-    '<div><div style="font-size:22px; font-weight:700; color:var(--text);">$'+total+'</div><div class="small muted" style="margin-top:3px;">Total spend</div></div>' +
-    '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--text);">'+(dur||'—')+'</div><div class="small muted" style="margin-top:3px;">Days</div></div>' +
-    '<div><div style="font-size:22px; font-weight:700; color:var(--green);">'+(total?leadsLow+'–'+leadsHigh:'—')+'</div><div class="small muted" style="margin-top:3px;">Est. leads</div></div>' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--text);">$'+monthEstimate+'</div><div class="small muted" style="margin-top:3px;">Est. month spend</div></div>' +
+    '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--text);">$'+daily+'</div><div class="small muted" style="margin-top:3px;">Daily</div></div>' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--green);">'+leadsLow+'–'+leadsHigh+'</div><div class="small muted" style="margin-top:3px;">Est. leads/mo</div></div>' +
     '</div>' +
     '<div class="small muted mt-10" style="text-align:center; line-height:1.5;">Based on avg. CPL $8–$15 for plumbing in Toronto · adjust after first 7 days</div>' +
     '</div>' +
@@ -2104,8 +2176,8 @@ function renderMetaStep4(){
     '</div>' +
 
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(6)">Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(7)">Continue →</button>' +
     '</div>';
 }
 
@@ -2121,24 +2193,26 @@ function renderMetaStep5(){
     '<div class="small muted mt-8">This becomes the headline and visual hook on your creatives.</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(7)">Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(6)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(8)">Continue →</button>' +
     '</div>';
 }
 
 function renderMetaStep6(){
   const cb = state.campaignBuilder;
   const isImm = cb.schedule === 'immediate';
+  const hasEndDate = !!cb._showEndDate;
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">✦</div>' +
-    '<div class="msg"><strong>Start immediately — there\'s no reason to wait.</strong> Meta\'s review takes about 24 hours. The sooner your campaign is live, the sooner you get real data. You can pause or stop anytime from your dashboard.</div>' +
+    '<div class="msg"><strong>We recommend no end date.</strong> Foxtly monitors performance daily and automatically pauses underperforming ads. You can stop at any time from your dashboard.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
-    '<div style="display:flex; flex-direction:column; gap:12px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px;">Start date</div>' +
+    '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">' +
 
     '<div onclick="state.campaignBuilder.schedule=\'immediate\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(isImm?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; background:var(--card-bg);">' +
     '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(isImm?'var(--orange)':'var(--border)')+';background:'+(isImm?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">'+(isImm?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'')+'</div>' +
-    '<div><div style="font-weight:600; font-size:14px;">Start after Meta approval</div><div class="small muted">Campaign goes live automatically once approved (~24 hours)</div></div>' +
+    '<div><div style="font-weight:600; font-size:14px;">Start after Meta approval <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span></div><div class="small muted">Campaign goes live automatically once approved (~24 hours)</div></div>' +
     '</div>' +
 
     '<div onclick="state.campaignBuilder.schedule=\'scheduled\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(!isImm?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; background:var(--card-bg);">' +
@@ -2146,13 +2220,26 @@ function renderMetaStep6(){
     '<div><div style="font-weight:600; font-size:14px;">Choose a start date</div><div class="small muted">Set a specific date for the campaign to go live</div></div>' +
     '</div>' +
 
-    (!isImm ? '<div style="padding:16px 18px; background:var(--card-bg-3); border-radius:10px; margin-top:4px;"><label style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">Start date</label><input type="date" value="'+(state.campaignBuilder.startDate||'')+'" onchange="state.campaignBuilder.startDate=this.value" style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; width:100%;"></div>' : '') +
+    (!isImm ? '<div style="padding:16px 18px; background:var(--card-bg-3); border-radius:10px; margin-top:4px;"><label style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">Start date</label><input type="date" value="'+(cb.startDate||'')+'" onchange="state.campaignBuilder.startDate=this.value" style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; width:100%;"></div>' : '') +
 
+    '</div>' +
+
+    '<div style="border-top:1px solid var(--border); padding-top:18px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">End date</div>' +
+    '<div style="background:var(--card-bg-2); border-radius:10px; padding:14px 16px; margin-bottom:10px;">' +
+    '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">Run until you pause <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">Recommended</span></div>' +
+    '<div class="small muted">No end date — Foxtly auto-pauses underperforming ads. Stop anytime from the dashboard.</div>' +
+    '</div>' +
+    (!hasEndDate ?
+      '<button onclick="state.campaignBuilder._showEndDate=true; navigateTo(\'campaign-launch\')" style="background:none; border:1px solid var(--border); border-radius:8px; padding:8px 14px; color:var(--text-muted); font-size:13px; cursor:pointer;">Set an end date →</button>'
+    :
+      '<div style="padding:14px 16px; background:var(--card-bg-3); border-radius:10px;"><label style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">End date</label><input type="date" value="'+(cb.endDate||'')+'" onchange="state.campaignBuilder.endDate=this.value" style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; width:100%;"><button onclick="state.campaignBuilder._showEndDate=false; state.campaignBuilder.endDate=\'\'; navigateTo(\'campaign-launch\')" style="margin-top:8px; background:none; border:none; color:var(--text-muted); font-size:12px; cursor:pointer;">Remove end date</button></div>'
+    ) +
     '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(6)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(8)">Generate creatives →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(7)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(9)">Generate creatives →</button>' +
     '</div>';
 }
 
@@ -2240,12 +2327,21 @@ function renderMetaStep7(){
   });
 
   const selCount = w.selectedCreatives.length;
+  const missingOffer = !cb.offer;
+  const missingBranding = !state.creatives.branding;
+  const warningBanner = (missingOffer || missingBranding) ?
+    '<div style="background:var(--yellow-dim); border:1px solid var(--yellow); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:var(--yellow);">⚠ ' +
+    (missingOffer ? 'Set your offer first — go back to the Offer step. ' : '') +
+    (missingBranding ? 'Brand kit not configured. ' : '') +
+    '<button onclick="setLaunchStep(7)" style="background:none; border:none; color:var(--yellow); cursor:pointer; text-decoration:underline; font-size:13px; padding:0;">Set your offer first ↗</button>' +
+    '</div>' : '';
   return '<div class="ai-bubble mb-16">' +
     '<div class="av">✦</div>' +
-    '<div class="msg">Done! I created <strong>2 images + 1 short video</strong> — each sized for its placement. All are pre-selected. Deselect anything you don\'t want, or add your own files.' +
+    '<div class="msg">I\'ll generate <strong>2 images + 1 short video (1:1, 8 sec)</strong> for your campaign. Each creative uses your branding and offer. Generation requires your brand kit and offer to be set.' +
     '<br><button onclick="regenerateCreatives()" style="margin-top:8px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:12px; padding:4px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">↻ Generate new batch</button>' +
     '</div>' +
     '</div>' +
+    warningBanner +
     '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px;">' + tiles + '</div>' +
     '<div class="card" style="border-style:dashed; padding:14px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; margin-bottom:24px;" onclick="showToast(\'Upload your own files — coming in next build\')">' +
     '<div style="font-size:24px;">📁</div>' +
@@ -2253,14 +2349,14 @@ function renderMetaStep7(){
     '<div class="small muted">JPG, PNG, MP4 · auto-formatted for each placement</div></div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(7)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(9)">Continue with '+selCount+' creative'+(selCount===1?'':'s')+' →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(8)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(10)">Continue with '+selCount+' creative'+(selCount===1?'':'s')+' →</button>' +
     '</div>';
 }
 
 function renderMetaStep8(){
   const ad = state.adCopy;
-  const CTAs = ['Get Quote','Learn More','Call Now','Contact Us','Sign Up'];
+  const CTAs = ['Get Quote','Learn More','Call Now','Contact Us','Sign Up','Buy Now'];
   const ctaOptions = CTAs.map(function(c){ return '<option value="'+c+'" '+(ad.cta===c?'selected':'')+'>'+c+'</option>'; }).join('');
 
   const fields =
@@ -2310,8 +2406,8 @@ function renderMetaStep8(){
     fields + mockup +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(8)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(10)">Preview my ad →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(9)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(11)">Preview my ad →</button>' +
     '</div>';
 }
 
@@ -2365,7 +2461,7 @@ function renderMetaStep9(){
     storiesMockup + '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(9)">← Back</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(10)">← Back</button>' +
     '<button class="btn primary" onclick="submitLaunchCampaign()">Send for review →</button>' +
     '</div>';
 }
