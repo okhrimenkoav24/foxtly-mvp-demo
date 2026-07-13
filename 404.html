@@ -548,6 +548,7 @@
     <div class="tt-foot">
       <span class="tt-step" id="tour-step-label"></span>
       <div class="flex gap-8">
+        <button class="btn small" onclick="skipTour()" style="color:var(--text-muted);">Skip tour</button>
         <button class="btn primary small" onclick="nextTourStep()" id="tour-next-btn">Next</button>
       </div>
     </div>
@@ -733,6 +734,7 @@ const ROUTE_MAP = {
   'integrations': { type:'view', id:'integrations' },
   'campaign-strategy': { type:'view', id:'campaign-strategy' },
   'campaign-launch': { type:'view', id:'campaign-launch' },
+  'campaign-connect': { type:'view', id:'campaign-connect' },
   'creative-studio': { type:'view', id:'creative-studio' },
   'approvals': { type:'view', id:'approvals' },
   'settings': { type:'view', id:'settings' },
@@ -900,6 +902,9 @@ const REVERS_LABEL = {
 
 VIEWS['decision-center'] = function(){
   const pending = state.pendingActions.filter(a=>a.status!=='done' && a.status!=='rejected');
+  const metaOk = state.integrations.meta.status === 'connected';
+  const googleOk = state.integrations.google && state.integrations.google.status === 'connected';
+  const noAccounts = !metaOk && !googleOk;
 
   const kpis = [
     { label:'Spend', value: state.period==='7d'?'$1,940':'$284', deltaHTML: `<div class="kpi-delta up">↑ ${state.period==='7d'?'12%':'4%'} vs prior period</div>` },
@@ -924,6 +929,37 @@ VIEWS['decision-center'] = function(){
       </div>
     </div>
 
+    ${noAccounts ? `
+    <div style="position:relative; margin-bottom:16px;">
+      <!-- Blurred KPI cards underneath -->
+      <div style="filter:blur(6px); pointer-events:none; user-select:none;">
+        <div class="dash-top" style="margin-bottom:0;">
+          <div class="kpi-grid">
+            ${kpis.map(k=>`
+              <div class="kpi-card">
+                <div class="kpi-label">${k.label}</div>
+                <div class="kpi-value">${k.value}</div>
+                ${k.deltaHTML}
+              </div>
+            `).join('')}
+          </div>
+          <div class="card insight-card">
+            <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
+            <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Overlay card -->
+      <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:10;">
+        <div class="card" style="max-width:400px; width:100%; text-align:center; padding:32px 28px; background:var(--card-bg); border-color:var(--orange); box-shadow:0 8px 40px rgba(0,0,0,0.4);">
+          <div style="font-size:40px; margin-bottom:12px;">🔗</div>
+          <h2 style="margin-bottom:8px;">Connect your ad accounts</h2>
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">To unlock your dashboard data, connect Meta Ads or Google Ads. Foxtly will start tracking your campaigns automatically.</p>
+          <button class="btn primary" style="padding:11px 28px; font-size:14px;" onclick="navigateTo('integrations')">Connect accounts →</button>
+        </div>
+      </div>
+    </div>
+    ` : `
     <div class="dash-top">
       <div class="kpi-grid">
         ${state.kpiEmptyDemo ? kpis.map(k=>`
@@ -946,6 +982,7 @@ VIEWS['decision-center'] = function(){
         <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
       </div>
     </div>
+    `}
 
     <div class="section" data-tour="action-queue">
       <div class="section-head">
@@ -1339,58 +1376,92 @@ function renderKbStrategy(){
       </div>
     </div>
 
-    <!-- Channel recommendation -->
-    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">📢 Recommended Channel</div>
-    <div class="card mb-20" style="border-color:var(--orange); background:var(--orange-dim);">
-      <div style="display:flex; align-items:flex-start; gap:16px;">
-        <div style="font-size:36px; flex-shrink:0;">📘</div>
-        <div style="flex:1;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-            <span style="font-size:15px; font-weight:700;">Start with Meta Ads</span>
-            <span class="badge orange" style="font-size:10px;">AI pick</span>
-          </div>
-          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:12px;">Home services under $1K/month convert 3× better on Meta than Google. Faster to launch — Google Ads verification takes 3–5 days. Once Google is active, we expand there for high-intent "emergency plumber" searches.</p>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
-              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Expected CPL</div>
-              <div style="font-weight:700; font-size:16px;">$18 – $28</div>
+    <!-- Strategy variants -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🎯 Choose Your Strategy</div>
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">AI generated 3 launch strategies based on your budget and goals. Pick one — we'll prefill your campaign and you can launch in minutes.</p>
+
+    ${[
+      {
+        id:'conservative',
+        label:'Conservative',
+        tag:'Low risk',
+        tagColor:'var(--green)',
+        emoji:'🛡',
+        desc:'Start small, learn what works, scale gradually. Best for first-time advertisers or tight budgets.',
+        platform:'Meta Ads only',
+        budget:'$300 – $500 / mo',
+        cpl:'$24 – $35',
+        leads:'9 – 20 / mo',
+        offer:'Free Estimate',
+        highlight:false,
+      },
+      {
+        id:'balanced',
+        label:'Balanced',
+        tag:'AI recommended',
+        tagColor:'var(--orange)',
+        emoji:'⚖️',
+        desc:'Meta first for fast ROI, then expand to Google Search once the algorithm learns your audience.',
+        platform:'Meta → Google (Month 2)',
+        budget:'$800 – $1,200 / mo',
+        cpl:'$18 – $28',
+        leads:'36 – 55 / mo',
+        offer:'Free Estimate + Seasonal Promo',
+        highlight:true,
+      },
+      {
+        id:'aggressive',
+        label:'Aggressive',
+        tag:'Max reach',
+        tagColor:'var(--blue)',
+        emoji:'🚀',
+        desc:'Launch on Meta and Google simultaneously with retargeting. Fastest path to lead volume.',
+        platform:'Meta + Google + Retargeting',
+        budget:'$2,000+ / mo',
+        cpl:'$14 – $22',
+        leads:'90 – 140 / mo',
+        offer:'Free Estimate + Emergency + Seasonal',
+        highlight:false,
+      },
+    ].map(s=>`
+      <div class="card mb-16" style="${s.highlight ? 'border-color:var(--orange); background:var(--orange-dim);' : ''}">
+        <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:14px;">
+          <div style="font-size:32px; flex-shrink:0; line-height:1;">${s.emoji}</div>
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:16px; font-weight:800;">${s.label}</span>
+              <span class="badge" style="background:${s.tagColor}22; color:${s.tagColor}; font-size:10px; font-weight:700;">${s.tag}</span>
             </div>
-            <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:10px 12px;">
-              <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Est. leads / mo ($1K)</div>
-              <div style="font-weight:700; font-size:16px;">36 – 55</div>
-            </div>
+            <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin:0;">${s.desc}</p>
           </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Budget</div>
+            <div style="font-weight:700; font-size:14px;">${s.budget}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Est. CPL</div>
+            <div style="font-weight:700; font-size:14px;">${s.cpl}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Leads / mo</div>
+            <div style="font-weight:700; font-size:14px;">${s.leads}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Platform</div>
+            <div style="font-weight:700; font-size:12px; line-height:1.3;">${s.platform}</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div style="font-size:12px; color:var(--text-muted);">Offer: <span style="color:var(--text-secondary); font-weight:600;">${s.offer}</span></div>
+          <button class="btn ${s.highlight ? 'primary' : ''}" style="margin-left:auto; ${s.highlight ? 'padding:9px 20px;' : ''}"
+            onclick="state.launchWizard.prefilled=true; state.launchWizard.strategy='${s.id}'; navigateTo('campaign-launch'); showToast('Strategy loaded — review and launch')">
+            Select &amp; Launch →
+          </button>
         </div>
       </div>
-    </div>
-
-    <!-- 90-day plan -->
-    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🗓 90-Day Action Plan</div>
-    <div class="card mb-20">
-      ${[
-        { phase:'Week 1–2',  color:'var(--orange)',  title:'Launch Meta Ads', desc:'Free Estimate campaign targeting homeowners 25–65, 15 mi radius. AI generates creatives and copy.' },
-        { phase:'Week 3–4',  color:'var(--blue)',    title:'Optimize & learn', desc:'AI reviews first 100 leads, adjusts targeting and ad creative based on what\'s converting.' },
-        { phase:'Month 2',   color:'var(--green)',   title:'Add Google Search', desc:'Launch "emergency plumber" keywords as your Google account activates. Multi-channel reach.' },
-        { phase:'Month 3',   color:'var(--purple, var(--orange))', title:'Scale what works', desc:'Increase budget on top-performing ad sets. AI proposes a new service offer based on lead data.' },
-      ].map((s,i,a)=>`
-        <div style="display:flex; gap:14px; padding-bottom:${i<a.length-1?'20px':'0'};">
-          <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
-            <div style="width:32px; height:32px; border-radius:50%; background:${s.color}22; border:2px solid ${s.color}; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:${s.color};">${i+1}</div>
-            ${i<a.length-1?`<div style="width:2px; flex:1; background:var(--border-light); margin:4px 0;"></div>`:''}
-          </div>
-          <div style="padding-top:4px;">
-            <div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">${s.phase}</div>
-            <div style="font-weight:700; font-size:14px; margin-bottom:4px;">${s.title}</div>
-            <div style="font-size:13px; color:var(--text-secondary); line-height:1.6;">${s.desc}</div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-
-    <!-- CTA -->
-    <div style="display:flex; justify-content:center; padding-bottom:16px;">
-      <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="state.launchWizard.prefilled=true; navigateTo('campaign-launch')">Launch your first campaign →</button>
-    </div>
+    `).join('')}
   `;
 }
 </script>
@@ -1488,6 +1559,14 @@ VIEWS['integrations'] = function(){
       <div id="security-note" style="display:none; margin-top:10px;">
         <p class="small muted" style="line-height:1.6;">Your data is secure. Foxtly uses official Meta / Google login (OAuth) — we never see or store your password. You can revoke access anytime from your account settings or here.</p>
       </div>
+    </div>
+
+    <div style="margin-top:24px; padding:14px 16px; border:1px dashed var(--border-light); border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <div>
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:2px;">Preview</div>
+        <div style="font-size:13px; color:var(--text-secondary);">See what the campaign screen looks like before accounts are connected</div>
+      </div>
+      <button class="btn small" style="white-space:nowrap; flex-shrink:0;" onclick="navigateTo('campaign-connect')">View →</button>
     </div>
   `;
 };
@@ -1721,6 +1800,8 @@ function renderCampaignBlurScreen(){
     </div>
   `;
 }
+
+VIEWS['campaign-connect'] = function(){ return renderCampaignBlurScreen(); };
 
 VIEWS['campaign-launch'] = function(){
   const metaOk = state.integrations.meta.status === 'connected';
