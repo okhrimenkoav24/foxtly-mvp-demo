@@ -403,8 +403,9 @@
   #tour-tooltip{ position:absolute; background:var(--card-bg-3); border:1px solid var(--orange); border-radius:12px; padding:18px; width:300px; pointer-events:auto; box-shadow:0 12px 40px rgba(0,0,0,0.5); transition:top .3s ease, left .3s ease; }
   #tour-tooltip .tt-title{ font-weight:700; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:6px; color:var(--text); }
   #tour-tooltip .tt-body{ font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:16px; }
-  #tour-tooltip .tt-foot{ display:flex; justify-content:space-between; align-items:center; }
-  #tour-tooltip .tt-step{ font-size:11px; color:var(--text-muted); }
+  #tour-tooltip .tt-foot{ display:flex; flex-direction:column; align-items:stretch; gap:12px; }
+  #tour-tooltip .tt-step{ font-size:11px; color:var(--text-muted); white-space:nowrap; }
+  #tour-tooltip .tt-foot-btns{ display:flex; gap:8px; align-items:center; justify-content:flex-end; }
   #tour-modal{ position:fixed; inset:0; z-index:401; display:none; align-items:center; justify-content:center; background:rgba(4,4,8,0.75); pointer-events:auto; }
   #tour-modal.open{ display:flex; }
   #tour-modal .box{ background:var(--card-bg); border:1px solid var(--border-light); border-radius:18px; padding:44px 40px; max-width:480px; text-align:center; }
@@ -553,7 +554,7 @@
     <div class="tt-body" id="tour-body"></div>
     <div class="tt-foot">
       <span class="tt-step" id="tour-step-label"></span>
-      <div class="flex gap-8">
+      <div class="tt-foot-btns">
         <button class="btn small" id="tour-back-btn" onclick="prevTourStep()" style="color:var(--text-muted);">← Back</button>
         <button class="btn small" onclick="skipTour()" style="color:var(--text-muted);">Skip tour</button>
         <button class="btn primary small" onclick="nextTourStep()" id="tour-next-btn">Next</button>
@@ -585,7 +586,7 @@
         <path d="M32 43 l4 4 h-8 Z" fill="#2a1206"/>
       </svg>
     </div>
-    <h3>Hi, I'm Foxy — your AI marketing lead</h3>
+    <h3>Hi, I'm Foxy<br>— your AI marketing lead</h3>
     <p>Welcome to Foxtly. Let me give you a quick tour.</p>
     <div class="row">
       <button class="btn primary" style="padding:12px 36px; font-size:16px;" onclick="startTourSteps()">Start →</button>
