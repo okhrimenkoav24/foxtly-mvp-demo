@@ -277,6 +277,13 @@
   .int-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-bottom:16px; }
   .int-card{ display:flex; flex-direction:column; height:100%; }
   .int-card .int-actions{ margin-top:auto; padding-top:16px; }
+  .foxy-note{ display:flex; gap:12px; align-items:flex-start; background:var(--orange-dim); border:1px solid rgba(240,136,62,0.35); border-radius:12px; padding:13px 15px; margin-bottom:20px; }
+  .foxy-note-av{ flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .foxy-note-av svg{ width:34px; height:34px; display:block; }
+  .foxy-note-name{ font-size:11px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+  .foxy-note-text{ font-size:13px; color:var(--text-secondary); line-height:1.6; }
+  .foxy-note.hero{ background:linear-gradient(180deg, rgba(240,136,62,0.16), rgba(240,136,62,0.06)); border-color:var(--orange); padding:16px 18px; }
+  .foxy-note.hero .foxy-note-text{ color:var(--text); }
 
   /* toggle switch */
   .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
@@ -1331,6 +1338,8 @@ function renderKbResearch(){
       </div>
     </div>
 
+    ${foxyNote("Demand is healthy — about <strong>12k searches a month</strong> and up 8% year-over-year, so there's room to win new customers. The cheapest ways in are <strong>drain cleaning</strong> ($4.10) and <strong>free estimate</strong> ($3.50) — I'd start there instead of the pricey <strong>emergency plumber</strong> ($9.80 a click).")}
+
     <!-- Section 2: Competitors -->
     <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🏁 Competitor Landscape</div>
     <div class="card mb-20">
@@ -1359,12 +1368,11 @@ function renderKbResearch(){
       </table>
     </div>
 
+    ${foxyNote("<strong>Rotorooter is your toughest rival</strong> — heavy spend on <strong>both</strong> Meta and Google. Mr. Plumber runs Meta only, and Toronto Pro is quiet. Nobody's seriously covering routine <strong>drain-cleaning</strong> and <strong>free-estimate</strong> searches — that's the door I'd walk through.")}
+
     <!-- Section 3: Opportunity -->
     <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">💡 Your Opportunity</div>
-    <div class="card mb-20" style="border-color:var(--orange); background:var(--orange-dim);">
-      <div style="font-size:14px; font-weight:700; color:var(--orange); margin-bottom:8px;">Gap identified: routine service searches</div>
-      <p style="font-size:13px; line-height:1.65; color:var(--text-secondary);">All three competitors are bidding heavily on "emergency plumbing" keywords — where CPCs run $8–$12. The "free estimate" and drain-cleaning segments have significantly lower competition and a $3–$5 CPC range. Starting there gives you more leads per dollar while you build your ad history.</p>
-    </div>
+    ${foxyNote("<strong style=\"color:var(--orange);\">My recommendation: go after routine service searches first.</strong><br>All three competitors bid heavily on \"emergency plumbing,\" where clicks cost $8–$12. The \"free estimate\" and drain-cleaning segments have far less competition at $3–$5 a click — so you get more leads per dollar while we build your ad history. Once your numbers are strong, we scale into the pricier keywords.", true)}
 
     <!-- Section 4: Forecast -->
     <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🎯 Estimated Results · $1,000 / month budget</div>
@@ -1385,7 +1393,9 @@ function renderKbResearch(){
         <div style="font-size:12px; color:var(--text-muted);">at ~25% close rate, $600 avg job</div>
       </div>
     </div>
-    <div style="font-size:11px; color:var(--text-muted); margin-top:-12px; margin-bottom:24px; line-height:1.5;">Estimates based on Toronto market data. Actual results vary and will be refined after your first campaigns run.</div>
+    <div style="font-size:11px; color:var(--text-muted); margin-top:-12px; margin-bottom:20px; line-height:1.5;">Estimates based on Toronto market data. Actual results vary and will be refined after your first campaigns run.</div>
+
+    ${foxyNote("At <strong>$1,000/mo</strong> I'd expect roughly <strong>36–55 leads</strong> and <strong>$5–9k</strong> in booked jobs once we skip the expensive emergency keywords. Treat these as a starting estimate — I'll tighten them the moment your first campaigns give me real numbers.")}
 
     <!-- CTA -->
     <div style="display:flex; justify-content:center; padding-bottom:16px;">
@@ -4788,6 +4798,27 @@ const FOXY_SVG = `<svg class="foxy-svg" viewBox="0 0 64 64" width="64" height="6
   <ellipse class="foxy-eye" cx="40" cy="34" rx="3" ry="4" fill="#2a1206"/>
   <path d="M32 43 l4 4 h-8 Z" fill="#2a1206"/>
 </svg>`;
+
+// Static (non-animated) fox head for inline "Foxy note" recommendations.
+const FOXY_MINI = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Foxy">
+  <path d="M14 8 L27 21 L9 25 Z" fill="#e8722e"/>
+  <path d="M50 8 L37 21 L55 25 Z" fill="#e8722e"/>
+  <path d="M17 12 L24 20 L14 22 Z" fill="#2a1206"/>
+  <path d="M47 12 L40 20 L50 22 Z" fill="#2a1206"/>
+  <path d="M32 16 C46 16 52 26 52 36 C52 48 43 55 32 55 C21 55 12 48 12 36 C12 26 18 16 32 16 Z" fill="#f0883e"/>
+  <path d="M32 30 C40 30 46 36 46 44 C46 51 39 55 32 55 C25 55 18 51 18 44 C18 36 24 30 32 30 Z" fill="#fbe9d6"/>
+  <ellipse cx="24" cy="34" rx="3" ry="4" fill="#2a1206"/>
+  <ellipse cx="40" cy="34" rx="3" ry="4" fill="#2a1206"/>
+  <path d="M32 43 l4 4 h-8 Z" fill="#2a1206"/>
+</svg>`;
+// Renders an inline recommendation styled as if spoken by Foxy, the AI marketer.
+function foxyNote(text, hero){
+  return '<div class="foxy-note'+(hero?' hero':'')+'">'+
+    '<div class="foxy-note-av">'+FOXY_MINI+'</div>'+
+    '<div><div class="foxy-note-name">Foxy · your AI marketer</div>'+
+    '<div class="foxy-note-text">'+text+'</div></div>'+
+  '</div>';
+}
 
 // ---------- Product Tour ----------
 // Ordered general → specific: first the foundation (what Foxtly knows about you),
