@@ -274,6 +274,9 @@
   .choice-card .ttl{ font-weight:700; font-size:13.5px; margin-bottom:3px; }
   .choice-card .desc{ font-size:12px; color:var(--text-secondary); }
   .choice-card .rec-badge{ position:absolute; top:10px; right:10px; }
+  .int-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-bottom:16px; }
+  .int-card{ display:flex; flex-direction:column; height:100%; }
+  .int-card .int-actions{ margin-top:auto; padding-top:16px; }
 
   /* toggle switch */
   .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
@@ -1548,64 +1551,54 @@ VIEWS['integrations'] = function(){
   return `
     <div class="topbar"><div><h1>Connect your accounts</h1><div class="greeting">Foxtly needs access to your ad accounts to start analyzing and managing your campaigns. You can disconnect anytime.</div></div></div>
 
-    <div class="card mb-16" data-tour="integrations-meta">
-      <div class="flex justify-between items-start" style="flex-wrap:wrap; gap:12px;">
-        <div class="flex items-center gap-12">
+    <div class="int-grid">
+      <div class="card int-card" data-tour="integrations-meta">
+        <div class="flex justify-between items-start" style="gap:12px; margin-bottom:14px;">
           <div class="action-icon info" style="background:var(--blue-dim); color:var(--blue);">f</div>
-          <div>
-            <div style="font-weight:700; font-size:15px;">Meta Ads <span class="muted small">(Facebook & Instagram)</span></div>
-            <div class="small muted mt-4">Connect your Facebook Business Manager to let AI manage your Meta ad campaigns.</div>
-            ${meta.status==='connected' ? `<div class="small mt-8">✅ ${meta.account}</div>` : ''}
-          </div>
-        </div>
-        <div style="text-align:right;">
           ${meta.status==='connected' ? '<span class="badge green">Connected ✅</span>' : meta.status==='connecting' ? '<span class="badge yellow"><span class="spinner"></span> Connecting…</span>' : '<span class="badge gray">Not connected</span>'}
-          <div class="mt-12">
-            ${meta.status==='connected'
-              ? `<button class="btn small danger" onclick="disconnectMeta()">Disconnect</button>`
-              : meta.status==='connecting' ? ''
-              : `<button class="btn small primary" onclick="connectMeta()">Connect Meta Ads</button>`}
-          </div>
+        </div>
+        <div style="font-weight:700; font-size:15px; margin-bottom:4px;">Meta Ads <span class="muted small">(Facebook & Instagram)</span></div>
+        <div class="small muted" style="line-height:1.55;">Connect your Facebook Business Manager to let AI manage your Meta ad campaigns.</div>
+        ${meta.status==='connected' ? `<div class="small mt-8">✅ ${meta.account}</div>` : ''}
+        ${meta.status==='connected' ? `
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:8px;">Facebook Page <span style="color:var(--red);">*</span> <span style="font-weight:400; color:var(--text-muted);">— required for publishing ads</span></label>
+          <select onchange="setFacebookPage(this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid ${meta.facebookPage ? 'var(--green)' : 'var(--yellow)'}; border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; cursor:pointer;">
+            <option value="" ${!meta.facebookPage?'selected':''}>— Select a Facebook Page —</option>
+            <option value="mikes_plumbing" ${meta.facebookPage==='mikes_plumbing'?'selected':''}>Mike's Plumbing Services</option>
+            <option value="mikes_plumbing_toronto" ${meta.facebookPage==='mikes_plumbing_toronto'?'selected':''}>Mike's Plumbing Toronto</option>
+            <option value="mikes_plumbing_gta" ${meta.facebookPage==='mikes_plumbing_gta'?'selected':''}>Mike's Plumbing — GTA</option>
+          </select>
+          ${meta.facebookPage
+            ? `<div class="small mt-6" style="color:var(--green);">✓ Ads will publish from this page</div>`
+            : `<div class="small mt-6" style="color:var(--yellow);">⚠ Select a page to enable ad publishing — required for Meta App Review</div>`}
+        </div>` : ''}
+        <div class="int-actions">
+          ${meta.status==='connected'
+            ? `<button class="btn small danger" style="width:100%;" onclick="disconnectMeta()">Disconnect</button>`
+            : meta.status==='connecting' ? ''
+            : `<button class="btn primary" style="width:100%;" onclick="connectMeta()">Connect Meta Ads</button>`}
         </div>
       </div>
-      ${meta.status==='connected' ? `
-      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
-        <label style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:8px;">Facebook Page <span style="color:var(--red);">*</span> <span style="font-weight:400; color:var(--text-muted);">— required for publishing ads</span></label>
-        <select onchange="setFacebookPage(this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid ${meta.facebookPage ? 'var(--green)' : 'var(--yellow)'}; border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; cursor:pointer;">
-          <option value="" ${!meta.facebookPage?'selected':''}>— Select a Facebook Page —</option>
-          <option value="mikes_plumbing" ${meta.facebookPage==='mikes_plumbing'?'selected':''}>Mike's Plumbing Services</option>
-          <option value="mikes_plumbing_toronto" ${meta.facebookPage==='mikes_plumbing_toronto'?'selected':''}>Mike's Plumbing Toronto</option>
-          <option value="mikes_plumbing_gta" ${meta.facebookPage==='mikes_plumbing_gta'?'selected':''}>Mike's Plumbing — GTA</option>
-        </select>
-        ${meta.facebookPage
-          ? `<div class="small mt-6" style="color:var(--green);">✓ Ads will publish from this page</div>`
-          : `<div class="small mt-6" style="color:var(--yellow);">⚠ Select a page to enable ad publishing — required for Meta App Review</div>`}
-      </div>` : ''}
-    </div>
 
-    <div class="card mb-16" data-tour="integrations-google">
-      <div class="flex justify-between items-start" style="flex-wrap:wrap; gap:12px;">
-        <div class="flex items-center gap-12">
+      <div class="card int-card" data-tour="integrations-google">
+        <div class="flex justify-between items-start" style="gap:12px; margin-bottom:14px;">
           <div class="action-icon" style="background:var(--purple-dim); color:var(--purple);">G</div>
-          <div>
-            <div style="font-weight:700; font-size:15px;">Google Ads</div>
-            ${google.status==='blocked'
-              ? `<div class="small muted mt-4">Google Ads connection is temporarily unavailable while we complete Google's API verification. We'll notify you the moment it's ready — no action needed from you.</div>`
-              : `<div class="small muted mt-4">Connect your Google Ads account to let AI manage your Search and Performance Max campaigns.</div>`}
-            ${google.status==='connected' ? `<div class="small mt-8">✅ ${google.account}</div>` : ''}
-          </div>
-        </div>
-        <div style="text-align:right;">
           ${google.status==='blocked' ? '<span class="badge purple">Pending verification 🚫</span>'
             : google.status==='connected' ? '<span class="badge green">Connected ✅</span>'
             : google.status==='connecting' ? '<span class="badge yellow"><span class="spinner"></span> Connecting…</span>'
             : '<span class="badge gray">Not connected</span>'}
-          <div class="mt-12">
-            ${google.status==='blocked' ? `<button class="btn small" disabled title="Coming soon">Connect Google Ads</button>`
-              : google.status==='connected' ? `<button class="btn small danger" onclick="disconnectGoogle()">Disconnect</button>`
-              : google.status==='connecting' ? ''
-              : `<button class="btn small primary" onclick="connectGoogle()">Connect Google Ads</button>`}
-          </div>
+        </div>
+        <div style="font-weight:700; font-size:15px; margin-bottom:4px;">Google Ads</div>
+        ${google.status==='blocked'
+          ? `<div class="small muted" style="line-height:1.55;">Google Ads connection is temporarily unavailable while we complete Google's API verification. We'll notify you the moment it's ready — no action needed from you.</div>`
+          : `<div class="small muted" style="line-height:1.55;">Connect your Google Ads account to let AI manage your Search and Performance Max campaigns.</div>`}
+        ${google.status==='connected' ? `<div class="small mt-8">✅ ${google.account}</div>` : ''}
+        <div class="int-actions">
+          ${google.status==='blocked' ? `<button class="btn" disabled title="Coming soon" style="width:100%; opacity:0.5; cursor:not-allowed;">Connect Google Ads</button>`
+            : google.status==='connected' ? `<button class="btn small danger" style="width:100%;" onclick="disconnectGoogle()">Disconnect</button>`
+            : google.status==='connecting' ? ''
+            : `<button class="btn primary" style="width:100%;" onclick="connectGoogle()">Connect Google Ads</button>`}
         </div>
       </div>
     </div>
