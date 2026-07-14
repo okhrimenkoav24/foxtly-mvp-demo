@@ -322,6 +322,10 @@
   #setup-widget .sw-item.done .sw-dot{ background:var(--orange); border-color:var(--orange); color:#fff; }
   #setup-widget .sw-item .sw-label{ color:var(--text-secondary); }
   #setup-widget .sw-item.done .sw-label{ color:var(--text-muted); text-decoration:line-through; }
+  #setup-widget .sw-item.sw-clickable{ cursor:pointer; }
+  #setup-widget .sw-item.sw-clickable .sw-arrow{ opacity:0; margin-left:2px; transition:opacity .15s; }
+  #setup-widget .sw-item.sw-clickable:hover .sw-label{ color:var(--orange); }
+  #setup-widget .sw-item.sw-clickable:hover .sw-arrow{ opacity:1; }
   #setup-widget .sw-cta{ width:100%; margin-top:2px; }
 
   /* ============ MODAL ============ */
@@ -550,6 +554,7 @@
     <div class="tt-foot">
       <span class="tt-step" id="tour-step-label"></span>
       <div class="flex gap-8">
+        <button class="btn small" id="tour-back-btn" onclick="prevTourStep()" style="color:var(--text-muted);">← Back</button>
         <button class="btn small" onclick="skipTour()" style="color:var(--text-muted);">Skip tour</button>
         <button class="btn primary small" onclick="nextTourStep()" id="tour-next-btn">Next</button>
       </div>
@@ -1108,9 +1113,10 @@ function renderSetupWidget(){
   if(bar) bar.style.width = Math.round(done/total*100)+'%';
   var html = SETUP_ITEMS.map(function(i){
     var isDone = state.setupProgress[i.key];
-    return '<div class="sw-item'+(isDone?' done':'')+'">'+
+    var attrs = isDone ? '' : ' onclick="navigateTo(\''+i.view+'\')" role="link" tabindex="0"';
+    return '<div class="sw-item'+(isDone?' done':' sw-clickable')+'"'+attrs+'>'+
       '<div class="sw-dot">'+(isDone?'✓':'')+'</div>'+
-      '<span class="sw-label">'+i.label+'</span>'+
+      '<span class="sw-label">'+i.label+(isDone?'':' <span class="sw-arrow">→</span>')+'</span>'+
     '</div>';
   }).join('');
   var items = document.getElementById('sw-items');
@@ -1374,6 +1380,22 @@ function renderKbResearch(){
   `;
 }
 
+// Per-strategy launch gating: a strategy can only launch once its required ad
+// platforms are connected. Returns whether all are connected + the chips/buttons.
+function strategyPlatformState(requires){
+  const names = { meta:'Meta', google:'Google' };
+  let allOk = true;
+  const parts = (requires||[]).map(function(p){
+    const st = ((state.integrations||{})[p]||{}).status;
+    if(st === 'connected'){
+      return `<span style="display:inline-flex; align-items:center; gap:5px; background:var(--green-dim); color:var(--green); border:1px solid var(--green); font-size:11px; font-weight:700; padding:5px 10px; border-radius:7px; white-space:nowrap;">✓ ${names[p]} connected</span>`;
+    }
+    allOk = false;
+    return `<button class="btn small" style="border-color:var(--orange); color:var(--orange); white-space:nowrap;" onclick="event.stopPropagation(); navigateTo('integrations')">⎆ Connect your ${names[p]} account</button>`;
+  });
+  return { allOk: allOk, html: parts.join('') };
+}
+
 function renderKbStrategy(){
   return `
     <div class="section-head">
@@ -1416,6 +1438,7 @@ function renderKbStrategy(){
         emoji:'🛡',
         desc:'Start small, learn what works, scale gradually. Best for first-time advertisers or tight budgets.',
         platform:'Meta Ads only',
+        requires:['meta'],
         budget:'$300 – $500 / mo',
         cpl:'$24 – $35',
         leads:'9 – 20 / mo',
@@ -1430,6 +1453,7 @@ function renderKbStrategy(){
         emoji:'⚖️',
         desc:'Meta first for fast ROI, then expand to Google Search once the algorithm learns your audience.',
         platform:'Meta → Google (Month 2)',
+        requires:['meta'],
         budget:'$800 – $1,200 / mo',
         cpl:'$18 – $28',
         leads:'36 – 55 / mo',
@@ -1444,6 +1468,7 @@ function renderKbStrategy(){
         emoji:'🚀',
         desc:'Launch on Meta and Google simultaneously with retargeting. Fastest path to lead volume.',
         platform:'Meta + Google + Retargeting',
+        requires:['meta','google'],
         budget:'$2,000+ / mo',
         cpl:'$14 – $22',
         leads:'90 – 140 / mo',
@@ -1480,13 +1505,23 @@ function renderKbStrategy(){
             <div style="font-weight:700; font-size:12px; line-height:1.3;">${s.platform}</div>
           </div>
         </div>
+        ${(function(){
+          const cs = strategyPlatformState(s.requires);
+          const launchOnclick = "state.launchWizard.prefilled=true; state.launchWizard.strategy='"+s.id+"'; navigateTo('campaign-launch'); showToast('Strategy loaded — review and launch')";
+          return `
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <div style="font-size:12px; color:var(--text-muted);">Offer: <span style="color:var(--text-secondary); font-weight:600;">${s.offer}</span></div>
-          <button class="btn ${s.highlight ? 'primary' : ''}" style="margin-left:auto; ${s.highlight ? 'padding:9px 20px;' : ''}"
-            onclick="state.launchWizard.prefilled=true; state.launchWizard.strategy='${s.id}'; navigateTo('campaign-launch'); showToast('Strategy loaded — review and launch')">
-            Select &amp; Launch →
-          </button>
-        </div>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+            ${cs.html}
+            <button class="btn ${s.highlight && cs.allOk ? 'primary' : ''}" ${cs.allOk ? '' : 'disabled'}
+              title="${cs.allOk ? '' : 'Connect the required ad account to launch this strategy'}"
+              style="${s.highlight && cs.allOk ? 'padding:9px 20px;' : ''} ${cs.allOk ? '' : 'opacity:0.45; cursor:not-allowed;'}"
+              ${cs.allOk ? 'onclick="'+launchOnclick+'"' : ''}>
+              Select &amp; Launch →
+            </button>
+          </div>
+        </div>`;
+        })()}
       </div>
     `).join('')}
   `;
@@ -4787,6 +4822,9 @@ function replayTour(){
     renderTourStep();
   }, 80);
 }
+function prevTourStep(){
+  if(state.tour.step > 0){ state.tour.step--; renderTourStep(); }
+}
 function nextTourStep(){
   state.tour.step++;
   if(state.tour.step >= TOUR_STEPS.length){
@@ -4869,6 +4907,8 @@ function renderTourStep(){
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;
   document.getElementById('tour-step-label').textContent = 'Step '+(state.tour.step+1)+' of '+TOUR_STEPS.length;
+  const backBtn = document.getElementById('tour-back-btn');
+  if(backBtn) backBtn.style.display = state.tour.step === 0 ? 'none' : '';
   document.getElementById('tour-next-btn').textContent = state.tour.step === TOUR_STEPS.length-1 ? 'Done ✓' : 'Next →';
 }
 </script>
@@ -4940,6 +4980,9 @@ function renderTourStep(){
 .ob-step-label{ font-size:12px; color:var(--text-muted); }
 .ob-progress{ height:6px; border-radius:3px; background:var(--card-bg-2); overflow:hidden; margin-bottom:36px; }
 .ob-progress-fill{ height:100%; background:var(--orange); transition:width .3s ease; }
+.ob-info{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; border:1.5px solid var(--text-muted); color:var(--text-muted); font-size:12px; font-style:italic; font-weight:700; font-family:Georgia,serif; cursor:pointer; flex-shrink:0; transition:border-color .15s,color .15s; }
+.ob-info:hover{ border-color:var(--orange); color:var(--orange); }
+.ob-info-pop{ background:var(--card-bg-3, var(--card-bg-2)); border:1px solid var(--orange); border-radius:10px; padding:12px 14px; font-size:12.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:16px; max-width:520px; }
 .ob-shell h1{ font-size:24px; margin-bottom:6px; }
 .ob-shell .ob-sub{ color:var(--text-secondary); font-size:13px; margin-bottom:28px; }
 .ob-block{ margin-bottom:22px; }
@@ -5272,7 +5315,10 @@ AUTH_VIEWS['onboarding'] = function(){
     <div class="ob-shell">
       <div class="ob-top">
         <div class="logo" style="font-weight:800; font-size:16px; display:flex; align-items:center; gap:8px;"><div class="mark" style="width:26px;height:26px;border-radius:7px;background:var(--orange-dim);color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:13px;">✦</div> Foxtly</div>
-        <div class="ob-step-label">Step ${ob.step} of ${OB_TOTAL_STEPS}</div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="ob-step-label">Step ${ob.step} of ${OB_TOTAL_STEPS}</div>
+          <button onclick="confirmLeaveOnboarding()" title="Close" aria-label="Close setup" style="background:var(--card-bg-2); border:1px solid var(--border); color:var(--text-muted); width:28px; height:28px; border-radius:7px; cursor:pointer; font-size:13px; line-height:1;">✕</button>
+        </div>
       </div>
       <div class="ob-progress"><div class="ob-progress-fill" style="width:${pct}%;"></div></div>
       ${renderObStep(ob.step)}
@@ -5378,7 +5424,10 @@ function renderObStep(step){
       {id:'lead_quality',   icon:'🎯', label:'Improve lead quality',     desc:'Fewer but better-fit leads — tighter targeting, higher intent.'},
     ];
     return `
-      <h1>What's your main goal right now?</h1>
+      <h1 style="display:flex; align-items:center; gap:8px;">What's your main goal right now?
+        <span class="ob-info" onclick="toggleGoalInfo(event)" title="What's this?" role="button" tabindex="0">i</span>
+      </h1>
+      <div id="goal-info-pop" class="ob-info-pop" style="display:none;">This sets what I optimise your budget for — more calls, more revenue, or better-quality leads. Your pick changes who I target, how I bid, and the wording of your ads.</div>
       <p class="ob-sub">Pick one — it sets what I optimise for (reach, revenue, or lead quality), so the same budget gets spent differently.</p>
       <div class="ob-block choice-grid" style="grid-template-columns:repeat(2,1fr);">
         ${goals.map(g=>`
@@ -5504,6 +5553,28 @@ function onboardingSkip(){
   state.onboarding.step++;
   navigateAuth('onboarding');
 }
+function toggleGoalInfo(e){
+  if(e){ e.stopPropagation(); }
+  const p = document.getElementById('goal-info-pop');
+  if(p) p.style.display = (p.style.display === 'none') ? 'block' : 'none';
+}
+function confirmLeaveOnboarding(){
+  if(document.getElementById('ob-leave-overlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'ob-leave-overlay';
+  ov.style.cssText = 'position:fixed; inset:0; z-index:600; display:flex; align-items:center; justify-content:center; background:rgba(4,4,8,0.6); padding:20px;';
+  ov.innerHTML = `
+    <div style="background:var(--card-bg); border:1px solid var(--border-light); border-radius:16px; padding:28px; max-width:400px; text-align:center;">
+      <div style="font-size:36px; margin-bottom:12px;">🦊</div>
+      <h3 style="font-size:19px; font-weight:700; margin-bottom:10px;">Leave setup?</h3>
+      <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:22px;">Are you sure you want to leave? Please come back and finish — the more complete your details, the more accurately I can build your campaigns. Your progress is saved.</p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="btn primary" onclick="document.getElementById('ob-leave-overlay').remove()">Keep going</button>
+        <button class="btn" onclick="document.getElementById('ob-leave-overlay').remove(); navigateTo('decision-center');">Leave for now</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
 function renderObFinal(){
   const ob = state.onboarding;
   const steps = [
@@ -5519,12 +5590,16 @@ function renderObFinal(){
         <span style="font-size:28px; color:var(--orange);">✦</span>
       </div>
       <h1 style="font-size:22px; margin-bottom:8px;">Building your strategy, ${ob.businessName ? ob.businessName.split(' ')[0] : 'there'}…</h1>
-      <p style="margin-bottom:20px; font-size:13px;">I'm analyzing your market and preparing everything — this usually takes under a minute. You don't have to wait here: your answers are saved, and I'll notify you the moment it's ready.</p>
-      <div style="margin-bottom:24px;">
-        <button class="link-btn muted small" onclick="finishOnboarding()">Go to dashboard — I'll finish in the background →</button>
+      <p style="margin-bottom:22px; font-size:13px;">Your strategy will be ready shortly — no need to wait here. I'll ping you in the 🔔 bell the moment it's done, and your answers are already saved.</p>
+
+      <div style="max-width:440px; margin:0 auto 26px;">
+        <div style="height:8px; border-radius:99px; background:var(--card-bg-2); overflow:hidden;">
+          <div id="ob-build-bar" style="height:100%; width:0%; background:var(--orange); border-radius:99px; transition:width .5s ease;"></div>
+        </div>
+        <div id="ob-build-pct" style="font-size:11.5px; color:var(--text-muted); margin-top:6px;">0%</div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:10px; text-align:left; margin-bottom:32px;">
+      <div style="display:flex; flex-direction:column; gap:10px; text-align:left; margin-bottom:26px;">
         ${steps.map(s=>`
           <div class="ob-build-step" style="animation-delay:${s.delay};" id="obs-${s.delay.replace('.','_')}">
             <span class="ob-step-icon" style="font-size:18px; flex-shrink:0; transition:color .3s;">${s.icon}</span>
@@ -5534,7 +5609,14 @@ function renderObFinal(){
         `).join('')}
       </div>
 
-      <div id="ob-final-cta" style="opacity:0; transition:opacity .5s;">
+      <div id="ob-connect-cta" style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; text-align:left; margin-bottom:16px;">
+        <div style="font-weight:700; font-size:14px; margin-bottom:4px;">While I work — let's connect your accounts</div>
+        <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:12px;">Connect your Meta &amp; Google Ads now and I can launch the moment your strategy is ready — no waiting twice.</div>
+        <button class="btn primary small" onclick="goToConnections()">Connect accounts →</button>
+      </div>
+      <button class="link-btn muted small" onclick="finishOnboarding()">Or go to the dashboard — I'll finish in the background →</button>
+
+      <div id="ob-final-cta" style="opacity:0; transition:opacity .5s; margin-top:24px;">
         <div style="display:flex; align-items:center; justify-content:center; gap:8px; background:var(--green-dim, var(--card-bg-2)); border:1px solid var(--green); border-radius:10px; padding:12px 16px; margin-bottom:24px;">
           <span style="color:var(--green); font-size:16px;">✅</span>
           <span style="font-size:14px; font-weight:600; color:var(--green);">Your strategy is ready!</span>
@@ -5547,6 +5629,10 @@ function renderObFinal(){
   (function(){
     var delays = [${steps.map(s=>parseFloat(s.doneDelay)*1000).join(',')}];
     var steps = document.querySelectorAll('.ob-build-step');
+    var bar = document.getElementById('ob-build-bar');
+    var pctEl = document.getElementById('ob-build-pct');
+    var n = delays.length;
+    setTimeout(function(){ if(bar) bar.style.width='8%'; if(pctEl) pctEl.textContent='8%'; }, 100);
     delays.forEach(function(d,i){
       setTimeout(function(){
         if(steps[i]){
@@ -5554,10 +5640,15 @@ function renderObFinal(){
           var chk = steps[i].querySelector('.ob-step-check');
           if(chk) chk.style.opacity='1';
         }
-        if(i===delays.length-1){
+        var pct = Math.round((i+1)/n*100);
+        if(bar) bar.style.width = pct+'%';
+        if(pctEl) pctEl.textContent = pct+'%';
+        if(i===n-1){
           setTimeout(function(){
             var cta = document.getElementById('ob-final-cta');
             if(cta) cta.style.opacity='1';
+            var cc = document.getElementById('ob-connect-cta');
+            if(cc) cc.style.display='none';
           }, 600);
         }
       }, d);
@@ -5565,6 +5656,10 @@ function renderObFinal(){
   })();
   <\/script>
   `;
+}
+function goToConnections(){
+  finishOnboarding();
+  navigateTo('integrations');
 }
 function finishOnboarding(){
   clearOnboardingSave();
