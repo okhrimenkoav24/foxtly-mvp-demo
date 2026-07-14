@@ -405,6 +405,8 @@
   #tour-modal.open{ display:flex; }
   #tour-modal .box{ background:var(--card-bg); border:1px solid var(--border-light); border-radius:18px; padding:44px 40px; max-width:480px; text-align:center; }
   #tour-modal .box .emoji{ font-size:52px; margin-bottom:18px; }
+  #tour-modal .box .foxy-mascot{ margin-bottom:16px; line-height:0; }
+  #tour-modal .box .foxy-mascot .foxy-svg{ display:inline-block; }
   #tour-modal .box h3{ font-size:26px; font-weight:700; margin-bottom:14px; letter-spacing:-0.3px; }
   #tour-modal .box p{ font-size:16px; color:var(--text-secondary); margin-bottom:32px; line-height:1.65; }
   #tour-modal .box .row{ display:flex; gap:10px; justify-content:center; }
@@ -556,9 +558,30 @@
 </div>
 <div id="tour-modal" onclick="event.stopPropagation()">
   <div class="box">
-    <div class="emoji">✦</div>
-    <h3>Your AI marketing team is ready!</h3>
-    <p>I'm Foxtly. Let me quickly show you around.</p>
+    <div class="foxy-mascot">
+      <svg class="foxy-svg" viewBox="0 0 64 64" width="72" height="72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Foxy the fox mascot">
+        <style>
+          @keyframes foxy-blink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+          @keyframes foxy-ear{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg)}}
+          @keyframes foxy-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+          .foxy-svg{animation:foxy-bob 3s ease-in-out infinite}
+          .foxy-eye{transform-box:fill-box;transform-origin:center;animation:foxy-blink 4s infinite}
+          .foxy-earL{transform-box:fill-box;transform-origin:bottom right;animation:foxy-ear 5s ease-in-out infinite}
+          .foxy-earR{transform-box:fill-box;transform-origin:bottom left;animation:foxy-ear 5s ease-in-out infinite .4s}
+        </style>
+        <path class="foxy-earL" d="M14 8 L27 21 L9 25 Z" fill="#e8722e"/>
+        <path class="foxy-earR" d="M50 8 L37 21 L55 25 Z" fill="#e8722e"/>
+        <path d="M17 12 L24 20 L14 22 Z" fill="#2a1206"/>
+        <path d="M47 12 L40 20 L50 22 Z" fill="#2a1206"/>
+        <path d="M32 16 C46 16 52 26 52 36 C52 48 43 55 32 55 C21 55 12 48 12 36 C12 26 18 16 32 16 Z" fill="#f0883e"/>
+        <path d="M32 30 C40 30 46 36 46 44 C46 51 39 55 32 55 C25 55 18 51 18 44 C18 36 24 30 32 30 Z" fill="#fbe9d6"/>
+        <ellipse class="foxy-eye" cx="24" cy="34" rx="3" ry="4" fill="#2a1206"/>
+        <ellipse class="foxy-eye" cx="40" cy="34" rx="3" ry="4" fill="#2a1206"/>
+        <path d="M32 43 l4 4 h-8 Z" fill="#2a1206"/>
+      </svg>
+    </div>
+    <h3>Hi, I'm Foxy — your AI marketing lead</h3>
+    <p>Welcome to Foxtly. Let me give you a quick tour.</p>
     <div class="row">
       <button class="btn primary" style="padding:12px 36px; font-size:16px;" onclick="startTourSteps()">Start →</button>
     </div>
@@ -602,7 +625,7 @@
 const PROTO_SCREENS = [
   {group:'Workspace', items:[
     {id:'decision-center', label:'01 · Decision Center (start here)', mode:'app'},
-    {id:'onboarding', label:'02 · Onboarding questionnaire', mode:'auth'},
+    {id:'onboarding', label:'02 · Onboarding', mode:'auth'},
     {id:'knowledge-base', label:'03 · Knowledge Base', mode:'app'},
     {id:'integrations', label:'04 · Integrations', mode:'app'},
     {id:'campaign-strategy', label:'05 · Campaign Strategy', mode:'app'},
@@ -835,6 +858,7 @@ function navigateAuth(screenId, opts){
   root.innerHTML = renderer ? renderer() : '<div style="padding:60px;color:#fff">Not found</div>';
   window.scrollTo(0,0);
   closeProtoPanel();
+  if(screenId==='onboarding' && typeof saveOnboarding==='function') saveOnboarding();
   if(!opts.skipPush) updateUrl('auth', screenId);
 }
 
@@ -4704,13 +4728,37 @@ function getAIResponse(text){
   return "I'm a demo AI assistant, so I can only answer a few sample questions here. In the live product I'd answer using your real campaign data. Try asking about cost per lead, your leads, or what I did this week.";
 }
 
+// ---------- Foxy mascot (reusable) ----------
+const FOXY_SVG = `<svg class="foxy-svg" viewBox="0 0 64 64" width="64" height="64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Foxy the fox mascot">
+  <style>
+    @keyframes foxy-blink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+    @keyframes foxy-ear{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg)}}
+    @keyframes foxy-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+    .foxy-svg{animation:foxy-bob 3s ease-in-out infinite}
+    .foxy-eye{transform-box:fill-box;transform-origin:center;animation:foxy-blink 4s infinite}
+    .foxy-earL{transform-box:fill-box;transform-origin:bottom right;animation:foxy-ear 5s ease-in-out infinite}
+    .foxy-earR{transform-box:fill-box;transform-origin:bottom left;animation:foxy-ear 5s ease-in-out infinite .4s}
+  </style>
+  <path class="foxy-earL" d="M14 8 L27 21 L9 25 Z" fill="#e8722e"/>
+  <path class="foxy-earR" d="M50 8 L37 21 L55 25 Z" fill="#e8722e"/>
+  <path d="M17 12 L24 20 L14 22 Z" fill="#2a1206"/>
+  <path d="M47 12 L40 20 L50 22 Z" fill="#2a1206"/>
+  <path d="M32 16 C46 16 52 26 52 36 C52 48 43 55 32 55 C21 55 12 48 12 36 C12 26 18 16 32 16 Z" fill="#f0883e"/>
+  <path d="M32 30 C40 30 46 36 46 44 C46 51 39 55 32 55 C25 55 18 51 18 44 C18 36 24 30 32 30 Z" fill="#fbe9d6"/>
+  <ellipse class="foxy-eye" cx="24" cy="34" rx="3" ry="4" fill="#2a1206"/>
+  <ellipse class="foxy-eye" cx="40" cy="34" rx="3" ry="4" fill="#2a1206"/>
+  <path d="M32 43 l4 4 h-8 Z" fill="#2a1206"/>
+</svg>`;
+
 // ---------- Product Tour ----------
+// Ordered general → specific: first the foundation (what Foxtly knows about you),
+// then how it connects and plans, then how it acts, and finally how you sign off.
 const TOUR_STEPS = [
-  { target:'[data-tour="action-queue"]',      title:'✦ Action Queue',    body:"I surface changes here — pausing ads, adjusting budgets. Nothing runs until you approve." },
-  { target:'[data-tour="nav-approvals"]',     title:'☑ Approval Queue',  body:"Every AI suggestion lands here with a full explanation. Approve or reject — your call." },
-  { target:'[data-tour="nav-knowledge-base"]',title:'◐ Knowledge Base',  body:"Your business profile, market research and strategy live here. This is how I make decisions." },
-  { target:'[data-tour="nav-integrations"]',  title:'⎆ Integrations',    body:"Connect Meta, Google Ads and your CRM so I can manage campaigns and sync leads automatically." },
-  { target:'[data-tour="ai-fab"]',            title:'✦ AI Assistant',    body:"I'm one click away — ask me anything about your campaigns, results or next steps." },
+  { target:'[data-tour="nav-knowledge-base"]',title:'◐ Knowledge Base',  body:"Start here. This is everything I know about your business — profile, market research and strategy. I read this before making any decision." },
+  { target:'[data-tour="nav-integrations"]',  title:'⎆ Integrations',    body:"Connect Meta, Google Ads and your CRM so I can manage campaigns and sync your leads automatically." },
+  { target:'[data-tour="action-queue"]',      title:'✦ Action Queue',    body:"This is my to-do list for your account: the changes I want to make — pause a weak ad, shift budget — each with my reasoning." },
+  { target:'[data-tour="nav-approvals"]',     title:'☑ Approval Queue',  body:"This is your sign-off desk. Nothing from the Action Queue goes live until you approve it here — approve or reject, your call." },
+  { target:'[data-tour="ai-fab"]',            title:'✦ Ask Foxy',        body:"I'm one click away — ask me anything about your campaigns, results or next steps." },
 ];
 
 function openWelcomeTourModal(){
@@ -4753,13 +4801,13 @@ function nextTourStep(){
 function showQuestionnairePrompt(){
   const box = document.querySelector('#tour-modal .box');
   box.innerHTML = `
-    <div class="emoji">📋</div>
-    <h3>One more thing</h3>
-    <p>Want to answer a few quick questions about your business? It helps me build a more accurate strategy and recommendations for your ads.</p>
+    <div class="foxy-mascot">${FOXY_SVG}</div>
+    <h3>Let's build your custom strategy</h3>
+    <p>Tell me a bit about your business and I'll build a marketing strategy made for you — matched to your services, pricing, goals and competitors. About 3 minutes, no marketing jargon.</p>
     <div class="row">
-      <button class="btn" onclick="declineQuestionnairePrompt()">Maybe later</button>
-      <button class="btn primary" onclick="startQuestionnaire()">Start questionnaire</button>
+      <button class="btn primary" onclick="startQuestionnaire()">Build my strategy →</button>
     </div>
+    <button class="link-btn muted small" style="margin-top:14px;" onclick="declineQuestionnairePrompt()">I'll do this later</button>
   `;
   document.getElementById('tour-modal').classList.add('open');
 }
@@ -4940,11 +4988,26 @@ state.onboarding = {
   financialGoal: '',
   competitors: [],
   brandNote: '',
+  brandColor: '#f0883e',
   logoUploaded: false,
   photosUploaded: 0,
 };
 state.signup = { method:null, email:'', password:'', businessName:'', showPassword:false, agreed:false, error:null, loading:false };
 state.faqOpen = null;
+
+// ---- Onboarding persistence: survive a page refresh so progress isn't lost ----
+function saveOnboarding(){
+  try{ localStorage.setItem('foxtly_onboarding', JSON.stringify(state.onboarding)); }catch(e){}
+}
+function clearOnboardingSave(){
+  try{ localStorage.removeItem('foxtly_onboarding'); }catch(e){}
+}
+(function restoreOnboarding(){
+  try{
+    const raw = localStorage.getItem('foxtly_onboarding');
+    if(raw){ Object.assign(state.onboarding, JSON.parse(raw)); }
+  }catch(e){}
+})();
 
 const SERVICE_OPTIONS = {
   Plumbing: ['Drain cleaning','Water heater repair','Emergency plumbing','Pipe repair','Bathroom remodel','Leak detection'],
@@ -4997,7 +5060,7 @@ AUTH_VIEWS['landing'] = function(){
       <h2>How it works</h2>
       <p class="lead">From sign-up to optimized ads, in four simple steps.</p>
       <div class="mkt-grid-4">
-        <div class="mkt-step"><div class="num">1</div><h3>Tell us about your business</h3><p>A short questionnaire (~5 min), no marketing jargon.</p></div>
+        <div class="mkt-step"><div class="num">1</div><h3>Tell us about your business</h3><p>A few quick questions (~5 min), no marketing jargon.</p></div>
         <div class="mkt-step"><div class="num">2</div><h3>AI builds your strategy</h3><p>Market &amp; competitor research, channel and budget recommendations — delivered to your Knowledge Base within minutes, with an AI notification when it's ready.</p></div>
         <div class="mkt-step"><div class="num">3</div><h3>You approve, AI launches</h3><p>Every action needs your OK before it touches your ad account.</p></div>
         <div class="mkt-step"><div class="num">4</div><h3>AI optimizes every 6 hours</h3><p>Pauses what's not working, scales what is, and sends you a recap.</p></div>
@@ -5293,9 +5356,10 @@ function renderObStep(step){
         <div class="small muted mt-6">We use this to estimate ROI and recommend the right ad budget.</div>
       </div>
       <div class="ob-block field">
-        <label class="field-label">What's your approximate margin? <span class="muted">(optional)</span></label>
+        <label class="field-label">Roughly how much do you keep as profit? <span class="muted">(optional)</span></label>
+        <div class="small muted mt-4" style="margin-bottom:10px; line-height:1.5;">Out of every $100 a customer pays you, about how much is profit after your costs (materials, labour, fuel)? A rough guess is fine — it just helps us set a smart ad budget.</div>
         <div class="chip-group">
-          ${['<20%','20–35%','35–50%','50%+'].map(m=>`<span class="chip ${(ob.margin||'')===m?'selected':''}" onclick="state.onboarding.margin='${m}'; navigateAuth('onboarding')">${m}</span>`).join('')}
+          ${[['<20%','Under $20'],['20–35%','$20–35'],['35–50%','$35–50'],['50%+','Over $50']].map(([val,lab])=>`<span class="chip ${(ob.margin||'')===val?'selected':''}" onclick="state.onboarding.margin='${val}'; navigateAuth('onboarding')">${lab} <span class="muted">(${val})</span></span>`).join('')}
         </div>
       </div>
       <div class="ob-block field">
@@ -5306,21 +5370,22 @@ function renderObStep(step){
   }
   if(step===4){
     const goals = [
-      {id:'leads',          icon:'📈', label:'Get more leads & calls'},
-      {id:'sales',          icon:'💰', label:'Grow revenue / sales'},
-      {id:'start_growing',  icon:'🚀', label:'Start growing from scratch'},
-      {id:'fill_schedule',  icon:'📅', label:'Fill my schedule'},
-      {id:'new_service',    icon:'🛠️', label:'Launch a new service'},
-      {id:'lead_quality',   icon:'🎯', label:'Improve lead quality'},
+      {id:'leads',          icon:'📈', label:'Get more leads & calls',   desc:'Maximise call & form volume — broad reach, lowest cost per lead.'},
+      {id:'sales',          icon:'💰', label:'Grow revenue / sales',     desc:'Chase higher-value jobs and total revenue, not just lead count.'},
+      {id:'start_growing',  icon:'🚀', label:'Start growing from scratch',desc:'New to ads? Start lean, test channels, and build from zero.'},
+      {id:'fill_schedule',  icon:'📅', label:'Fill my schedule',         desc:'Steady, even flow of bookings — pacing over big spikes.'},
+      {id:'new_service',    icon:'🛠️', label:'Launch a new service',      desc:'Push demand for one specific service you plan to launch.'},
+      {id:'lead_quality',   icon:'🎯', label:'Improve lead quality',     desc:'Fewer but better-fit leads — tighter targeting, higher intent.'},
     ];
     return `
       <h1>What's your main goal right now?</h1>
-      <p class="ob-sub">We'll build your strategy around this.</p>
+      <p class="ob-sub">Pick one — it sets what I optimise for (reach, revenue, or lead quality), so the same budget gets spent differently.</p>
       <div class="ob-block choice-grid" style="grid-template-columns:repeat(2,1fr);">
         ${goals.map(g=>`
           <div class="choice-card ${ob.goal===g.id?'selected':''}" onclick="state.onboarding.goal='${g.id}'; navigateAuth('onboarding')">
             <div class="ico">${g.icon}</div>
             <div class="ttl">${g.label}</div>
+            <div class="desc">${g.desc}</div>
           </div>
         `).join('')}
       </div>
@@ -5357,7 +5422,7 @@ function renderObStep(step){
         <label class="field-label" style="margin-bottom:10px;">Competitor website <span class="muted">(up to 5)</span></label>
         ${ob.competitors.map((c,i)=>`
           <div class="competitor-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-            <input placeholder="https://competitorsite.com" value="${c.url}" onchange="state.onboarding.competitors[${i}].url=this.value" style="flex:1;">
+            <input type="text" placeholder="https://competitorsite.com" value="${c.url}" onchange="state.onboarding.competitors[${i}].url=this.value" style="flex:1;">
             <button class="btn small" onclick="removeCompetitor(${i})">✕</button>
           </div>
         `).join('')}
@@ -5369,16 +5434,23 @@ function renderObStep(step){
   if(step===7){
     return `
       <h1>Brand &amp; creative assets</h1>
-      <p class="ob-sub">Optional — helps Creative Studio generate on-brand ads.</p>
+      <p class="ob-sub">Optional — the logo, colour and style I'll use so generated ads look like <em>your</em> brand. You can skip this and add it later in Creative Studio.</p>
       <div class="ob-block">
-        <label class="field-label">Do you have a logo or brand colors?</label>
+        <label class="field-label">Logo</label>
         ${ob.logoUploaded
           ? `<div class="card tight small">✅ logo-mikesplumbing.png uploaded</div>`
           : `<button class="btn small" onclick="state.onboarding.logoUploaded=true; navigateAuth('onboarding')">Upload logo</button>`}
       </div>
       <div class="ob-block field">
-        <label class="field-label">Anything else AI should know about your business?</label>
-        <textarea id="ob-brandNote" rows="3" placeholder="e.g. We focus on emergency call-outs and pride ourselves on same-day response.">${ob.brandNote}</textarea>
+        <label class="field-label">Brand color <span class="muted">(optional)</span></label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input type="color" value="${ob.brandColor||'#f0883e'}" onchange="state.onboarding.brandColor=this.value" style="width:44px; height:36px; padding:2px; background:var(--card-bg-2); border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+          <span class="small muted">Used to tint your generated ads and creatives.</span>
+        </div>
+      </div>
+      <div class="ob-block field">
+        <label class="field-label">Brand voice or style I should match? <span class="muted">(optional)</span></label>
+        <textarea id="ob-brandNote" rows="3" placeholder="e.g. Friendly and local, no hard-sell — we emphasise same-day response and upfront pricing.">${ob.brandNote}</textarea>
       </div>
     `;
   }
@@ -5411,6 +5483,7 @@ function syncObFields(){
     const el = document.getElementById(id);
     if(el) ob[key] = el.value;
   });
+  saveOnboarding();
 }
 function onboardingNext(){
   syncObFields();
@@ -5446,7 +5519,10 @@ function renderObFinal(){
         <span style="font-size:28px; color:var(--orange);">✦</span>
       </div>
       <h1 style="font-size:22px; margin-bottom:8px;">Building your strategy, ${ob.businessName ? ob.businessName.split(' ')[0] : 'there'}…</h1>
-      <p style="margin-bottom:28px; font-size:13px;">I'm analyzing your market and preparing everything. This takes about 10 seconds.</p>
+      <p style="margin-bottom:20px; font-size:13px;">I'm analyzing your market and preparing everything — this usually takes under a minute. You don't have to wait here: your answers are saved, and I'll notify you the moment it's ready.</p>
+      <div style="margin-bottom:24px;">
+        <button class="link-btn muted small" onclick="finishOnboarding()">Go to dashboard — I'll finish in the background →</button>
+      </div>
 
       <div style="display:flex; flex-direction:column; gap:10px; text-align:left; margin-bottom:32px;">
         ${steps.map(s=>`
@@ -5491,6 +5567,7 @@ function renderObFinal(){
   `;
 }
 function finishOnboarding(){
+  clearOnboardingSave();
   if(state.onboarding.businessName){
     state.businessProfile.name = state.onboarding.businessName;
   }
