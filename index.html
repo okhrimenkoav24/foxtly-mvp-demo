@@ -284,6 +284,8 @@
   .foxy-note-text{ font-size:13px; color:var(--text-secondary); line-height:1.6; }
   .foxy-note.hero{ background:linear-gradient(180deg, rgba(240,136,62,0.16), rgba(240,136,62,0.06)); border-color:var(--orange); padding:16px 18px; }
   .foxy-note.hero .foxy-note-text{ color:var(--text); }
+  .foxy-chat-av{ width:32px; height:32px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .foxy-chat-av svg{ width:28px; height:28px; display:block; }
 
   /* toggle switch */
   .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
@@ -363,7 +365,8 @@
   .wizard-step-bar{ height:3px; border-radius:2px; margin-bottom:5px; }
   .wizard-step-label{ font-size:10px; }
   .ai-bubble{ display:flex; gap:10px; align-items:flex-start; background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
-  .ai-bubble .av{ width:28px; height:28px; border-radius:8px; background:var(--orange-dim); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+  .ai-bubble .av{ width:30px; height:30px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; overflow:hidden; }
+  .ai-bubble .av svg{ width:27px; height:27px; display:block; }
   .ai-bubble .msg{ font-size:13px; line-height:1.6; color:var(--text-secondary); }
   .ai-bubble .msg strong{ color:var(--text); }
   .setting-row{ background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; }
@@ -987,7 +990,7 @@ VIEWS['decision-center'] = function(){
             `).join('')}
           </div>
           <div class="card insight-card">
-            <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
+            <div class="flex items-center gap-8 mb-12"><div class="foxy-chat-av" style="width:30px; height:30px;">${FOXY_MINI}</div><h2>This week's insight</h2><span class="badge" style="background:var(--orange-dim); color:var(--orange); font-size:9px; font-weight:700; padding:2px 6px; border-radius:5px;">FOXY</span></div>
             <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target.</p>
           </div>
         </div>
@@ -1020,7 +1023,7 @@ VIEWS['decision-center'] = function(){
         `).join('')}
       </div>
       <div class="card insight-card">
-        <div class="flex items-center gap-8 mb-12"><span style="font-size:18px;">✦</span><h2>This week's insight</h2></div>
+        <div class="flex items-center gap-8 mb-12"><div class="foxy-chat-av" style="width:30px; height:30px;">${FOXY_MINI}</div><h2>This week's insight</h2><span class="badge" style="background:var(--orange-dim); color:var(--orange); font-size:9px; font-weight:700; padding:2px 6px; border-radius:5px;">FOXY</span></div>
         <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target. "Spring Promo" hasn't generated a lead in 48 hours and is likely worth pausing or refreshing the creative.</p>
         <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
       </div>
@@ -1029,9 +1032,12 @@ VIEWS['decision-center'] = function(){
 
     <div class="section" data-tour="action-queue">
       <div class="section-head">
-        <div>
-          <h2>Needs your attention ${pending.length ? `(${pending.length})` : ''}</h2>
-          <p>Your AI strategist found a few things worth a look. Nothing happens without your OK.</p>
+        <div style="display:flex; align-items:flex-start; gap:12px;">
+          <div class="foxy-chat-av" style="width:34px; height:34px;">${FOXY_MINI}</div>
+          <div>
+            <h2>Needs your attention ${pending.length ? `(${pending.length})` : ''}</h2>
+            <p>Foxy found a few things worth a look. Nothing happens without your OK.</p>
+          </div>
         </div>
       </div>
       <div class="action-list" id="action-list">
@@ -1947,7 +1953,7 @@ function renderLaunchStep1(){
     '</div>' : '';
   return prefilledBanner +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">Based on your profile <strong>(local plumbing, Toronto, lead gen)</strong>, Meta Ads will get you leads faster — home services convert 3× better on Facebook under $1K/month. Google is great for high-intent searches like "emergency plumber near me". Both platforms are ready to go.</div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px;">' +
@@ -1985,7 +1991,7 @@ function renderMetaFBPage(){
   ];
   const connected = meta.status === 'connected';
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Meta requires a Facebook Page to publish ads.</strong> Your ad will appear as coming from this page — it\'s shown in the "Sponsored" label on every placement. Select the page that best represents this business.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:28px;">' +
@@ -2026,7 +2032,7 @@ function renderMetaStep2(){
   ];
   const serviceOptions = ['Plumbing Repair','Emergency Plumbing','Water Heater Installation','Drain Cleaning','Pipe Repair'];
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Recommendation: Lead Generation.</strong> Your goal is customers contacting you about plumbing work. Lead Gen campaigns optimize exactly for form fills and messages — that\'s how you get real inquiries, not just ad views.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px;">' +
@@ -2069,7 +2075,7 @@ function renderMetaLeadDestination(){
     { val:'website',      icon:'🌐', label:'Website (landing page form)', desc:'Send users to your website form. Requires a working landing page.' },
   ];
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Instant Form is our default recommendation</strong> for lead generation. Facebook pre-fills the form with the user\'s name, email, and phone — so leads come in with zero friction. No landing page needed.</div>' +
     '</div>' +
     '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">' +
@@ -2129,7 +2135,7 @@ function renderMetaStep3(){
   }).join('');
 
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+cb.ageMax+' within '+cb.radius+' km of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
     '</div>' +
 
@@ -2205,7 +2211,7 @@ function renderMetaStep4(){
   const leadsHigh = Math.round(monthEstimate / cplLow);
 
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>New campaign = test phase.</strong> We start conservatively and scale +20–30% every 3–4 days when CPL is good. Enter your monthly budget and I\'ll calculate the right daily spend to start.</div>' +
     '</div>' +
 
@@ -2257,7 +2263,7 @@ function renderMetaStep4(){
 function renderMetaStep5(){
   const cb = state.campaignBuilder;
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>"Free Estimate" is a proven hook for local service businesses.</strong> It removes price anxiety and gets people to reach out before they\'re fully committed. Your competitors run "Emergency Service" — standing out with a free estimate typically drives 40–60% more clicks.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:28px;">' +
@@ -2276,7 +2282,7 @@ function renderMetaStep6(){
   const isImm = cb.schedule === 'immediate';
   const hasEndDate = !!cb._showEndDate;
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>We recommend no end date.</strong> Foxtly monitors performance daily and automatically pauses underperforming ads. You can stop at any time from your dashboard.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
@@ -2357,7 +2363,7 @@ function renderLaunchStep2(){
   });
 
   return '<div class="ai-bubble mb-16">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">I\'ve set up your campaign using your business profile and onboarding data. <strong>Everything looks ready to go.</strong> Review each setting — tap any row to see my reasoning or make changes.</div>' +
     '</div>' +
     rows +
@@ -2372,7 +2378,7 @@ function renderMetaStep7(){
   const cb = state.campaignBuilder;
   if(w.aiGenerating){
     return '<div class="ai-bubble mb-20">' +
-      '<div class="av">✦</div>' +
+      '<div class="av">'+FOXY_MINI+'</div>' +
       '<div class="msg"><span class="spinner" style="display:inline-block;width:13px;height:13px;margin-right:6px;vertical-align:middle;"></span>' +
       'Generating your creatives — <strong>2 images + 1 short video</strong> tailored to your offer and audience. Takes about 30 seconds…</div>' +
       '</div>' +
@@ -2409,7 +2415,7 @@ function renderMetaStep7(){
     '<button onclick="setLaunchStep(7)" style="background:none; border:none; color:var(--yellow); cursor:pointer; text-decoration:underline; font-size:13px; padding:0;">Set your offer first ↗</button>' +
     '</div>' : '';
   return '<div class="ai-bubble mb-16">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">I\'ll generate <strong>2 images + 1 short video (1:1, 8 sec)</strong> for your campaign. Each creative uses your branding and offer. Generation requires your brand kit and offer to be set.' +
     '<br><button onclick="regenerateCreatives()" style="margin-top:8px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:12px; padding:4px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">↻ Generate new batch</button>' +
     '</div>' +
@@ -2472,7 +2478,7 @@ function renderMetaStep8(){
     '</div></div></div></div>';
 
   return '<div class="ai-bubble mb-16">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">I wrote your ad copy based on your offer and what converts in home services. <strong>Review and tweak</strong> — the mini-preview updates with your edits.</div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:1fr auto; gap:20px; align-items:start; margin-bottom:28px;">' +
@@ -2522,7 +2528,7 @@ function renderMetaStep9(){
     '</div></div>';
 
   return '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">Here\'s exactly how your ad will look on mobile — <strong>Feed (left) and Stories (right).</strong> Everything looks great. Ready to launch?</div>' +
     '</div>' +
     '<div style="display:flex; gap:28px; justify-content:center; align-items:flex-start; margin-bottom:28px;">' +
@@ -2629,7 +2635,7 @@ function renderGoogleStep2(){
   ];
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Recommendation: Search Campaign.</strong> You\'re capturing people who are actively looking for a plumber right now — that\'s the highest intent you can buy. Performance Max works great at scale, but Search gives you more control and transparency early on.</div>' +
     '</div>' +
     '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom:28px;">' +
@@ -2673,7 +2679,7 @@ function renderGoogleStep3(){
   }).join('');
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>I selected 4 high-intent keywords your competitors bid on.</strong> Each has a match type — click the label to cycle: <span style="color:var(--text-muted); font-weight:600;">broad</span> captures variants, <span style="color:#4285F4; font-weight:600;">"phrase"</span> matches your phrase in any query, <span style="font-weight:600;">[exact]</span> matches only that exact search. Start broad, tighten after 7 days of data.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
@@ -2706,7 +2712,7 @@ function renderGoogleStep4(){
 
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>$'+w.gBudget+'/day is a solid starting point for local search in Toronto.</strong> Set your daily budget and campaign duration — I\'ll calculate your total spend and estimated clicks so you know exactly what to expect before committing.</div>' +
     '</div>' +
 
@@ -2761,7 +2767,7 @@ function renderGoogleStep5(){
   const preview = buildGoogleSerpMiniPreview(w.gHeadlines[0],w.gHeadlines[1],w.gHeadlines[2],w.gDescriptions[0],w.gDescriptions[1],w.gSitelinks,w.gCall,w.gLocation);
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>I wrote 3 headlines for your Responsive Search Ad.</strong> Google mixes and matches them automatically — each must make sense on its own. Max 30 chars each. The preview updates as you type.</div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; align-items:start;">' +
@@ -2791,7 +2797,7 @@ function renderGoogleStep6(){
   const preview = buildGoogleSerpMiniPreview(w.gHeadlines[0],w.gHeadlines[1],w.gHeadlines[2],w.gDescriptions[0],w.gDescriptions[1],w.gSitelinks,w.gCall,w.gLocation);
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Descriptions expand on your headlines and drive the click.</strong> Google shows up to 2 at a time. I focused on credibility, service area, and social proof. Max 90 chars each. Preview updates as you type.</div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; align-items:start;">' +
@@ -2819,7 +2825,7 @@ function renderGoogleStep7(){
   ];
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>I turned on all three extensions.</strong> They\'re free and increase your ad real estate. In local service categories, ads with call extensions convert 2× better than those without. No reason to leave them off.</div>' +
     '</div>' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
@@ -2869,7 +2875,7 @@ function renderGoogleStep8(){
 
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
-    '<div class="av">✦</div>' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">Here\'s exactly how your ad will appear in Google Search results. The headline combination, description, and extensions all look strong. Ready to submit?</div>' +
     '</div>' +
     '<div style="margin-bottom:28px;">' +
@@ -4600,11 +4606,19 @@ VIEWS['reports'] = function(){
 
 VIEWS['ai-assistant'] = function(){
   return `
-    <div class="topbar"><div><h1>AI Assistant</h1><div class="greeting">Your AI marketing strategist — ask anything about your campaigns, leads, and strategy</div></div></div>
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div class="foxy-chat-av" style="width:46px; height:46px;">${FOXY_SVG}</div>
+        <div>
+          <h1>Ask Foxy</h1>
+          <div class="greeting">Your AI marketing strategist — ask anything about your campaigns, leads, and strategy</div>
+        </div>
+      </div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
       <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:520px;">
         <div style="flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;" id="ai-fs-messages">
-          <div class="ai-msg bot" style="max-width:80%;">Hi! I'm your Foxtly AI. I'm watching your campaigns and leads, and I'll ask for your approval before making changes. Ask me anything below.</div>
+          ${foxyBotMsg("Hi, I'm Foxy — your AI marketing strategist. I keep an eye on your campaigns and leads, and I'll always ask for your approval before changing anything. Ask me anything below, or tap a quick question.")}
         </div>
         <div class="ai-input-row" style="border-top:1px solid var(--border);padding:14px 16px;">
           <input type="text" id="ai-fs-input" placeholder="Ask anything about your campaigns..." class="field-input" style="flex:1;" onkeydown="if(event.key==='Enter')sendAIFSMessage()">
@@ -4636,11 +4650,18 @@ function sendAIFSMessage(){
   if(container){
     container.innerHTML += `<div class="ai-msg user" style="align-self:flex-end;max-width:80%;">${msg}</div>`;
     setTimeout(()=>{
-      container.innerHTML += `<div class="ai-msg bot" style="max-width:80%;">Great question! In this demo, I can show you how the assistant would respond. In the live platform, I'd analyze your actual campaign data and give you a detailed answer.</div>`;
+      container.innerHTML += foxyBotMsg("Great question! In this demo I can show you how I'd respond. In the live platform I'd analyze your actual campaign data and give you a detailed answer.");
       container.scrollTop = container.scrollHeight;
     }, 800);
     container.scrollTop = container.scrollHeight;
   }
+}
+// Bot chat message with Foxy avatar (used on the AI Assistant page).
+function foxyBotMsg(text){
+  return '<div style="display:flex; gap:10px; align-items:flex-start; align-self:flex-start; max-width:85%;">'+
+    '<div class="foxy-chat-av">'+FOXY_MINI+'</div>'+
+    '<div class="ai-msg bot" style="max-width:none;">'+text+'</div>'+
+  '</div>';
 }
 
 function renderSparkline(change){
@@ -4693,7 +4714,7 @@ const AI_CHIPS = [
 
 function initAI(){
   document.getElementById('ai-messages').innerHTML = '';
-  appendAIMessage('bot', "Hi! I'm your Foxtly AI. I'm watching your campaigns and leads, and I'll ask for your approval before making changes. Ask me anything, or try one of these:");
+  appendAIMessage('bot', "Hi, I'm Foxy — your AI marketing strategist. I'm watching your campaigns and leads, and I'll always ask for your approval before making changes. Ask me anything, or try one of these:");
   renderAIChips();
 }
 
@@ -4712,8 +4733,22 @@ function toggleAI(){
 function appendAIMessage(who, text){
   const wrap = document.getElementById('ai-messages');
   const div = document.createElement('div');
-  div.className = `ai-msg ${who}`;
-  div.textContent = text;
+  if(who === 'bot'){
+    div.style.cssText = 'display:flex; gap:8px; align-items:flex-start; align-self:flex-start; max-width:90%;';
+    const av = document.createElement('div');
+    av.className = 'foxy-chat-av';
+    av.style.cssText = 'width:26px; height:26px;';
+    av.innerHTML = FOXY_MINI;
+    const bubble = document.createElement('div');
+    bubble.className = 'ai-msg bot';
+    bubble.style.maxWidth = 'none';
+    bubble.innerHTML = text;
+    div.appendChild(av);
+    div.appendChild(bubble);
+  } else {
+    div.className = `ai-msg ${who}`;
+    div.textContent = text;
+  }
   wrap.appendChild(div);
   wrap.scrollTop = wrap.scrollHeight;
 }
