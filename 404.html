@@ -283,7 +283,7 @@
   .foxy-note-av{ flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .foxy-note-av svg{ width:34px; height:34px; display:block; }
   .foxy-note-name{ font-size:11px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
-  .foxy-note-text{ font-size:13px; color:var(--text-secondary); line-height:1.6; }
+  .foxy-note-text{ font-size:13px; color:var(--text-secondary); line-height:1.6; max-width:72ch; }
   .foxy-note.hero{ background:linear-gradient(180deg, rgba(240,136,62,0.16), rgba(240,136,62,0.06)); border-color:var(--orange); padding:16px 18px; }
   .foxy-note.hero .foxy-note-text{ color:var(--text); }
   .foxy-chat-av{ width:32px; height:32px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
@@ -296,7 +296,7 @@
   .rs-sub{ font-size:12px; color:var(--text-muted); margin-top:1px; }
   .rs-panel{ background:var(--card-bg-2); border-radius:10px; padding:14px 16px; }
   .rs-take{ display:flex; gap:9px; align-items:flex-start; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border-light); }
-  .rs-take-txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.55; }
+  .rs-take-txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.55; max-width:72ch; }
   .rs-take-txt b{ color:var(--orange); font-weight:700; }
   .rs-disclaimer{ font-size:12.5px; color:var(--text-secondary); margin-top:12px; line-height:1.55; }
   .strategy-footer-note{ margin-top:24px; padding:14px 16px; background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; font-size:12.5px; color:var(--text-secondary); line-height:1.6; }
@@ -388,7 +388,7 @@
   .ai-bubble .av{ width:36px; height:36px; border-radius:50%; background:var(--card-bg-3); border:1.5px solid var(--orange); color:var(--orange); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; box-shadow:0 0 0 3px rgba(240,136,62,0.10); }
   .ai-bubble .av svg{ width:32px; height:32px; display:block; }
   .ai-bubble .msg{ position:relative; background:var(--card-bg-2); border:1px solid var(--border-light); border-radius:3px 14px 14px 14px; padding:11px 15px 12px; font-size:13px; line-height:1.6; color:var(--text-secondary); max-width:600px; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
-  .ai-bubble .msg::before{ content:'Foxy · AI tip'; display:block; font-size:10px; font-weight:800; letter-spacing:0.6px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; }
+  .ai-bubble .msg::before{ content:'Foxy tip'; display:block; font-size:10px; font-weight:800; letter-spacing:0.6px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; }
   .ai-bubble .msg::after{ content:''; position:absolute; left:-7px; top:13px; width:0; height:0; border-top:6px solid transparent; border-bottom:8px solid transparent; border-right:8px solid var(--card-bg-2); filter:drop-shadow(-1px 0 0 var(--border-light)); }
   .ai-bubble .msg strong{ color:var(--text); }
   .setting-row{ background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; }
@@ -401,7 +401,7 @@
   .preview-phone{ width:220px; background:#1a1a2e; border-radius:22px; overflow:hidden; border:3px solid #2a2a3e; box-shadow:0 12px 40px rgba(0,0,0,0.5); margin:0 auto; }
   .preview-phone .notch{ height:8px; background:#111; border-radius:0 0 8px 8px; width:60px; margin:0 auto; }
 
-  /* ============ AI ASSISTANT ============ */
+  /* ============ FOXY ============ */
   @keyframes fab-shimmer{ 0%{background-position:0% 50%;box-shadow:0 4px 20px rgba(240,136,62,0.5)} 50%{background-position:100% 50%;box-shadow:0 4px 32px rgba(240,80,20,0.85),0 0 0 6px rgba(240,136,62,0.18)} 100%{background-position:0% 50%;box-shadow:0 4px 20px rgba(240,136,62,0.5)} }
   @keyframes fab-pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.09)} }
   .ai-fab{ position:fixed !important; bottom:28px; right:32px; width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg,#ff9a4a,#d94f0a,#ffb347,#e05010,#ff7020); background-size:400% 400%; animation:fab-shimmer 1.6s ease-in-out infinite, fab-pulse 1.6s ease-in-out infinite; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; box-shadow:0 4px 20px rgba(240,136,62,0.5); cursor:pointer; z-index:410; border:none; }
@@ -516,7 +516,7 @@
       <button class="nav-subitem" data-subtab="research" onclick="setKbTab('research')">Market Research</button>
       <button class="nav-subitem" data-subtab="strategy" onclick="setKbTab('strategy')">Marketing Strategy</button>
     </div>
-    <button class="nav-item" data-view="ai-assistant" onclick="navigateTo('ai-assistant')"><span class="ic">✦</span> AI Assistant <span class="nav-badge" style="background:var(--orange-dim);color:var(--orange);font-size:9px;padding:2px 5px;border-radius:4px;font-weight:700;">AI</span></button>
+    <button class="nav-item" data-view="ai-assistant" onclick="navigateTo('ai-assistant')"><span class="ic">✦</span> Foxy <span class="nav-badge" style="background:var(--orange-dim);color:var(--orange);font-size:9px;padding:2px 5px;border-radius:4px;font-weight:700;">AI</span></button>
 
     <div class="nav-group-label">Setup</div>
     <button class="nav-item" data-view="integrations" data-tour="nav-integrations" onclick="navigateTo('integrations')"><span class="ic">⎆</span> Integrations</button>
@@ -556,7 +556,7 @@
 <!-- ============ AUTH / MARKETING ROOT ============ -->
 <div id="auth-root"></div>
 
-<!-- ============ AI ASSISTANT ============ -->
+<!-- ============ FOXY ============ -->
 <button class="ai-fab" id="ai-fab" data-tour="ai-fab" onclick="toggleAI()">✦<span class="nudge" id="ai-nudge"></span></button>
 <div class="ai-panel" id="ai-panel">
   <div class="ai-panel-head">
@@ -693,7 +693,7 @@ const state = {
   setupProgress: { profile:true, meta:true, google:false, firstCampaign:false },
   pendingIntegrationNudge: false,
   pendingActions: [
-    { id:'pa1', type:'urgent', icon:'⚠', title:"AI recommends pausing \"Spring Promo\" creative",
+    { id:'pa1', type:'urgent', icon:'⚠', title:"Foxy recommends pausing \"Spring Promo\" creative",
       desc:"Spending $40/day with 0 leads in the last 48 hours.", reversibility:'green',
       explain:"This creative has spent $40 over 48 hours with 0 leads. Pausing it will save ~$20/day. Your other creative ('Free Estimate Photo') is performing well (CPL $14) and will continue running.",
       diff:["Status: Active → Paused"], status:'proposed' },
@@ -703,7 +703,7 @@ const state = {
       diff:[], status:'proposed', linkView:'integrations' },
     { id:'pa3', type:'info', icon:'◎', title:"3 new leads need a status update",
       desc:"Lead pipeline hasn't been updated in 3+ days.", reversibility:'green',
-      explain:"Updating lead status helps AI understand which campaigns are producing real customers, not just clicks.",
+      explain:"Updating lead status helps Foxy understand which campaigns are producing real customers, not just clicks.",
       diff:[], status:'proposed', linkView:'leads' },
   ],
   history: [
@@ -745,9 +745,24 @@ const state = {
     audienceDescription: '',
     monthlyBudget: 1000,
   },
+  creativeTokens: 40,
   creatives: {
     uploaded: [],
     generated: [],
+    // Previously generated creatives, kept so they can be reused in future
+    // campaigns without spending tokens again. Grouped by the campaign they
+    // were first made for.
+    library: [
+      { campaign:'Free Estimate — Plumbing', date:'Jun 5', items:[
+        { id:'lib1', emoji:'🖼', ratio:'1:1',  label:'Team at work — Free Estimate' },
+        { id:'lib2', emoji:'🖼', ratio:'4:5',  label:'Before & after — drain' },
+        { id:'lib3', emoji:'🎬', ratio:'9:16', label:'8s video — same-day service' },
+      ]},
+      { campaign:'Emergency Plumbing — Search', date:'May 22', items:[
+        { id:'lib4', emoji:'🖼', ratio:'1:1',  label:'Burst pipe — 24/7' },
+        { id:'lib5', emoji:'🖼', ratio:'1.91:1', label:'Emergency banner' },
+      ]},
+    ],
   },
   launchWizard: {
     step: 1,
@@ -1058,7 +1073,7 @@ VIEWS['decision-center'] = function(){
       <div class="card insight-card">
         <div class="flex items-center gap-8 mb-12"><div class="foxy-chat-av" style="width:30px; height:30px;">${FOXY_MINI}</div><h2>This week's insight</h2><span class="badge" style="background:var(--orange-dim); color:var(--orange); font-size:9px; font-weight:700; padding:2px 6px; border-radius:5px;">FOXY</span></div>
         <p class="small muted" style="line-height:1.6;">Your "Free Estimate — Plumbing" campaign is your best performer at $18.70 per lead — well below your $30 target. "Spring Promo" hasn't generated a lead in 48 hours and is likely worth pausing or refreshing the creative.</p>
-        <button class="btn mt-16" onclick="askAIAbout('insight')">Ask AI more</button>
+        <button class="btn mt-16" onclick="askAIAbout('insight')">Ask Foxy</button>
       </div>
     </div>
     `}
@@ -1231,7 +1246,7 @@ function approveAction(id){
   navigateTo('decision-center');
   setTimeout(()=>{
     a.status = 'done';
-    state.history.unshift({date:'Just now', desc:a.title.replace(/^AI recommends /,''), who:'AI (approved by you)', status:'Completed'});
+    state.history.unshift({date:'Just now', desc:a.title.replace(/^Foxy recommends /,''), who:'Foxy (approved by you)', status:'Completed'});
     navigateTo('decision-center');
     showToast('Done — change applied. You can undo this anytime from the Approval history.', {success:true});
   }, 1100);
@@ -1263,7 +1278,7 @@ state.businessProfile = {
 
 VIEWS['knowledge-base'] = function(){
   return `
-    <div class="topbar"><div><h1>Knowledge Base</h1><div class="greeting">Everything Foxtly's AI knows about your business.</div></div></div>
+    <div class="topbar"><div><h1>Knowledge Base</h1><div class="greeting">Everything Foxy knows about your business.</div></div></div>
     <div class="tabs">
       <button class="tab ${state.kbTab==='profile'?'active':''}" onclick="setKbTab('profile')">Business Profile</button>
       <button class="tab ${state.kbTab==='research'?'active':''}" onclick="setKbTab('research')">Market Research</button>
@@ -1290,7 +1305,7 @@ function renderKbProfile(){
     ${state.profileChanged ? `
     <div class="card mb-16" style="border-color:var(--orange); background:var(--orange-dim);">
       <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;">
-        <div><strong style="color:var(--orange);">Your profile changed</strong> — want AI to refresh your strategy?</div>
+        <div><strong style="color:var(--orange);">Your profile changed</strong> — want Foxy to refresh your strategy?</div>
         <button class="btn primary small" onclick="refreshStrategy()">Refresh analysis</button>
       </div>
     </div>` : ''}
@@ -1340,7 +1355,7 @@ function saveProfileField(key){
 function refreshStrategy(){
   state.profileChanged = false;
   navigateTo('knowledge-base');
-  showToast('AI is refreshing your strategy based on your updated profile…');
+  showToast('Foxy is refreshing your strategy based on your updated profile…');
 }
 
 function renderKbResearch(){
@@ -1423,7 +1438,7 @@ function renderKbResearch(){
         <div class="rs-num">3</div>
         <div><div class="rs-title">Where's your opening?</div><div class="rs-sub">My recommended focus</div></div>
       </div>
-      ${foxyNote("<strong style=\"color:var(--orange);\">Go after routine service searches first.</strong><br>All three competitors bid heavily on \"emergency plumbing,\" where clicks cost $8–$12. The \"free estimate\" and drain-cleaning segments have far less competition at $3–$5 a click — so you get more leads per dollar while we build your ad history. Once your numbers are strong, we scale into the pricier keywords.", true)}
+      ${foxyNote("<strong style=\"color:var(--orange);\">Go after routine service searches first.</strong><br>All three competitors bid heavily on \"emergency plumbing,\" where clicks cost $8–$12. The \"free estimate\" and drain-cleaning searches (these are keyword themes, not services) have far less competition at $3–$5 a click — so you get more leads per dollar while we build your ad history. Once your numbers are strong, we scale into the pricier keywords.<br><span style=\"color:var(--text-muted); font-size:11.5px;\">This is my recommendation from current competition data — a starting hypothesis, not a rule. I'll confirm it against your real results in the first 2 weeks and adjust if the data says otherwise.</span>", true)}
     </div>
 
     <!-- 4. Forecast -->
@@ -1511,7 +1526,7 @@ function renderKbStrategy(){
 
     <!-- Strategy variants -->
     <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🎯 Choose Your Strategy</div>
-    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">AI generated 3 launch strategies based on your budget and goals. Pick one — we'll prefill your campaign and you can launch in minutes.</p>
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">Foxy generated 3 launch strategies based on your budget and goals. Pick one — we'll prefill your campaign and you can launch in minutes.</p>
 
     ${[
       {
@@ -1532,7 +1547,7 @@ function renderKbStrategy(){
       {
         id:'balanced',
         label:'Balanced',
-        tag:'AI recommended',
+        tag:"Foxy pick",
         tagColor:'var(--orange)',
         emoji:'⚖️',
         desc:'Meta first for fast ROI, then expand to Google Search once the algorithm learns your audience.',
@@ -1628,7 +1643,7 @@ VIEWS['integrations'] = function(){
           ${meta.status==='connected' ? '<span class="badge green">Connected ✅</span>' : meta.status==='connecting' ? '<span class="badge yellow"><span class="spinner"></span> Connecting…</span>' : '<span class="badge gray">Not connected</span>'}
         </div>
         <div style="font-weight:700; font-size:15px; margin-bottom:4px;">Meta Ads <span class="muted small">(Facebook & Instagram)</span></div>
-        <div class="small muted" style="line-height:1.55;">Connect your Facebook Business Manager to let AI manage your Meta ad campaigns.</div>
+        <div class="small muted" style="line-height:1.55;">Connect your Facebook Business Manager to let Foxy manage your Meta ad campaigns.</div>
         ${meta.status==='connected' ? `<div class="small mt-8">✅ ${meta.account}</div>` : ''}
         ${meta.status==='connected' ? `
         <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
@@ -1662,7 +1677,7 @@ VIEWS['integrations'] = function(){
         <div style="font-weight:700; font-size:15px; margin-bottom:4px;">Google Ads</div>
         ${google.status==='blocked'
           ? `<div class="small muted" style="line-height:1.55;">Google Ads connection is temporarily unavailable while we complete Google's API verification. We'll notify you the moment it's ready — no action needed from you.</div>`
-          : `<div class="small muted" style="line-height:1.55;">Connect your Google Ads account to let AI manage your Search and Performance Max campaigns.</div>`}
+          : `<div class="small muted" style="line-height:1.55;">Connect your Google Ads account to let Foxy manage your Search and Performance Max campaigns.</div>`}
         ${google.status==='connected' ? `<div class="small mt-8">✅ ${google.account}</div>` : ''}
         <div class="int-actions">
           ${google.status==='blocked' ? `<button class="btn" disabled title="Coming soon" style="width:100%; opacity:0.5; cursor:not-allowed;">Connect Google Ads</button>`
@@ -1812,7 +1827,7 @@ VIEWS['campaign-strategy'] = function(){
     <div class="section">
       <div class="section-head"><h2>Audience</h2></div>
       <div class="card mb-12" style="border-color:var(--orange);">
-        <div class="badge orange mb-8">AI recommendation</div>
+        <div class="badge orange mb-8">Foxy’s recommendation</div>
         <p class="small" style="line-height:1.6;">Homeowners, ${cb.ageMin}-${cb.ageMax}, within ${cb.radius} miles of ${cb.location}, interested in home improvement. I focused on homeowners because renters are less likely to need plumbing repairs — based on your service type.</p>
       </div>
       <div class="card">
@@ -1900,7 +1915,7 @@ const AI_CREATIVES = [
 
 function renderCampaignBlurScreen(){
   return `
-    <div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>
+    <div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">Foxy sets everything up — you just confirm and go</div></div></div>
     <div style="position:relative; max-width:640px; margin:0 auto;">
 
       <!-- Blurred wizard preview -->
@@ -1920,7 +1935,7 @@ function renderCampaignBlurScreen(){
         <div style="background:var(--card-bg-3); border:1px solid var(--border-light); border-radius:20px; padding:36px 32px; text-align:center; max-width:360px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
           <div style="font-size:42px; margin-bottom:16px;">🔌</div>
           <div style="font-size:18px; font-weight:700; margin-bottom:10px;">Connect an ad account first</div>
-          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:24px;">To launch campaigns, Foxtly needs access to your Meta or Google Ads account. Connect once — AI handles the rest.</p>
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.65; margin-bottom:24px;">To launch campaigns, Foxtly needs access to your Meta or Google Ads account. Connect once — Foxy handles the rest.</p>
           <div style="display:flex; flex-direction:column; gap:10px;">
             <button class="btn primary" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="navigateTo('integrations')">
               <span style="font-size:16px;">📘</span> Connect Meta Ads
@@ -1998,7 +2013,7 @@ VIEWS['campaign-launch'] = function(){
 
   const isWide = isGoogle && (w.step===8 || w.step===9);
   const maxW = isWide ? '960px' : '640px';
-  return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>' +
+  return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">Foxy sets everything up — you just confirm and go</div></div></div>' +
     progressBar + '<div style="max-width:'+maxW+'; margin:0 auto;">' + content + '</div>';
 };
 
@@ -2021,7 +2036,7 @@ function renderLaunchStep1(){
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px;">' +
 
     '<div onclick="setLaunchPlatform(\'meta\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(w.platform==='meta'?'var(--orange)':'var(--border)')+'; border-radius:14px; padding:24px 20px; position:relative;">' +
-    (w.platform==='meta' ? '<span class="badge orange" style="position:absolute;top:12px;right:12px;font-size:10px;">AI pick ✓</span>' : '') +
+    (w.platform==='meta' ? '<span class="badge orange" style="position:absolute;top:12px;right:12px;font-size:10px;">Foxy’s pick ✓</span>' : '') +
     '<div style="font-size:36px; margin-bottom:12px;">📘</div>' +
     '<div style="font-weight:700; font-size:16px; margin-bottom:4px;">Meta Ads</div>' +
     '<div class="small muted" style="margin-bottom:10px;">Facebook & Instagram</div>' +
@@ -2088,9 +2103,9 @@ function renderMetaFBPage(){
 function renderMetaStep2(){
   const cb = state.campaignBuilder;
   const goals = [
-    { val:'leads',     icon:'📋', label:'Lead Generation',  desc:'Collect contact info via forms and messages. AI pick for local services.' },
+    { val:'leads',     icon:'📋', label:'Lead Generation',  desc:'Collect contact info via forms and messages. Foxy’s pick for local services.' },
     { val:'sales',     icon:'💰', label:'Sales',             desc:'Drive purchases or bookings. Optimized for high-intent conversions.' },
-    { val:'awareness', icon:'📣', label:'Brand Awareness',   desc:'Maximize reach and visibility. Lower cost-per-impression, wider audience.' },
+    { val:'awareness', icon:'📣', label:'Brand Awareness',   desc:'Get your name seen — build recognition on Facebook & Instagram. This is about being remembered, not direct leads today; best when you want people to know you before they need you.' },
   ];
   const serviceOptions = ['Plumbing Repair','Emergency Plumbing','Water Heater Installation','Drain Cleaning','Pipe Repair'];
   return '<div class="ai-bubble mb-20">' +
@@ -2113,7 +2128,7 @@ function renderMetaStep2(){
       return '<div onclick="state.campaignBuilder.goal=\''+g.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px;">' +
         '<div style="font-size:26px; flex-shrink:0;">'+g.icon+'</div>' +
         '<div style="flex:1; min-width:0;">' +
-        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+g.label+(isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span>':'')+'</div>' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+g.label+(isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">Foxy’s pick</span>':'')+'</div>' +
         '<div class="small muted">'+g.desc+'</div>' +
         '</div>' +
         '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
@@ -2138,7 +2153,7 @@ function renderMetaLeadDestination(){
   ];
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>Instant Form is our default recommendation</strong> for lead generation. Facebook pre-fills the form with the user\'s name, email, and phone — so leads come in with zero friction. No landing page needed.</div>' +
+    '<div class="msg"><strong>This is one campaign — not three.</strong> I run it across Facebook, Instagram and Messenger automatically and shift budget to whichever placement performs best, so you don\'t pick placements by hand. The only choice here is <em>where a lead lands</em> once someone taps your ad. <strong>Instant Form is my pick</strong> — Facebook pre-fills name, email and phone, so leads arrive with zero friction and no landing page. Want to run more than one goal (e.g. leads + a website campaign)? You can — just launch this one, then start another.</div>' +
     '</div>' +
     '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">' +
     destinations.map(function(d){
@@ -2146,7 +2161,7 @@ function renderMetaLeadDestination(){
       return '<div onclick="state.campaignBuilder.leadDestination=\''+d.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px;">' +
         '<div style="font-size:26px; flex-shrink:0;">'+d.icon+'</div>' +
         '<div style="flex:1; min-width:0;">' +
-        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+d.label+(d.isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span>':'')+'</div>' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+d.label+(d.isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">Foxy’s pick</span>':'')+'</div>' +
         '<div class="small muted">'+d.desc+'</div>' +
         '</div>' +
         '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
@@ -2353,7 +2368,7 @@ function renderMetaStep6(){
 
     '<div onclick="state.campaignBuilder.schedule=\'immediate\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(isImm?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; background:var(--card-bg);">' +
     '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(isImm?'var(--orange)':'var(--border)')+';background:'+(isImm?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">'+(isImm?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'')+'</div>' +
-    '<div><div style="font-weight:600; font-size:14px;">Start after Meta approval <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">AI pick</span></div><div class="small muted">Campaign goes live automatically once approved (~24 hours)</div></div>' +
+    '<div><div style="font-weight:600; font-size:14px;">Start after Meta approval <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">Foxy’s pick</span></div><div class="small muted">Campaign goes live automatically once approved (~24 hours)</div></div>' +
     '</div>' +
 
     '<div onclick="state.campaignBuilder.schedule=\'scheduled\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(!isImm?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:16px 18px; display:flex; align-items:center; gap:14px; background:var(--card-bg);">' +
@@ -2479,7 +2494,8 @@ function renderMetaStep7(){
   return '<div class="ai-bubble mb-16">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">I\'ll generate <strong>2 images + 1 short video (1:1, 8 sec)</strong> for your campaign. Each creative uses your branding and offer. Generation requires your brand kit and offer to be set.' +
-    '<br><button onclick="regenerateCreatives()" style="margin-top:8px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:12px; padding:4px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">↻ Generate new batch</button>' +
+    '<br><span class="small muted" style="display:block; margin-top:6px;">💠 A new batch uses 3 generation tokens. Every creative is saved to your Creative library, so you can reuse it later for free.</span>' +
+    '<br><button onclick="regenerateCreatives()" style="margin-top:8px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:12px; padding:4px 10px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">↻ Generate new batch · 3 tokens</button>' +
     '</div>' +
     '</div>' +
     warningBanner +
@@ -3309,7 +3325,7 @@ function setLaunchStep(n){
       state.launchWizard.aiGenerating = false;
       state.launchWizard.aiGenDone = true;
       navigateTo('campaign-launch');
-      showToast('✦ AI: Your creatives are ready — 2 images + 1 video', {success:true});
+      showToast('✦ Foxy: Your creatives are ready — 2 images + 1 video', {success:true});
     }, 2800);
   } else {
     navigateTo('campaign-launch');
@@ -3330,7 +3346,7 @@ function regenerateCreatives(){
     state.launchWizard.aiGenerating = false;
     state.launchWizard.aiGenDone = true;
     navigateTo('campaign-launch');
-    showToast('✦ AI: New batch of creatives is ready', {success:true});
+    showToast('✦ Foxy: New batch of creatives is ready', {success:true});
   }, 2800);
 }
 function toggleLaunchCreative(i){
@@ -3397,6 +3413,7 @@ state.generating = false;
 state.generatingHiggsfield = false;
 state.csTab = 'upload';
 state.csUploadType = 'photo';
+state.csLibraryOpen = false;
 state.higgsfieldStyle = 'cinematic';
 state.higgsfieldDuration = '15';
 state.higgsfieldFormat = '9:16';
@@ -3610,7 +3627,7 @@ VIEWS['creative-studio'] = function(){
       <div class="section-head"><h2>4 · Add creatives</h2></div>
       <div class="tabs" style="margin-bottom:16px;">
         <button class="tab ${state.csTab==='upload'?'active':''}" onclick="setCsTab('upload')">📤 Upload your own</button>
-        <button class="tab ${state.csTab==='ai'?'active':''}" onclick="setCsTab('ai')">✨ AI Images</button>
+        <button class="tab ${state.csTab==='ai'?'active':''}" onclick="setCsTab('ai')">✨ Foxy Images</button>
         <button class="tab ${state.csTab==='higgsfield'?'active':''}" onclick="setCsTab('higgsfield')">🎬 Higgsfield Video</button>
       </div>
       ${state.csTab==='upload' ? renderCsUploadTab() : ''}
@@ -3631,6 +3648,9 @@ VIEWS['creative-studio'] = function(){
       ` : '<div class="card" style="text-align:center; color:var(--yellow); padding:24px;">⚠ You need at least one creative to launch your campaign.</div>'}
     </div>
 
+    <!-- ── CREATIVE LIBRARY ── -->
+    ${renderCreativeLibrary()}
+
     <!-- ── BOTTOM BAR ── -->
     <div class="card mt-16" style="position:sticky; bottom:16px; display:flex; justify-content:space-between; align-items:center; border-color:var(--border-light); box-shadow:0 8px 24px rgba(0,0,0,0.4);">
       <button class="link-btn muted" onclick="navigateTo('campaign-launch')">← Back to strategy</button>
@@ -3641,6 +3661,54 @@ VIEWS['creative-studio'] = function(){
     </div>
   `;
 };
+
+// Creative library — reuse creatives generated for earlier campaigns without
+// spending tokens again. Grouped by the campaign they were first made for.
+function renderCreativeLibrary(){
+  const lib = (state.creatives.library||[]);
+  const total = lib.reduce((n,g)=>n+g.items.length,0);
+  const open = state.csLibraryOpen;
+  return `
+    <div class="section mb-16">
+      <div class="section-head" style="cursor:pointer;" onclick="state.csLibraryOpen=${open?'false':'true'}; navigateTo('creative-studio')">
+        <h2>📚 Creative library ${total?`(${total})`:''} <span style="font-size:12px; color:var(--text-muted);">${open?'▾':'▸'}</span></h2>
+        <span class="small muted">Reuse past creatives — no tokens</span>
+      </div>
+      ${open ? (total ? lib.map(g=>`
+        <div class="mb-16">
+          <div class="small muted mb-8" style="font-weight:600;">${g.campaign} <span style="font-weight:400;">· ${g.date}</span></div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;">
+            ${g.items.map(it=>`
+              <div class="card tight" style="padding:12px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; justify-content:center; height:72px; background:var(--card-bg-3); border-radius:8px; font-size:26px;">${it.emoji}</div>
+                <div class="small" style="line-height:1.35;">${it.label}</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                  <span class="badge muted small">${it.ratio}</span>
+                  <button class="btn small" onclick="reuseLibraryCreative('${it.id}')">Reuse →</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('') : `<div class="card" style="text-align:center; color:var(--text-secondary); padding:20px;">Nothing here yet — creatives you generate get saved here automatically.</div>`) : ''}
+    </div>
+  `;
+}
+function reuseLibraryCreative(id){
+  let found=null;
+  (state.creatives.library||[]).forEach(g=>g.items.forEach(it=>{ if(it.id===id) found=it; }));
+  if(!found) return;
+  const ratioToAspect = {'1:1':'1:1','4:5':'4:5','9:16':'9:16','1.91:1':'1.91:1'};
+  state.creatives.generated.push({
+    id:'reuse-'+id+'-'+state.creatives.generated.length,
+    kind: found.emoji==='🎬' ? 'higgsfield' : 'generated',
+    aspectRatio: ratioToAspect[found.ratio] || '1:1',
+    label: found.label,
+    selected: true,
+  });
+  showToast('✦ Foxy: Reused "'+found.label+'" — no tokens spent', {success:true});
+  navigateTo('creative-studio');
+}
 
 function renderCsUploadTab(){
   const placements = state.creatives.placements;
@@ -3672,7 +3740,7 @@ function renderCsAiTab(){
   const aiGenerated = state.creatives.generated.filter(c=>c.kind==='generated');
   return `
     <div class="card" style="padding:20px;">
-      <p class="small muted mb-16">AI generates professional ad images from your business profile. Each image is auto-sized for your selected placements.</p>
+      <p class="small muted mb-16">Foxy generates professional ad images from your business profile. Each image is auto-sized for your selected placements.</p>
       <div class="field-row mb-14">
         <div class="field" style="margin-bottom:0;"><label class="field-label">Style</label>
           <select onchange="state.creativeGenStyle=this.value">
@@ -3699,12 +3767,13 @@ function renderCsAiTab(){
           <span class="small">Include logo & brand color</span>
         </label>
         <div style="display:flex; gap:8px;">
-          <button class="btn" onclick="generateCreativesSingle()" ${state.generating?'disabled':''}>Generate 1</button>
+          <button class="btn" onclick="generateCreativesSingle()" ${state.generating?'disabled':''}>Generate 1 · 1 token</button>
           <button class="btn primary" onclick="generateCreatives()" ${state.generating?'disabled':''}>
-            ${state.generating ? '<span class="spinner" style="display:inline-block;"></span> Generating…' : 'Generate 4 options'}
+            ${state.generating ? '<span class="spinner" style="display:inline-block;"></span> Generating…' : 'Generate 4 options · 4 tokens'}
           </button>
         </div>
       </div>
+      <div class="small muted mt-10" style="line-height:1.5; border-top:1px solid var(--border); padding-top:10px;">💠 Each image uses 1 generation token (${state.creativeTokens ?? 40} left this month). Everything you generate is saved to your <strong>Creative library</strong> below — you can reuse it in future campaigns without spending tokens again.</div>
     </div>
     ${state.generating ? `
       <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px;">
@@ -3715,7 +3784,7 @@ function renderCsAiTab(){
     ${aiGenerated.length ? `
       <div class="mt-16">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div class="small muted">AI-generated images</div>
+          <div class="small muted">Foxy-generated images</div>
           <button class="btn small" onclick="generateCreatives()">Generate more</button>
         </div>
         <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">
@@ -3766,7 +3835,7 @@ function renderCsHiggsfieldTab(){
           <button class="btn small" onclick="simulateHiggsfieldTemplate()" style="${state.higgsfieldTemplate?'border-color:var(--green);color:var(--green);':''}">
             📎 ${state.higgsfieldTemplate?'Reference image uploaded ✓':'Upload reference image (optional)'}
           </button>
-          <div class="small muted mt-6">Your photo as visual reference for the AI</div>
+          <div class="small muted mt-6">Your photo as visual reference for Foxy</div>
         </div>
         <button class="btn primary" onclick="generateHiggsfieldVideo()" ${state.generatingHiggsfield?'disabled':''}>
           ${state.generatingHiggsfield ? '<span class="spinner" style="display:inline-block;"></span> Generating video…' : '🎬 Generate video ad'}
@@ -3794,7 +3863,7 @@ function renderCsHiggsfieldTab(){
 function renderCreativeTile(c, removable){
   const isVideo = c.mediaType==='video';
   const ratioH = {'1:1':'100%','4:5':'125%','9:16':'177.8%'}[c.aspectRatio] || '100%';
-  const kindLabel = {'higgsfield':'🎬 Higgsfield','uploaded':'📤 Uploaded','generated':'✨ AI'}[c.kind] || c.kind;
+  const kindLabel = {'higgsfield':'🎬 Higgsfield','uploaded':'📤 Uploaded','generated':'✨ Foxy'}[c.kind] || c.kind;
   const brandColor = state.creatives.branding.color;
   const coverageChips = Object.entries(PLACEMENT_DEFS)
     .filter(([k]) => state.creatives.placements.includes(k))
@@ -3914,7 +3983,7 @@ function generateCreatives(){
       });
     }
     navigateTo('creative-studio');
-    showToast('4 AI images generated.', {success:true});
+    showToast('4 images generated by Foxy.', {success:true});
   }, 1600);
 }
 function generateCreativesSingle(){
@@ -3931,7 +4000,7 @@ function generateCreativesSingle(){
       gradient: CREATIVE_GRADIENTS[Math.floor(Math.random()*CREATIVE_GRADIENTS.length)]
     });
     navigateTo('creative-studio');
-    showToast('1 AI image generated.', {success:true});
+    showToast('1 image generated by Foxy.', {success:true});
   }, 1100);
 }
 function regenerateSingle(id){
@@ -3993,7 +4062,7 @@ VIEWS['approvals'] = function(){
   const pending = state.pendingActions.filter(a=>a.status==='proposed' || a.status==='applying');
   const rejected = state.pendingActions.filter(a=>a.status==='rejected');
   return `
-    <div class="topbar"><div><h1>Approval Queue</h1><div class="greeting">AI never acts on its own — review what's proposed and decide.</div></div></div>
+    <div class="topbar"><div><h1>Approval Queue</h1><div class="greeting">Foxy never acts on its own — review what's proposed and decide.</div></div></div>
     <div class="tabs">
       <button class="tab ${state.approvalsTab==='pending'?'active':''}" onclick="setApprovalsTab('pending')">Pending approvals ${pending.length?`(${pending.length})`:''}</button>
       <button class="tab ${state.approvalsTab==='history'?'active':''}" onclick="setApprovalsTab('history')">History</button>
@@ -4006,7 +4075,7 @@ function setApprovalsTab(tab){ state.approvalsTab = tab; navigateTo('approvals')
 
 function renderApprovalsPending(pending, rejected){
   if(pending.length===0 && rejected.length===0){
-    return `<div class="card" style="text-align:center; color:var(--text-secondary); padding:40px;">No pending approvals. AI is monitoring your campaigns and will notify you here if anything needs your attention.</div>`;
+    return `<div class="card" style="text-align:center; color:var(--text-secondary); padding:40px;">No pending approvals. Foxy is monitoring your campaigns and will notify you here if anything needs your attention.</div>`;
   }
   return `
     <div class="action-list">
@@ -4088,7 +4157,7 @@ function approveQueueAction(id){
   setTimeout(()=>{
     a.status = 'done';
     const isLaunch = id==='campaign-launch';
-    state.history.unshift({date:'Just now', desc: isLaunch ? 'Launched campaign "Free Estimate — Plumbing (New)"' : a.title.replace(/^AI recommends /,''), who:'AI (approved by you)', status:'Completed'});
+    state.history.unshift({date:'Just now', desc: isLaunch ? 'Launched campaign "Free Estimate — Plumbing (New)"' : a.title.replace(/^Foxy recommends /,''), who:'Foxy (approved by you)', status:'Completed'});
     navigateTo('approvals');
     showToast(isLaunch ? 'Your campaign is now live!' : 'Done — change applied.', {success:true});
   }, 1200);
@@ -4103,7 +4172,7 @@ function openRejectFlow(id){
       <div class="chip" onclick="setRejectReason(this,'I disagree with this')">I disagree with this</div>
       <div class="chip" onclick="setRejectReason(this,'Other')">Other</div>
     </div>
-    <textarea id="reject-note" placeholder="Optional note for AI..."></textarea>
+    <textarea id="reject-note" placeholder="Optional note for Foxy..."></textarea>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmReject()">Reject</button></div>
   `);
 }
@@ -4159,7 +4228,7 @@ VIEWS['settings'] = function(){
       </div>
       <div class="toggle-row">
         <div>
-          <div class="ttl">AI proposes a new action (needs approval)</div><div class="desc">Get notified when AI has a recommendation waiting for you.</div>
+          <div class="ttl">Foxy proposes a new action (needs approval)</div><div class="desc">Get notified when Foxy has a recommendation waiting for you.</div>
           ${p.ai_action ? `<div class="toggle-extra"><span class="small muted">Frequency:</span><select onchange="state.notifPrefs.ai_action_freq=this.value">
             <option value="immediately" ${p.ai_action_freq==='immediately'?'selected':''}>Immediately</option>
             <option value="daily" ${p.ai_action_freq==='daily'?'selected':''}>Bundled — once per day</option>
@@ -4182,7 +4251,7 @@ VIEWS['settings'] = function(){
       </div>
       <div class="toggle-row">
         <div>
-          <div class="ttl">Weekly performance report</div><div class="desc">Spend, leads, CPL and AI recommendations — once a week.</div>
+          <div class="ttl">Weekly performance report</div><div class="desc">Spend, leads, CPL and Foxy’s recommendations — once a week.</div>
           ${p.weekly_report ? `<div class="toggle-extra"><span class="small muted">Send on:</span><select onchange="state.notifPrefs.weekly_day=this.value">
             ${['Monday','Tuesday','Friday'].map(d=>`<option ${p.weekly_day===d?'selected':''}>${d}</option>`).join('')}
           </select></div>` : ''}
@@ -4242,8 +4311,8 @@ state.billing = {
   paymentMethod: null,
 };
 const PLANS = [
-  {id:'starter', name:'Starter', price:49, desc:'For getting started with one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Weekly AI report','Email support']},
-  {id:'growth', name:'Growth', price:99, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration','Weekly AI report + recommendations','Priority email support']},
+  {id:'starter', name:'Starter', price:49, desc:'For getting started with one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Weekly Foxy report','Email support']},
+  {id:'growth', name:'Growth', price:99, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration','Weekly Foxy report + recommendations','Priority email support']},
   {id:'pro', name:'Pro', price:199, desc:'For established advertisers.', features:['Unlimited ad spend','All platforms','Advanced reporting & exports','Dedicated account manager']},
 ];
 
@@ -4414,7 +4483,7 @@ function renderCampaignsList(){
         <tbody>
           ${CAMPAIGNS.map(c=>`
             <tr onclick="openCampaignDetail('${c.id}')">
-              <td><strong>${c.name}</strong> <span class="small muted">· ${c.platform} Ads</span> ${c.anomaly?`<span title="Spend up with no leads — AI is reviewing">🔴</span>`:''}</td>
+              <td><strong>${c.name}</strong> <span class="small muted">· ${c.platform} Ads</span> ${c.anomaly?`<span title="Spend up with no leads — Foxy is reviewing">🔴</span>`:''}</td>
               <td><span class="badge ${c.status==='Active'?'green':'yellow'}">${c.status}</span></td>
               <td>$${c.spend}</td>
               <td>${c.leads}</td>
@@ -4485,7 +4554,7 @@ function renderCampaignDetail(c){
             <div class="small muted mb-8">Current audience settings</div>
             <p class="mb-12">${c.audience}</p>
             <div class="card tight" style="background:var(--card-bg-2);">
-              <div class="badge orange mb-8">AI comment</div>
+              <div class="badge orange mb-8">Foxy’s note</div>
               <p class="small muted">${c.aiComment}</p>
             </div>
           </div>
@@ -4499,7 +4568,7 @@ function renderCampaignDetail(c){
       </div>
 
       <div class="card" data-tour="ai-insight">
-        <div class="flex items-center gap-8 mb-8"><span style="font-size:18px;">✦</span><h2>AI Insight</h2></div>
+        <div class="flex items-center gap-8 mb-8"><span style="font-size:18px;">✦</span><h2>Foxy Insight</h2></div>
         <div class="small muted mb-12">Last analyzed: 2 hours ago · Next check: in 4 hours</div>
         ${pendingForCampaign ? `
           <div class="card tight" style="background:var(--card-bg-2);">
@@ -4688,7 +4757,7 @@ VIEWS['leads'] = function(){
       </div>
     ` : ''}
     <div class="card tight mb-16" style="background:var(--card-bg-2);">
-      <div class="small muted">Connect your CRM and mark leads as "Closed Won" to help AI optimize your ads for real customers, not just clicks.</div>
+      <div class="small muted">Connect your CRM and mark leads as "Closed Won" to help Foxy optimize your ads for real customers, not just clicks.</div>
     </div>
 
     <div class="field-row mb-16">
@@ -4842,7 +4911,7 @@ function setLeadValue(id, val){
 .kanban-card:active{ cursor:grabbing; }
 </style>
 
-<!-- ===================== VIEW: 14 REPORTS (Weekly AI Report) ===================== -->
+<!-- ===================== VIEW: 14 REPORTS (Weekly Foxy Report) ===================== -->
 <script>
 state.reportsWeek = 'Jun 2 – Jun 8, 2026';
 state.reportConfig = {
@@ -4856,7 +4925,7 @@ state.reportConfig = {
 
 function toggleReportMetric(key){ state.reportConfig.metrics[key]=!state.reportConfig.metrics[key]; navigateTo('reports'); }
 function toggleReportBreakdown(key){ state.reportConfig.breakdown[key]=!state.reportConfig.breakdown[key]; navigateTo('reports'); }
-function generateReport(){ state.reportConfig.generated=true; navigateTo('reports'); showToast('✦ AI Report generated successfully'); }
+function generateReport(){ state.reportConfig.generated=true; navigateTo('reports'); showToast('✦ Report generated successfully'); }
 
 VIEWS['reports'] = function(){
   const cfg = state.reportConfig;
@@ -4899,7 +4968,7 @@ VIEWS['reports'] = function(){
         </table>
       </div>` : ''}
       <div class="card tight mt-16" style="background:var(--card-bg-2);">
-        <div class="badge orange mb-8">AI Summary</div>
+        <div class="badge orange mb-8">Foxy Summary</div>
         <p class="small">Your "Free Estimate — Plumbing" campaign accounts for 59% of spend and 75% of leads. ROAS of 4.2x is strong. Consider pausing Spring Promo and reallocating budget.</p>
       </div>
     </div>
@@ -4913,7 +4982,7 @@ VIEWS['reports'] = function(){
 
   return `
     <div class="topbar">
-      <div><h1>Report Builder</h1><div class="greeting">Build and export custom performance reports with AI analysis</div></div>
+      <div><h1>Report Builder</h1><div class="greeting">Build and export custom performance reports with Foxy analysis</div></div>
     </div>
     <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;">
       <div>
@@ -4961,7 +5030,7 @@ VIEWS['reports'] = function(){
             </label>
           `).join('')}
 
-          <button class="btn primary" style="width:100%;margin-top:16px;padding:12px;" onclick="generateReport()">✦ Generate AI Report</button>
+          <button class="btn primary" style="width:100%;margin-top:16px;padding:12px;" onclick="generateReport()">✦ Generate report</button>
         </div>
       </div>
 
@@ -4979,14 +5048,14 @@ VIEWS['ai-assistant'] = function(){
         <div class="foxy-chat-av" style="width:46px; height:46px;">${FOXY_SVG}</div>
         <div>
           <h1>Ask Foxy</h1>
-          <div class="greeting">Your AI marketing strategist — ask anything about your campaigns, leads, and strategy</div>
+          <div class="greeting">Foxy, your marketing strategist — ask anything about your campaigns, leads, and strategy</div>
         </div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
       <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:520px;">
         <div style="flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;" id="ai-fs-messages">
-          ${foxyBotMsg("Hi, I'm Foxy — your AI marketing strategist. I keep an eye on your campaigns and leads, and I'll always ask for your approval before changing anything. Ask me anything below, or tap a quick question.")}
+          ${foxyBotMsg("Hi, I'm Foxy, your marketing strategist. I keep an eye on your campaigns and leads, and I'll always ask for your approval before changing anything. Ask me anything below, or tap a quick question.")}
         </div>
         <div class="ai-input-row" style="border-top:1px solid var(--border);padding:14px 16px;">
           <input type="text" id="ai-fs-input" placeholder="Ask anything about your campaigns..." class="field-input" style="flex:1;" onkeydown="if(event.key==='Enter')sendAIFSMessage()">
@@ -5024,7 +5093,7 @@ function sendAIFSMessage(){
     container.scrollTop = container.scrollHeight;
   }
 }
-// Bot chat message with Foxy avatar (used on the AI Assistant page).
+// Bot chat message with Foxy avatar (used on the Foxy page).
 function foxyBotMsg(text){
   return '<div style="display:flex; gap:10px; align-items:flex-start; align-self:flex-start; max-width:85%;">'+
     '<div class="foxy-chat-av">'+FOXY_MINI+'</div>'+
@@ -5071,7 +5140,7 @@ function reviewRecommendation(id, icon, type, title, desc){
 }
 </script>
 
-<!-- ===================== AI ASSISTANT + PRODUCT TOUR ===================== -->
+<!-- ===================== FOXY + PRODUCT TOUR ===================== -->
 <script>
 const AI_CHIPS = [
   "What's my cost per lead?",
@@ -5082,7 +5151,7 @@ const AI_CHIPS = [
 
 function initAI(){
   document.getElementById('ai-messages').innerHTML = '';
-  appendAIMessage('bot', "Hi, I'm Foxy — your AI marketing strategist. I'm watching your campaigns and leads, and I'll always ask for your approval before making changes. Ask me anything, or try one of these:");
+  appendAIMessage('bot', "Hi, I'm Foxy, your marketing strategist. I'm watching your campaigns and leads, and I'll always ask for your approval before making changes. Ask me anything, or try one of these:");
   renderAIChips();
 }
 
@@ -5177,7 +5246,7 @@ function getAIResponse(text){
   if(t.includes('budget')){
     return `Right now your total daily budget is around $${state.campaignBuilder.budget}/day for "Free Estimate — Plumbing", with smaller spend on your other campaigns. I can suggest reallocating budget toward your best performer if you'd like — just say the word.`;
   }
-  return "I'm a demo AI assistant, so I can only answer a few sample questions here. In the live product I'd answer using your real campaign data. Try asking about cost per lead, your leads, or what I did this week.";
+  return "I'm Foxy, a demo assistant, so I can only answer a few sample questions here. In the live product I'd answer using your real campaign data. Try asking about cost per lead, your leads, or what I did this week.";
 }
 
 // ---------- Foxy mascot (reusable) ----------
@@ -5236,16 +5305,16 @@ function ico(name, size){
   return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; display:inline-block;">'+(ICO[name]||'')+'</svg>';
 }
 
-// Compact "Foxy's take" conclusion line, tied to the bottom of a report section.
+// Compact "Foxy’s take" conclusion line, tied to the bottom of a report section.
 function foxyTake(text){
   return '<div class="rs-take"><div class="foxy-chat-av" style="width:26px; height:26px;">'+FOXY_MINI+'</div>'+
     '<div class="rs-take-txt"><b>Foxy\'s take</b> — '+text+'</div></div>';
 }
-// Renders an inline recommendation styled as if spoken by Foxy, the AI marketer.
+// Renders an inline recommendation styled as if spoken by Foxy.
 function foxyNote(text, hero){
   return '<div class="foxy-note'+(hero?' hero':'')+'">'+
     '<div class="foxy-note-av">'+FOXY_MINI+'</div>'+
-    '<div><div class="foxy-note-name">Foxy · your AI marketer</div>'+
+    '<div><div class="foxy-note-name">Foxy</div>'+
     '<div class="foxy-note-text">'+text+'</div></div>'+
   '</div>';
 }
@@ -5532,6 +5601,8 @@ state.onboarding = {
   priceMax: '',
   margin: '',
   financialGoal: '',
+  locationType: '',
+  address: '',
   customServices: [],
   competitors: [],
   brandNote: '',
@@ -5583,7 +5654,7 @@ AUTH_VIEWS['landing'] = function(){
     </div>
 
     <div class="mkt-hero">
-      <h1>Your AI marketing manager for Meta &amp; Google Ads</h1>
+      <h1>Foxy — your marketing manager for Meta &amp; Google Ads</h1>
       <p class="sub">Foxtly analyzes your market, launches your campaigns, and optimizes them every 6 hours — so you can run your business, not your ads.</p>
       <div class="mkt-cta-row">
         <button class="btn primary" onclick="navigateAuth('signup')">Start Free Trial — 14 days, no credit card</button>
@@ -5608,16 +5679,16 @@ AUTH_VIEWS['landing'] = function(){
       <p class="lead">From sign-up to optimized ads, in four simple steps.</p>
       <div class="mkt-grid-4">
         <div class="mkt-step"><div class="num">1</div><h3>Tell us about your business</h3><p>A few quick questions (~5 min), no marketing jargon.</p></div>
-        <div class="mkt-step"><div class="num">2</div><h3>AI builds your strategy</h3><p>Market &amp; competitor research, channel and budget recommendations — delivered to your Knowledge Base within minutes, with an AI notification when it's ready.</p></div>
-        <div class="mkt-step"><div class="num">3</div><h3>You approve, AI launches</h3><p>Every action needs your OK before it touches your ad account.</p></div>
-        <div class="mkt-step"><div class="num">4</div><h3>AI optimizes every 6 hours</h3><p>Pauses what's not working, scales what is, and sends you a recap.</p></div>
+        <div class="mkt-step"><div class="num">2</div><h3>Foxy builds your strategy</h3><p>Market &amp; competitor research, channel and budget recommendations — delivered to your Knowledge Base within minutes, with a notification when it's ready.</p></div>
+        <div class="mkt-step"><div class="num">3</div><h3>You approve, Foxy launches</h3><p>Every action needs your OK before it touches your ad account.</p></div>
+        <div class="mkt-step"><div class="num">4</div><h3>Foxy optimizes every 6 hours</h3><p>Pauses what's not working, scales what is, and sends you a recap.</p></div>
       </div>
     </div>
 
     <div class="mkt-section">
       <h2>Why business owners trust Foxtly</h2>
       <div class="mkt-grid-3">
-        <div class="card"><h3 class="mb-8">You're always in control</h3><p class="small muted">AI never spends a dollar without your approval. Every recommendation shows exactly what will change and whether it can be undone.</p></div>
+        <div class="card"><h3 class="mb-8">You're always in control</h3><p class="small muted">Foxy never spends a dollar without your approval. Every recommendation shows exactly what will change and whether it can be undone.</p></div>
         <div class="card"><h3 class="mb-8">No agency fees, no contracts</h3><p class="small muted">Pricing well below a traditional agency retainer — cancel anytime.</p></div>
         <div class="card"><h3 class="mb-8">Built for your industry</h3><p class="small muted">Plumbing, HVAC, Roofing, Cleaning, Landscaping, General Contracting and more.</p></div>
       </div>
@@ -5642,7 +5713,7 @@ AUTH_VIEWS['landing'] = function(){
           <div class="for">For owner-operators (1-3 employees)</div>
           <ul>
             <li>1 ad account (Meta or Google)</li>
-            <li>AI optimization every 6 hours</li>
+            <li>Foxy re-optimizes every 6 hours</li>
             <li>Weekly performance report</li>
           </ul>
           <button class="btn" onclick="navigateAuth('signup')">Start Free Trial</button>
@@ -5674,8 +5745,8 @@ AUTH_VIEWS['landing'] = function(){
     <div class="mkt-section">
       <h2>Frequently asked questions</h2>
       <div>
-        ${renderFaqItem(0, "What if AI makes a mistake with my budget?", "Foxtly's safety rails mean AI can never exceed your set budget, and every action is labeled by how easily it can be undone — most changes are fully reversible.")}
-        ${renderFaqItem(1, "Do I need to know anything about Meta or Google Ads?", "No — Foxtly's AI assistant walks you through everything, in plain language.")}
+        ${renderFaqItem(0, "What if Foxy makes a mistake with my budget?", "Foxtly's safety rails mean Foxy can never exceed your set budget, and every action is labeled by how easily it can be undone — most changes are fully reversible.")}
+        ${renderFaqItem(1, "Do I need to know anything about Meta or Google Ads?", "No — Foxy walks you through everything, in plain language.")}
         ${renderFaqItem(2, "Can I cancel anytime?", "Yes, you can cancel your subscription at any time from Billing settings.")}
         ${renderFaqItem(3, "What happens after the free trial?", "You'll be prompted to add a payment method and choose a plan. If you don't, your campaigns are paused (your data and strategy are saved) until you reactivate.")}
       </div>
@@ -5872,9 +5943,22 @@ function renderObStep(step){
       <h1>Where do you operate?</h1>
       <p class="ob-sub">We'll use this to research your local market and target the right audience.</p>
       <div class="ob-block field">
-        <label class="field-label">What city is your business based in?</label>
-        <input id="ob-location" type="text" placeholder="e.g. Toronto, ON" value="${ob.location}">
+        <label class="field-label">Do customers come to you, or do you go to them?</label>
+        <div class="chip-group" style="flex-wrap:wrap;">
+          ${[['storefront','Customers visit me (shop / clinic / office)'],['mobile','I go to customers (mobile / on-site)']].map(([val,lab])=>`<span class="chip ${(ob.locationType||'')===val?'selected':''}" onclick="state.onboarding.locationType='${val}'; navigateAuth('onboarding')">${lab}</span>`).join('')}
+        </div>
       </div>
+      <div class="ob-block field">
+        <label class="field-label">What city are you based in?</label>
+        <input id="ob-location" type="text" placeholder="e.g. Toronto, ON" value="${ob.location}">
+        ${ob.locationType==='mobile' ? `<div class="small muted mt-6" style="line-height:1.5;">No exact address needed for a mobile business — I target the area you cover from your base city and the radius below.</div>` : ''}
+      </div>
+      ${ob.locationType==='storefront' ? `
+      <div class="ob-block field">
+        <label class="field-label">Your exact address</label>
+        <input id="ob-address" type="text" placeholder="e.g. 123 King St W, Toronto, ON" value="${ob.address||''}">
+        <div class="small muted mt-6" style="line-height:1.5;">Since customers come to you, I use your exact location to find the competitors nearest you and target the streets around you — not just the whole city.</div>
+      </div>` : ''}
       <div class="ob-block field">
         <label class="field-label">How far do you serve customers from your location?</label>
         <div class="chip-group" style="flex-wrap:wrap;">
@@ -5933,17 +6017,25 @@ function renderObStep(step){
       {id:'new_service',    icon:'tool',     label:'Launch a new service',      desc:'Push demand for one specific service you plan to launch.'},
       {id:'lead_quality',   icon:'filter',   label:'Improve lead quality',     desc:'Fewer but better-fit leads — tighter targeting, higher intent.'},
     ];
+    // Foxy pre-selects a sensible default so the client isn't guessing. For a
+    // local service business the best first goal is steady lead & call volume;
+    // the client can still switch. (Recommended pick — resolved from profile.)
+    const FOXY_GOAL = 'leads';
+    if(!ob.goal){ ob.goal = FOXY_GOAL; }
     return `
       <h1 style="display:flex; align-items:center; gap:8px;">What's your main goal right now?
         <span class="ob-info" onclick="toggleGoalInfo(event)" title="What's this?" role="button" tabindex="0">i</span>
       </h1>
       <div id="goal-info-pop" class="ob-info-pop" style="display:none;">This sets what I optimise your budget for — more calls, more revenue, or better-quality leads. Your pick changes who I target, how I bid, and the wording of your ads.</div>
-      <p class="ob-sub">Pick one — it sets what I optimise for (reach, revenue, or lead quality), so the same budget gets spent differently.</p>
+      <p class="ob-sub">I've pre-selected the goal I'd recommend for you — you can change it anytime.</p>
+      <div class="ob-info-pop" style="display:block; border-color:var(--orange); background:var(--orange-dim); margin-bottom:16px;">
+        <strong style="color:var(--orange);">Foxy’s pick: Get more leads &amp; calls.</strong> Most businesses do best starting here — steady volume first, then I tighten toward higher-value or better-quality leads once we have real numbers. Chasing "quality only" too early usually just means fewer leads while we're still learning what converts. Not sure which fits? Leave my pick.
+      </div>
       <div class="ob-block choice-grid" style="grid-template-columns:repeat(2,1fr);">
         ${goals.map(g=>`
           <div class="choice-card ${ob.goal===g.id?'selected':''}" onclick="state.onboarding.goal='${g.id}'; navigateAuth('onboarding')">
             <div class="ico" style="color:var(--orange);">${ico(g.icon,22)}</div>
-            <div class="ttl">${g.label}</div>
+            <div class="ttl" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">${g.label}${g.id===FOXY_GOAL?' <span style="font-size:10px; background:var(--orange); color:#000; padding:1px 6px; border-radius:4px; font-weight:700;">Foxy’s pick</span>':''}</div>
             <div class="desc">${g.desc}</div>
           </div>
         `).join('')}
@@ -6050,7 +6142,7 @@ function syncObFields(){
   const ob = state.onboarding;
   const map = {
     'ob-businessName':'businessName', 'ob-industryOther':'industryOther', 'ob-teamSize':'teamSize',
-    'ob-location':'location', 'ob-serviceArea':'serviceArea', 'ob-offer':'offer',
+    'ob-location':'location', 'ob-serviceArea':'serviceArea', 'ob-offer':'offer', 'ob-address':'address',
     'ob-priceMin':'priceMin', 'ob-priceMax':'priceMax', 'ob-financialGoal':'financialGoal',
     'ob-brandNote':'brandNote',
   };
@@ -6200,16 +6292,16 @@ function finishOnboarding(){
   const pa2 = state.pendingActions.find(a=>a.id==='pa2');
   if(pa2){
     pa2.title = "Connect your Meta and Google Ads accounts";
-    pa2.desc = "Finish setup to let AI start building and running campaigns.";
-    pa2.explain = "Connecting your ad accounts lets AI launch and optimize campaigns across Meta and Google, and report on real performance instead of estimates.";
+    pa2.desc = "Finish setup to let Foxy start building and running campaigns.";
+    pa2.explain = "Connecting your ad accounts lets Foxy launch and optimize campaigns across Meta and Google, and report on real performance instead of estimates.";
   }
   navigateTo('decision-center');
   showToast("Thanks! I'm building your strategy now — I'll let you know here as soon as it's ready. ✦");
   setTimeout(()=>{
-    appendAIMessage('bot', "✅ Good news — your AI marketing analysis is ready! I've put together your Business Profile, Market Research, and Strategy Report. Take a look in Knowledge Base whenever you're ready.");
+    appendAIMessage('bot', "✅ Good news — your marketing analysis is ready! I've put together your Business Profile, Market Research, and Strategy Report. Take a look in Knowledge Base whenever you're ready.");
     const nudge = document.getElementById('ai-nudge');
     if(nudge) nudge.style.display = '';
-    showToast('✦ AI: Your marketing analysis is ready — see <a class="link-btn small" onclick="navigateTo(\'knowledge-base\')">Knowledge Base</a>', {success:true});
+    showToast('✦ Foxy: Your marketing analysis is ready — see <a class="link-btn small" onclick="navigateTo(\'knowledge-base\')">Knowledge Base</a>', {success:true});
   }, 3000);
   setTimeout(()=>{
     state.pendingIntegrationNudge = true;
@@ -6217,7 +6309,7 @@ function finishOnboarding(){
     appendAIMessage('bot', "🔌 One more step — to start running campaigns, connect your Meta and Google Ads accounts in Integrations. I'll keep this reminder up until at least one account is connected.");
     const nudge = document.getElementById('ai-nudge');
     if(nudge) nudge.style.display = '';
-    showToast('✦ AI: Connect your ad accounts to get started — see <a class="link-btn small" onclick="navigateTo(\'integrations\')">Integrations</a>', {success:true});
+    showToast('✦ Foxy: Connect your ad accounts to get started — see <a class="link-btn small" onclick="navigateTo(\'integrations\')">Integrations</a>', {success:true});
   }, 6000);
 }
 </script>
