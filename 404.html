@@ -219,7 +219,9 @@
   .action-icon.ok{ background:var(--green-dim); color:var(--green); }
   .action-body{ flex:1; min-width:0; }
   .action-title{ font-size:13.5px; font-weight:600; margin-bottom:2px; }
-  .action-desc{ font-size:12.5px; color:var(--text-secondary); }
+  /* Cap line length so long recommendation text reads top-to-bottom instead of
+     one very wide left-to-right line (approval queue). */
+  .action-desc{ font-size:12.5px; color:var(--text-secondary); line-height:1.55; max-width:68ch; }
   .action-meta{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
   .action-actions{ flex-shrink:0; display:flex; gap:8px; align-items:center; }
   .applying-label{ font-size:12.5px; color:var(--text-muted); font-style:italic; display:flex; align-items:center; gap:6px; }
@@ -296,7 +298,10 @@
   .rs-take{ display:flex; gap:9px; align-items:flex-start; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border-light); }
   .rs-take-txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.55; }
   .rs-take-txt b{ color:var(--orange); font-weight:700; }
-  .rs-disclaimer{ font-size:11px; color:var(--text-muted); margin-top:12px; line-height:1.5; }
+  .rs-disclaimer{ font-size:12.5px; color:var(--text-secondary); margin-top:12px; line-height:1.55; }
+  .strategy-footer-note{ margin-top:24px; padding:14px 16px; background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; font-size:12.5px; color:var(--text-secondary); line-height:1.6; }
+  /* Cleaner line-wrapping: avoids single-word orphans / lone prepositions on their own line */
+  h1,h2,h3,h4,p,.ob-sub,.greeting,.msg,.rs-take-txt,.rs-disclaimer,.strategy-footer-note{ text-wrap:pretty; }
 
   /* toggle switch */
   .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
@@ -1409,7 +1414,7 @@ function renderKbResearch(){
           </tr>
         </tbody>
       </table>
-      ${foxyTake("<b>Rotorooter</b> is your toughest rival — heavy spend on both Meta and Google. Mr. Plumber runs Meta only, and Toronto Pro is quiet. Nobody's seriously covering routine <b>drain-cleaning</b> and <b>free-estimate</b> searches.")}
+      ${foxyTake("<b>Rotorooter</b> is your toughest rival — heavy spend on both Meta and Google. Mr. Plumber runs Meta only, and Toronto Pro is quiet. Right now no competitor is seriously covering routine <b>drain-cleaning</b> and <b>free-estimate</b> searches.<br><span style=\"color:var(--text-muted); font-size:11.5px;\">Source: live ad data from Meta Ad Library and Google Ads Transparency Center, checked Jun 2026. Ad spend is an estimate — we recheck it as your campaigns run.</span>")}
     </div>
 
     <!-- 3. Opportunity (hero) -->
@@ -1441,7 +1446,7 @@ function renderKbResearch(){
         <div class="rs-panel" style="text-align:center;">
           <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Revenue / month</div>
           <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; color:var(--orange);">$5–9K</div>
-          <div style="font-size:12px; color:var(--text-muted);">at ~25% close rate, $600 avg job</div>
+          <div style="font-size:12px; color:var(--text-muted);">assumes a ~25% close rate &amp; $600 avg job — varies by service; we'll tune it to yours</div>
         </div>
       </div>
       <div class="rs-disclaimer">Estimates based on Toronto market data. Actual results vary and will be refined after your first campaigns run.</div>
@@ -1451,6 +1456,10 @@ function renderKbResearch(){
     <!-- CTA -->
     <div style="display:flex; justify-content:center; padding:8px 0 16px;">
       <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="state.launchWizard.prefilled=true; navigateTo('campaign-launch')">Launch Campaign based on this →</button>
+    </div>
+
+    <div class="strategy-footer-note">
+      <strong>How to read this plan.</strong> Figures here are Foxtly's estimates built from live market data (Google Search volumes, Meta Ad Library, Google Ads Transparency Center) for ${state.onboarding.location||'your area'}, plus the details you gave us. They're a starting point, not a promise — real numbers depend on your offer, close rate and service. Foxtly refines every estimate automatically once your first campaigns produce live data.
     </div>
   `;
 }
@@ -1474,7 +1483,7 @@ function strategyPlatformState(requires){
 function renderKbStrategy(){
   return `
     <div class="section-head">
-      <div><h2>AI Marketing Strategy</h2><p style="color:var(--text-secondary); font-size:13px;">Generated Jun 5, 2026 · based on your business profile and market research</p></div>
+      <div><h2>Your Marketing Strategy</h2><p style="color:var(--text-secondary); font-size:13px;">Built by Foxtly, Jun 5, 2026 · from your business profile and live market research</p></div>
       <div class="flex gap-8">
         <button class="btn small" onclick="showToast('Refreshing strategy…')">↻ Refresh</button>
         <button class="btn small" onclick="showToast('Generating PDF…')">↓ PDF</button>
@@ -1562,20 +1571,20 @@ function renderKbStrategy(){
             <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin:0;">${s.desc}</p>
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;">
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Budget</div>
             <div style="font-weight:700; font-size:14px;">${s.budget}</div>
           </div>
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Est. CPL</div>
             <div style="font-weight:700; font-size:14px;">${s.cpl}</div>
           </div>
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Leads / mo</div>
             <div style="font-weight:700; font-size:14px;">${s.leads}</div>
           </div>
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:9px 12px;">
+          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Platform</div>
             <div style="font-weight:700; font-size:12px; line-height:1.3;">${s.platform}</div>
           </div>
@@ -1636,7 +1645,7 @@ VIEWS['integrations'] = function(){
         </div>` : ''}
         <div class="int-actions">
           ${meta.status==='connected'
-            ? `<button class="btn small danger" style="width:100%;" onclick="disconnectMeta()">Disconnect</button>`
+            ? `<div style="text-align:right;"><button class="link-btn muted small" style="opacity:0.65; font-size:11.5px;" onclick="disconnectMeta()">Disconnect</button></div>`
             : meta.status==='connecting' ? ''
             : `<button class="btn primary" style="width:100%;" onclick="connectMeta()">Connect Meta Ads</button>`}
         </div>
@@ -1657,7 +1666,7 @@ VIEWS['integrations'] = function(){
         ${google.status==='connected' ? `<div class="small mt-8">✅ ${google.account}</div>` : ''}
         <div class="int-actions">
           ${google.status==='blocked' ? `<button class="btn" disabled title="Coming soon" style="width:100%; opacity:0.5; cursor:not-allowed;">Connect Google Ads</button>`
-            : google.status==='connected' ? `<button class="btn small danger" style="width:100%;" onclick="disconnectGoogle()">Disconnect</button>`
+            : google.status==='connected' ? `<div style="text-align:right;"><button class="link-btn muted small" style="opacity:0.65; font-size:11.5px;" onclick="disconnectGoogle()">Disconnect</button></div>`
             : google.status==='connecting' ? ''
             : `<button class="btn primary" style="width:100%;" onclick="connectGoogle()">Connect Google Ads</button>`}
         </div>
@@ -1670,10 +1679,10 @@ VIEWS['integrations'] = function(){
       ${crm.status==='connected' ? `
         <div class="flex justify-between items-center">
           <div class="small">✅ Connected to <strong>${crm.name}</strong></div>
-          <button class="btn small danger" onclick="disconnectCrm()">Disconnect</button>
+          <button class="link-btn muted small" style="opacity:0.65; font-size:11.5px;" onclick="disconnectCrm()">Disconnect</button>
         </div>
       ` : crm.status==='none' ? `
-        <div class="small">No problem — Foxtly includes a simple built-in CRM. <a class="link-btn small" onclick="navigateTo('leads')">Go to Leads →</a></div>
+        <div class="small">Don't use a CRM yet? That's fine — Foxtly has a simple built-in CRM, so your leads are captured here automatically. <a class="link-btn small" onclick="navigateTo('leads')">Go to Leads →</a></div>
         <div class="choice-grid mt-12">
           <div class="choice-card" onclick="connectCrm('HubSpot')"><div class="ico">🟠</div><div class="ttl">HubSpot</div><div class="desc">Connect</div></div>
           <div class="choice-card" onclick="connectCrm('Zoho CRM')"><div class="ico">🔵</div><div class="ttl">Zoho CRM</div><div class="desc">Connect</div></div>
@@ -2231,7 +2240,7 @@ function renderMetaStep3(){
     '<div style="margin-top:22px;">' +
     '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Describe your target audience <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-muted);">(optional)</span></label>' +
     '<textarea placeholder="e.g. Homeowners worried about old pipes, families with children…" onchange="state.campaignBuilder.audienceDescription=this.value" rows="2" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px; resize:vertical; font-family:inherit;">'+cb.audienceDescription+'</textarea>' +
-    '<div class="small muted mt-6">AI uses this to refine interest targeting and creative copy.</div>' +
+    '<div class="small muted mt-6">Foxtly uses this to refine interest targeting and creative copy.</div>' +
     '</div>' +
 
     '</div>' +
@@ -2265,7 +2274,7 @@ function renderMetaStep4(){
 
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>New campaign = test phase.</strong> We start conservatively and scale +20–30% every 3–4 days when CPL is good. Enter your monthly budget and I\'ll calculate the right daily spend to start.</div>' +
+    '<div class="msg"><strong>New campaign = test phase.</strong> We start below your monthly budget on purpose, then — only if results are good — step the daily spend up by 20–30% every 3–4 days until it reaches your budget. We never go over the monthly number you set. Enter your monthly budget and I\'ll work out the right daily amount to start.</div>' +
     '</div>' +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
@@ -2274,7 +2283,7 @@ function renderMetaStep4(){
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Monthly budget</div>' +
     '<div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">' +
     '<span style="font-size:20px; color:var(--text-muted);">$</span>' +
-    '<input type="number" min="300" max="50000" value="'+monthly+'" oninput="state.campaignBuilder.monthlyBudget=parseInt(this.value)||300; state.campaignBuilder._budgetOverridden=false; state.campaignBuilder.budget=calcRecommendedDaily(state.campaignBuilder.monthlyBudget); navigateTo(\'campaign-launch\')" style="flex:1; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:11px 14px; color:var(--text); font-size:20px; font-weight:700;">' +
+    '<input type="number" min="300" max="50000" value="'+monthly+'" onchange="state.campaignBuilder.monthlyBudget=parseInt(this.value)||300; state.campaignBuilder._budgetOverridden=false; state.campaignBuilder.budget=calcRecommendedDaily(state.campaignBuilder.monthlyBudget); navigateTo(\'campaign-launch\')" style="flex:1; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:11px 14px; color:var(--text); font-size:20px; font-weight:700;">' +
     '<span style="font-size:14px; color:var(--text-muted); white-space:nowrap;">/ month</span>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between;"><span class="small muted">Min $300/mo</span><span class="small muted">No upper limit</span></div>' +
@@ -2283,14 +2292,14 @@ function renderMetaStep4(){
     '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:10px; padding:16px 20px; margin-bottom:20px;">' +
     '<div style="font-size:11px; font-weight:600; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommended daily budget</div>' +
     '<div style="font-size:36px; font-weight:700; color:var(--orange); margin-bottom:4px;">$'+recDaily+'/day</div>' +
-    '<div class="small" style="color:var(--text-secondary); line-height:1.5;">Conservative start for a $'+monthly+'/mo budget. We scale up +20–30% every 3–4 days when your CPL is on target.</div>' +
+    '<div class="small" style="color:var(--text-secondary); line-height:1.5;">A conservative start that stays inside your $'+monthly+'/mo budget. When your cost-per-lead is on target we raise the daily spend by 20–30% every 3–4 days, up to — never past — your monthly budget.</div>' +
     '</div>' +
 
     '<div style="margin-bottom:20px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Override daily budget <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optional — min $15)</span></div>' +
     '<div style="display:flex; align-items:center; gap:10px;">' +
     '<span style="font-size:16px; color:var(--text-muted);">$</span>' +
-    '<input type="number" min="15" value="'+daily+'" oninput="state.campaignBuilder.budget=Math.max(15,parseInt(this.value)||15); state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="width:120px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:16px; font-weight:600;">' +
+    '<input type="number" min="15" value="'+daily+'" onchange="state.campaignBuilder.budget=Math.max(15,parseInt(this.value)||15); state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="width:120px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:16px; font-weight:600;">' +
     '<span class="small muted">/ day</span>' +
     '</div>' +
     '</div>' +
@@ -2778,9 +2787,13 @@ function renderGoogleLocation(){
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Target locations <span style="color:var(--red);">*</span></div>' +
-    '<div style="margin-bottom:16px;">'+chips+'</div>' +
+    '<div style="margin-bottom:14px;">'+chips+'</div>' +
+    '<div style="display:flex; gap:8px; margin-bottom:16px;">' +
+    '<input type="text" id="lw-geo-input" placeholder="Add a city, region or postal code…" style="flex:1; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px;" onkeydown="if(event.key===\'Enter\'){addGoogleGeoInput();}" />' +
+    '<button class="btn" onclick="addGoogleGeoInput()" style="flex-shrink:0; padding:9px 16px;">+ Add</button>' +
+    '</div>' +
     (avail.length ?
-      '<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Add from your service area:</div>' +
+      '<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Or add from your service area:</div>' +
       '<div style="display:flex; flex-wrap:wrap; gap:8px;">' +
       avail.map(function(s){
         return '<div onclick="addGoogleGeo(\''+s.replace(/'/g,"\\'")+'\')" style="cursor:pointer; padding:7px 13px; border-radius:99px; font-size:12.5px; border:1px solid var(--border); background:var(--card-bg-2); color:var(--text-secondary);">+ '+s+'</div>';
@@ -2800,6 +2813,11 @@ function addGoogleGeo(name){
   if(!state.launchWizard.gGeo) state.launchWizard.gGeo = [];
   if(state.launchWizard.gGeo.indexOf(name) === -1) state.launchWizard.gGeo.push(name);
   navigateTo('campaign-launch');
+}
+function addGoogleGeoInput(){
+  const inp = document.getElementById('lw-geo-input');
+  if(!inp || !inp.value.trim()) return;
+  addGoogleGeo(inp.value.trim());
 }
 function removeGoogleGeo(i){
   if(state.launchWizard.gGeo) state.launchWizard.gGeo.splice(i,1);
@@ -5250,6 +5268,7 @@ function skipTour(){
   document.getElementById('tour-modal').classList.remove('open');
   document.getElementById('tour-overlay').classList.remove('open');
   state.tour.active = false;
+  detachTourReposition();
 }
 function startTourSteps(){
   document.getElementById('tour-modal').classList.remove('open');
@@ -5278,6 +5297,7 @@ function nextTourStep(){
     clearTourGlow();
     document.getElementById('tour-overlay').classList.remove('open');
     state.tour.active = false;
+    detachTourReposition();
     setTimeout(showQuestionnairePrompt, 3000);
     return;
   }
@@ -5287,8 +5307,8 @@ function showQuestionnairePrompt(){
   const box = document.querySelector('#tour-modal .box');
   box.innerHTML = `
     <div class="foxy-mascot">${FOXY_SVG}</div>
-    <h3>Let's build your custom strategy</h3>
-    <p>Tell me a bit about your business and I'll build a marketing strategy made for you — matched to your services, pricing, goals and competitors. About 3 minutes, no marketing jargon.</p>
+    <h3>Let's build your business growth plan</h3>
+    <p>Answer a few questions and I'll build you a marketing plan aimed at one thing — bringing you more customers and revenue. Matched to your services, pricing, goals and local competitors. About 3 minutes, no marketing jargon.</p>
     <div class="row">
       <button class="btn primary" onclick="startQuestionnaire()">Build my strategy →</button>
     </div>
@@ -5307,14 +5327,18 @@ function startQuestionnaire(){
 function clearTourGlow(){
   document.querySelectorAll('.tour-el-glow').forEach(function(e){ e.classList.remove('tour-el-glow'); });
 }
-function renderTourStep(){
-  clearTourGlow();
+// Positions the spotlight + tooltip against the current on-screen rect of the
+// highlighted element. Split out from renderTourStep so it can be re-run on
+// scroll/resize — otherwise the tooltip (and its Next button) stays frozen at
+// the old spot while the page scrolls, drifting off-screen and becoming
+// unclickable.
+function positionTourStep(){
   const step = TOUR_STEPS[state.tour.step];
-  const el = document.querySelector(step.target);
+  const el = step ? document.querySelector(step.target) : null;
   const spot = document.getElementById('tour-spotlight');
   const tooltip = document.getElementById('tour-tooltip');
+  if(!spot || !tooltip) return;
   if(el){
-    el.classList.add('tour-el-glow');
     const r = el.getBoundingClientRect();
     const pad = 8;
     spot.style.top = (r.top-pad)+'px';
@@ -5351,6 +5375,38 @@ function renderTourStep(){
     tooltip.style.top = '40%';
     tooltip.style.left = '50%';
   }
+}
+
+let _tourReposHandler = null;
+function attachTourReposition(){
+  if(_tourReposHandler) return;
+  _tourReposHandler = function(){
+    if(!state.tour.active){ detachTourReposition(); return; }
+    positionTourStep();
+  };
+  // capture:true so we also catch scrolling inside any scrollable container
+  window.addEventListener('scroll', _tourReposHandler, true);
+  window.addEventListener('resize', _tourReposHandler);
+}
+function detachTourReposition(){
+  if(!_tourReposHandler) return;
+  window.removeEventListener('scroll', _tourReposHandler, true);
+  window.removeEventListener('resize', _tourReposHandler);
+  _tourReposHandler = null;
+}
+
+function renderTourStep(){
+  clearTourGlow();
+  const step = TOUR_STEPS[state.tour.step];
+  const el = document.querySelector(step.target);
+  if(el){
+    el.classList.add('tour-el-glow');
+    // Bring the highlighted element into view so the tooltip has room and stays
+    // attached to it (instant, not smooth, so positioning below reads the final rect).
+    try{ el.scrollIntoView({block:'center', inline:'nearest'}); }catch(e){ try{ el.scrollIntoView(); }catch(_){} }
+  }
+  positionTourStep();
+  attachTourReposition();
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;
   document.getElementById('tour-step-label').textContent = 'Step '+(state.tour.step+1)+' of '+TOUR_STEPS.length;
@@ -5476,6 +5532,7 @@ state.onboarding = {
   priceMax: '',
   margin: '',
   financialGoal: '',
+  customServices: [],
   competitors: [],
   brandNote: '',
   brandColor: '#f0883e',
@@ -5752,7 +5809,7 @@ function verifyEmailContinue(){
 }
 
 /* ---------------- 05. ONBOARDING QUESTIONNAIRE ---------------- */
-const OB_TOTAL_STEPS = 7;
+const OB_TOTAL_STEPS = 6;
 AUTH_VIEWS['onboarding'] = function(){
   const ob = state.onboarding;
   if(ob.step > OB_TOTAL_STEPS) return renderObFinal();
@@ -5772,7 +5829,7 @@ AUTH_VIEWS['onboarding'] = function(){
       <div class="ob-actions">
         <div>${ob.step>1 ? `<button class="btn" onclick="onboardingBack()">Back</button>` : ''}</div>
         <div class="flex gap-8">
-          ${[3,6,7].includes(ob.step) ? `<button class="link-btn muted small" onclick="onboardingSkip()">Skip this step</button>` : ''}
+          ${[3,6].includes(ob.step) ? `<button class="link-btn muted small" onclick="onboardingSkip()">Skip this step</button>` : ''}
           <button class="btn primary" onclick="onboardingNext()">Continue</button>
         </div>
       </div>
@@ -5831,40 +5888,46 @@ function renderObStep(step){
     const opts = SERVICE_OPTIONS[ob.industry] || SERVICE_OPTIONS.Other;
     return `
       <h1>Services &amp; pricing</h1>
-      <p class="ob-sub">Helps AI build the right strategy and estimate your ROI.</p>
+      <p class="ob-sub">Helps Foxtly build the right plan and estimate your ROI.</p>
       <div class="ob-block">
         <label class="field-label">What services do you offer?</label>
         <div class="chip-group">
           ${opts.map(o=>`<span class="chip ${ob.services.includes(o)?'selected':''}" onclick="toggleObService('${o.replace(/'/g,"\\'")}')">${o}</span>`).join('')}
+          ${(ob.customServices||[]).map((o,i)=>`<span class="chip selected" onclick="removeCustomService(${i})">${o} ✕</span>`).join('')}
         </div>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
+          <input id="ob-customService" type="text" placeholder="Add a service we didn't list…" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomService();}">
+          <button class="btn small" onclick="addCustomService()">+ Add</button>
+        </div>
+        <div class="small muted mt-6" style="line-height:1.5;">Don't see one of your services, or call it something different? Add it — you can list as many as you like.</div>
       </div>
       <div class="ob-block field">
-        <label class="field-label">What's your average service price? <span class="muted">(optional)</span></label>
+        <label class="field-label">What's your average job value? <span class="muted">(optional)</span></label>
         <div style="display:flex; gap:8px; align-items:center;">
           <input id="ob-priceMin" type="number" placeholder="From" style="width:90px;" value="${ob.priceMin||''}">
           <span class="muted">–</span>
           <input id="ob-priceMax" type="number" placeholder="To" style="width:90px;" value="${ob.priceMax||''}">
           <span class="muted small">$</span>
         </div>
-        <div class="small muted mt-6">We use this to estimate ROI and recommend the right ad budget.</div>
+        <div class="small muted mt-6" style="line-height:1.5;">Your typical customer's total — the average check. If you sell packages or your prices vary a lot, give the low-to-high range and Foxtly will work with that.</div>
       </div>
       <div class="ob-block field">
-        <label class="field-label">Roughly how much do you keep as profit? <span class="muted">(optional)</span></label>
-        <div class="small muted mt-4" style="margin-bottom:10px; line-height:1.5;">Out of every $100 a customer pays you, about how much is profit after your costs (materials, labour, fuel)? A rough guess is fine — it just helps us set a smart ad budget.</div>
+        <label class="field-label">How much do you keep as profit? <span class="muted">(a rough guess is fine — optional)</span></label>
+        <div class="small muted mt-4" style="margin-bottom:10px; line-height:1.5;">Out of every $100 a customer pays you, about how much is profit after your costs (materials, labour, fuel)? It just helps us set a smart ad budget.</div>
         <div class="chip-group">
           ${[['<20%','Under $20'],['20–35%','$20–35'],['35–50%','$35–50'],['50%+','Over $50']].map(([val,lab])=>`<span class="chip ${(ob.margin||'')===val?'selected':''}" onclick="state.onboarding.margin='${val}'; navigateAuth('onboarding')">${lab} <span class="muted">(${val})</span></span>`).join('')}
         </div>
       </div>
       <div class="ob-block field">
         <label class="field-label">Do you have a special offer for new customers? <span class="muted">(optional)</span></label>
-        <input id="ob-offer" type="text" placeholder="e.g. Free estimate, $50 off first service, Same-day guarantee" value="${ob.offer}">
+        <input id="ob-offer" type="text" placeholder="e.g. $50 off your first drain cleaning, Free estimate on any repair" value="${ob.offer}">
       </div>
     `;
   }
   if(step===4){
     const goals = [
       {id:'leads',          icon:'phone',    label:'Get more leads & calls',   desc:'Maximise call & form volume — broad reach, lowest cost per lead.'},
-      {id:'sales',          icon:'dollar',   label:'Grow revenue / sales',     desc:'Chase higher-value jobs and total revenue, not just lead count.'},
+      {id:'sales',          icon:'dollar',   label:'Grow revenue / sales',     desc:'Focus on higher-value jobs and total revenue — quality of work won over sheer volume.'},
       {id:'start_growing',  icon:'trending', label:'Start growing from scratch',desc:'New to ads? Start lean, test channels, and build from zero.'},
       {id:'fill_schedule',  icon:'calendar', label:'Fill my schedule',         desc:'Steady, even flow of bookings — pacing over big spikes.'},
       {id:'new_service',    icon:'tool',     label:'Launch a new service',      desc:'Push demand for one specific service you plan to launch.'},
@@ -5913,7 +5976,7 @@ function renderObStep(step){
   if(step===6){
     return `
       <h1>Any competitors we should know about?</h1>
-      <p class="ob-sub">Optional — AI will also find top competitors automatically based on your location and niche.</p>
+      <p class="ob-sub">Optional — Foxtly will also find your top competitors automatically, based on your location and niche.</p>
       <div class="ob-block">
         <label class="field-label" style="margin-bottom:10px;">Competitor website <span class="muted">(up to 5)</span></label>
         ${ob.competitors.map((c,i)=>`
@@ -5922,7 +5985,7 @@ function renderObStep(step){
             <button class="btn small" onclick="removeCompetitor(${i})">✕</button>
           </div>
         `).join('')}
-        ${ob.competitors.length < 5 ? `<button class="btn small mt-4" onclick="addCompetitor()">+ Add another</button>` : ''}
+        ${ob.competitors.length < 5 ? `<button class="btn small mt-4" onclick="addCompetitor()">${ob.competitors.length === 0 ? '+ Add a competitor' : '+ Add another'}</button>` : ''}
         <div class="small muted mt-10" style="line-height:1.5;">We'll analyze their ads, offers, and positioning to find gaps you can win.</div>
       </div>
     `;
@@ -5957,6 +6020,22 @@ function toggleObService(s){
   const arr = state.onboarding.services;
   const i = arr.indexOf(s);
   if(i>-1) arr.splice(i,1); else arr.push(s);
+  navigateAuth('onboarding');
+}
+function addCustomService(){
+  const el = document.getElementById('ob-customService');
+  if(!el) return;
+  const v = (el.value||'').trim();
+  if(!v) return;
+  if(!state.onboarding.customServices) state.onboarding.customServices = [];
+  if(!state.onboarding.customServices.includes(v) && !state.onboarding.services.includes(v)){
+    state.onboarding.customServices.push(v);
+  }
+  el.value='';
+  navigateAuth('onboarding');
+}
+function removeCustomService(i){
+  state.onboarding.customServices.splice(i,1);
   navigateAuth('onboarding');
 }
 function addCompetitor(){
