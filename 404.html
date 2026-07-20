@@ -378,11 +378,13 @@
   .wizard-step-done{ cursor:pointer; }
   .wizard-step-done:hover .wizard-step-bar{ height:5px; margin-bottom:3px; }
   .wizard-step-done:hover .wizard-step-label{ text-decoration:underline; filter:brightness(1.25); }
-  .ai-bubble{ display:flex; gap:11px; align-items:flex-start; background:rgba(240,136,62,0.06); border:1px solid rgba(240,136,62,0.22); border-left:3px solid var(--orange); border-radius:10px; padding:13px 15px; }
-  .ai-bubble .av{ width:30px; height:30px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; overflow:hidden; }
-  .ai-bubble .av svg{ width:27px; height:27px; display:block; }
-  .ai-bubble .msg{ font-size:13px; line-height:1.6; color:var(--text-secondary); }
-  .ai-bubble .msg::before{ content:'Foxy · AI tip'; display:block; font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--orange); margin-bottom:4px; }
+  /* Foxy speech bubble — deliberately styled like a chat message, not a card. */
+  .ai-bubble{ display:flex; gap:10px; align-items:flex-start; background:none; border:none; padding:0; margin-bottom:22px; }
+  .ai-bubble .av{ width:36px; height:36px; border-radius:50%; background:var(--card-bg-3); border:1.5px solid var(--orange); color:var(--orange); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; box-shadow:0 0 0 3px rgba(240,136,62,0.10); }
+  .ai-bubble .av svg{ width:32px; height:32px; display:block; }
+  .ai-bubble .msg{ position:relative; background:var(--card-bg-2); border:1px solid var(--border-light); border-radius:3px 14px 14px 14px; padding:11px 15px 12px; font-size:13px; line-height:1.6; color:var(--text-secondary); max-width:600px; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
+  .ai-bubble .msg::before{ content:'Foxy · AI tip'; display:block; font-size:10px; font-weight:800; letter-spacing:0.6px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; }
+  .ai-bubble .msg::after{ content:''; position:absolute; left:-7px; top:13px; width:0; height:0; border-top:6px solid transparent; border-bottom:8px solid transparent; border-right:8px solid var(--card-bg-2); filter:drop-shadow(-1px 0 0 var(--border-light)); }
   .ai-bubble .msg strong{ color:var(--text); }
   .setting-row{ background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; }
   .setting-row:hover{ border-color:var(--border-light); }
@@ -744,6 +746,7 @@ const state = {
   },
   launchWizard: {
     step: 1,
+    maxStep: 1,
     platform: 'meta',
     prefilled: false,
     aiGenerating: false,
@@ -1941,14 +1944,17 @@ VIEWS['campaign-launch'] = function(){
   const googleLabels = ['Platform','Type','Website','Location','Budget','Keywords','Negatives','Headlines','Descriptions','Extensions','Preview','Done'];
   const labels = isGoogle ? googleLabels : metaLabels;
 
+  const maxStep = Math.max(w.step, Math.min(w.maxStep || w.step, labels.length));
   const progressBar = '<div class="wizard-progress">' +
     labels.map(function(s,i){
-      const done = i+1 < w.step;
-      const active = i+1 === w.step;
-      const barCol = done ? 'var(--green)' : active ? 'var(--orange)' : 'var(--border)';
-      const lblCol = done ? 'var(--green)' : active ? 'var(--orange)' : 'var(--text-muted)';
-      // Completed steps are clickable — jump back to review/edit them.
-      const clickable = done ? ' wizard-step-done" onclick="setLaunchStep('+(i+1)+')" title="Back to '+s.replace(/"/g,'')+'"' : '"';
+      const num = i+1;
+      const active = num === w.step;
+      const done = num < w.step;              // completed relative to where you are
+      const reached = num <= maxStep;         // visited at some point (behind OR ahead)
+      const barCol = active ? 'var(--orange)' : reached ? 'var(--green)' : 'var(--border)';
+      const lblCol = active ? 'var(--orange)' : reached ? 'var(--green)' : 'var(--text-muted)';
+      // Any reached step (except the current one) is clickable — jump back OR forward.
+      const clickable = (reached && !active) ? ' wizard-step-done" onclick="setLaunchStep('+num+')" title="Go to '+s.replace(/"/g,'')+'"' : '"';
       return '<div class="wizard-step'+clickable+'><div class="wizard-step-bar" style="background:'+barCol+';"></div><span class="wizard-step-label" style="color:'+lblCol+';">'+(done?'✓ ':'')+s+'</span></div>';
     }).join('') + '</div>';
 
@@ -3255,7 +3261,7 @@ function renderGoogleStep9(){
 // ---- Wizard helpers ----
 function resetLaunchWizard(){
   state.launchWizard = {
-    step:1, platform:'meta', prefilled:false, aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2],
+    step:1, maxStep:1, platform:'meta', prefilled:false, aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2],
     gCampaignType:'search',
     gWebsite:'',
     gGeo:['Toronto, ON'],
@@ -3276,6 +3282,8 @@ function resetLaunchWizard(){
 }
 function setLaunchStep(n){
   state.launchWizard.step = n;
+  // Track the furthest step reached so completed steps stay reachable in both directions.
+  state.launchWizard.maxStep = Math.max(state.launchWizard.maxStep || 1, n);
   if(n===8 && state.launchWizard.platform==='meta' && !state.launchWizard.aiGenDone){
     state.launchWizard.aiGenerating = true;
     navigateTo('campaign-launch');
@@ -3291,6 +3299,8 @@ function setLaunchStep(n){
 }
 function setLaunchPlatform(p){
   state.launchWizard.platform = p;
+  // Different platforms have different step maps — reset the reached marker.
+  state.launchWizard.maxStep = state.launchWizard.step;
   navigateTo('campaign-launch');
 }
 function regenerateCreatives(){
