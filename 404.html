@@ -286,6 +286,17 @@
   .foxy-note.hero .foxy-note-text{ color:var(--text); }
   .foxy-chat-av{ width:32px; height:32px; border-radius:50%; background:var(--card-bg-3); border:1px solid rgba(240,136,62,0.4); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
   .foxy-chat-av svg{ width:28px; height:28px; display:block; }
+  .rs-section{ background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px 22px; margin-bottom:16px; }
+  .rs-section.hero{ border-color:var(--orange); background:linear-gradient(180deg, rgba(240,136,62,0.10), rgba(240,136,62,0.02)); }
+  .rs-head{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .rs-num{ width:26px; height:26px; border-radius:8px; background:var(--orange-dim); color:var(--orange); font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rs-title{ font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.2px; }
+  .rs-sub{ font-size:12px; color:var(--text-muted); margin-top:1px; }
+  .rs-panel{ background:var(--card-bg-2); border-radius:10px; padding:14px 16px; }
+  .rs-take{ display:flex; gap:9px; align-items:flex-start; margin-top:16px; padding-top:14px; border-top:1px dashed var(--border-light); }
+  .rs-take-txt{ font-size:12.5px; color:var(--text-secondary); line-height:1.55; }
+  .rs-take-txt b{ color:var(--orange); font-weight:700; }
+  .rs-disclaimer{ font-size:11px; color:var(--text-muted); margin-top:12px; line-height:1.5; }
 
   /* toggle switch */
   .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; cursor:pointer; }
@@ -736,9 +747,14 @@ const state = {
     selectedCreatives: [0,1,2],
     // Google-specific
     gCampaignType: 'search',
+    gWebsite: '',
+    gGeo: ['Toronto, ON'],
+    gBidStrategy: 'max_clicks',
+    gSearchPartners: false,
+    gDisplayNetwork: false,
     gKeywords: ['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
     gMatchTypes: ['exact','phrase','broad','broad'],
-    gBudget: 30,
+    gBudget: 50,
     gHeadlines: ['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
     gDescriptions: ['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
     gSitelinks: true,
@@ -1317,94 +1333,111 @@ function renderKbResearch(){
       <button class="btn small" onclick="showToast('Refreshing market research…')">↻ Refresh</button>
     </div>
 
-    <!-- Section 1: Demand -->
-    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:7px;"><span style="color:var(--orange); display:inline-flex;">${ico('trending',14)}</span> Local Demand</div>
-    <div class="grid-2 mb-20">
-      <div class="card">
-        <div class="small muted mb-8">Plumbing searches · Toronto, ON</div>
-        <div style="font-size:32px; font-weight:800; letter-spacing:-1px; margin-bottom:4px;">~12,000</div>
-        <div class="small muted">searches / month</div>
-        <div class="kpi-delta up" style="margin-top:8px;">↑ 8% year-over-year</div>
+    ${foxyNote("I looked into your Toronto plumbing market — how many people are searching, what your competitors are doing, and where the cheap, winnable leads are. Here's the short version, step by step.", true)}
+
+    <!-- 1. Demand -->
+    <div class="rs-section">
+      <div class="rs-head">
+        <div class="rs-num">1</div>
+        <div><div class="rs-title">How much demand is out there?</div><div class="rs-sub">Search volume &amp; top terms in your area</div></div>
       </div>
-      <div class="card">
-        <div class="small muted mb-10">Top search terms in your area</div>
-        ${[
-          {kw:'plumber toronto',      vol:'3,400', cpc:'$6.20', hot:true},
-          {kw:'emergency plumber',    vol:'2,100', cpc:'$9.80', hot:false},
-          {kw:'drain cleaning toronto',vol:'1,600', cpc:'$4.10', hot:false},
-          {kw:'free estimate plumber', vol:'890',  cpc:'$3.50', hot:true},
-        ].map(k=>`
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-light); font-size:13px;">
-            <span>${k.hot ? '<span style="color:var(--orange);">🔥</span> ' : ''}${k.kw}</span>
-            <div style="display:flex; gap:12px; color:var(--text-muted); font-size:12px; flex-shrink:0;">
-              <span>${k.vol}/mo</span><span>${k.cpc} CPC</span>
+      <div class="grid-2">
+        <div class="rs-panel">
+          <div class="small muted mb-8">Plumbing searches · Toronto, ON</div>
+          <div style="font-size:32px; font-weight:800; letter-spacing:-1px; margin-bottom:4px;">~12,000</div>
+          <div class="small muted">searches / month</div>
+          <div class="kpi-delta up" style="margin-top:8px;">↑ 8% year-over-year</div>
+        </div>
+        <div class="rs-panel">
+          <div class="small muted mb-10">Top search terms in your area</div>
+          ${[
+            {kw:'plumber toronto',      vol:'3,400', cpc:'$6.20', hot:true},
+            {kw:'emergency plumber',    vol:'2,100', cpc:'$9.80', hot:false},
+            {kw:'drain cleaning toronto',vol:'1,600', cpc:'$4.10', hot:false},
+            {kw:'free estimate plumber', vol:'890',  cpc:'$3.50', hot:true},
+          ].map(k=>`
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-light); font-size:13px;">
+              <span>${k.hot ? '<span style="color:var(--orange);">🔥</span> ' : ''}${k.kw}</span>
+              <div style="display:flex; gap:12px; color:var(--text-muted); font-size:12px; flex-shrink:0;">
+                <span>${k.vol}/mo</span><span>${k.cpc} CPC</span>
+              </div>
             </div>
-          </div>
-        `).join('')}
+          `).join('')}
+        </div>
       </div>
+      ${foxyTake("Demand is healthy and growing <b>8%/yr</b>, so there's room to win new customers. The cheapest ways in are <b>drain cleaning</b> ($4.10) and <b>free estimate</b> ($3.50) — I'd avoid the pricey <b>emergency plumber</b> ($9.80 a click).")}
     </div>
 
-    ${foxyNote("Demand is healthy — about <strong>12k searches a month</strong> and up 8% year-over-year, so there's room to win new customers. The cheapest ways in are <strong>drain cleaning</strong> ($4.10) and <strong>free estimate</strong> ($3.50) — I'd start there instead of the pricey <strong>emergency plumber</strong> ($9.80 a click).")}
-
-    <!-- Section 2: Competitors -->
-    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:7px;"><span style="color:var(--orange); display:inline-flex;">${ico('users',14)}</span> Competitor Landscape</div>
-    <div class="card mb-20">
+    <!-- 2. Competitors -->
+    <div class="rs-section">
+      <div class="rs-head">
+        <div class="rs-num">2</div>
+        <div><div class="rs-title">Who are you up against?</div><div class="rs-sub">Your top 3 local competitors &amp; where they advertise</div></div>
+      </div>
       <table>
         <thead><tr><th>Competitor</th><th>Positioning</th><th>Ad activity</th><th>Platforms</th></tr></thead>
         <tbody>
           <tr>
             <td><strong>Rotorooter Toronto</strong><br><span class="small muted">rotorooter-toronto.ca</span></td>
-            <td style="font-size:13px;">24/7 emergency plumbing & drain</td>
+            <td style="font-size:13px;">24/7 emergency plumbing &amp; drain</td>
             <td><span class="badge orange">High</span></td>
             <td><span class="badge blue">Meta</span> <span class="badge green">Google</span></td>
           </tr>
           <tr>
             <td><strong>Mr. Plumber</strong><br><span class="small muted">mrplumber.ca</span></td>
             <td style="font-size:13px;">Residential repairs, financing</td>
-            <td><span class="badge" style="background:rgba(255,255,255,0.07); color:var(--text-muted);">Medium</span></td>
+            <td><span class="badge gray">Medium</span></td>
             <td><span class="badge blue">Meta</span></td>
           </tr>
           <tr>
             <td><strong>Toronto Pro Plumbing</strong><br><span class="small muted">torontoproplumbing.com</span></td>
             <td style="font-size:13px;">Renovations, water heaters</td>
-            <td><span class="badge" style="background:rgba(255,255,255,0.07); color:var(--text-muted);">Low</span></td>
+            <td><span class="badge gray">Low</span></td>
             <td><span class="badge green">Google</span></td>
           </tr>
         </tbody>
       </table>
+      ${foxyTake("<b>Rotorooter</b> is your toughest rival — heavy spend on both Meta and Google. Mr. Plumber runs Meta only, and Toronto Pro is quiet. Nobody's seriously covering routine <b>drain-cleaning</b> and <b>free-estimate</b> searches.")}
     </div>
 
-    ${foxyNote("<strong>Rotorooter is your toughest rival</strong> — heavy spend on <strong>both</strong> Meta and Google. Mr. Plumber runs Meta only, and Toronto Pro is quiet. Nobody's seriously covering routine <strong>drain-cleaning</strong> and <strong>free-estimate</strong> searches — that's the door I'd walk through.")}
-
-    <!-- Section 3: Opportunity -->
-    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:7px;"><span style="color:var(--orange); display:inline-flex;">${ico('zap',14)}</span> Your Opportunity</div>
-    ${foxyNote("<strong style=\"color:var(--orange);\">My recommendation: go after routine service searches first.</strong><br>All three competitors bid heavily on \"emergency plumbing,\" where clicks cost $8–$12. The \"free estimate\" and drain-cleaning segments have far less competition at $3–$5 a click — so you get more leads per dollar while we build your ad history. Once your numbers are strong, we scale into the pricier keywords.", true)}
-
-    <!-- Section 4: Forecast -->
-    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:7px;"><span style="color:var(--orange); display:inline-flex;">${ico('bars',14)}</span> Estimated Results · $1,000 / month budget</div>
-    <div class="grid-3 mb-20" style="grid-template-columns:repeat(3,1fr);">
-      <div class="card" style="text-align:center;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Cost per Lead</div>
-        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">$18–28</div>
-        <div style="font-size:12px; color:var(--text-muted);">based on local CPCs</div>
+    <!-- 3. Opportunity (hero) -->
+    <div class="rs-section hero">
+      <div class="rs-head">
+        <div class="rs-num">3</div>
+        <div><div class="rs-title">Where's your opening?</div><div class="rs-sub">My recommended focus</div></div>
       </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Leads / month</div>
-        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">36–55</div>
-        <div style="font-size:12px; color:var(--text-muted);">phone calls & form fills</div>
-      </div>
-      <div class="card" style="text-align:center;">
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Revenue / month</div>
-        <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; color:var(--orange);">$5–9K</div>
-        <div style="font-size:12px; color:var(--text-muted);">at ~25% close rate, $600 avg job</div>
-      </div>
+      ${foxyNote("<strong style=\"color:var(--orange);\">Go after routine service searches first.</strong><br>All three competitors bid heavily on \"emergency plumbing,\" where clicks cost $8–$12. The \"free estimate\" and drain-cleaning segments have far less competition at $3–$5 a click — so you get more leads per dollar while we build your ad history. Once your numbers are strong, we scale into the pricier keywords.", true)}
     </div>
-    <div style="font-size:11px; color:var(--text-muted); margin-top:-12px; margin-bottom:20px; line-height:1.5;">Estimates based on Toronto market data. Actual results vary and will be refined after your first campaigns run.</div>
 
-    ${foxyNote("At <strong>$1,000/mo</strong> I'd expect roughly <strong>36–55 leads</strong> and <strong>$5–9k</strong> in booked jobs once we skip the expensive emergency keywords. Treat these as a starting estimate — I'll tighten them the moment your first campaigns give me real numbers.")}
+    <!-- 4. Forecast -->
+    <div class="rs-section">
+      <div class="rs-head">
+        <div class="rs-num">4</div>
+        <div><div class="rs-title">What could this return?</div><div class="rs-sub">Estimate at a $1,000 / month budget</div></div>
+      </div>
+      <div class="grid-3" style="grid-template-columns:repeat(3,1fr);">
+        <div class="rs-panel" style="text-align:center;">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Cost per Lead</div>
+          <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">$18–28</div>
+          <div style="font-size:12px; color:var(--text-muted);">based on local CPCs</div>
+        </div>
+        <div class="rs-panel" style="text-align:center;">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Leads / month</div>
+          <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">36–55</div>
+          <div style="font-size:12px; color:var(--text-muted);">phone calls &amp; form fills</div>
+        </div>
+        <div class="rs-panel" style="text-align:center;">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:10px;">Est. Revenue / month</div>
+          <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; color:var(--orange);">$5–9K</div>
+          <div style="font-size:12px; color:var(--text-muted);">at ~25% close rate, $600 avg job</div>
+        </div>
+      </div>
+      <div class="rs-disclaimer">Estimates based on Toronto market data. Actual results vary and will be refined after your first campaigns run.</div>
+      ${foxyTake("At <b>$1,000/mo</b> I'd expect roughly <b>36–55 leads</b> and <b>$5–9k</b> in booked jobs once we skip the expensive emergency keywords. Treat these as a starting estimate — I'll tighten them after your first campaigns give me real numbers.")}
+    </div>
 
     <!-- CTA -->
-    <div style="display:flex; justify-content:center; padding-bottom:16px;">
+    <div style="display:flex; justify-content:center; padding:8px 0 16px;">
       <button class="btn primary" style="padding:13px 32px; font-size:15px;" onclick="state.launchWizard.prefilled=true; navigateTo('campaign-launch')">Launch Campaign based on this →</button>
     </div>
   `;
@@ -1896,7 +1929,7 @@ VIEWS['campaign-launch'] = function(){
   const metaLabels  = cb.goal === 'leads'
     ? ['Platform','FB Page','Goal','Destination','Location','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done']
     : ['Platform','FB Page','Goal','Location','Budget','Offer','Schedule','Creatives','Ad Copy','Preview','Done'];
-  const googleLabels = ['Platform','Type','Keywords','Budget','Headlines','Descriptions','Extensions','Preview','Done'];
+  const googleLabels = ['Platform','Type','Website','Location','Budget','Keywords','Headlines','Descriptions','Extensions','Preview','Done'];
   const labels = isGoogle ? googleLabels : metaLabels;
 
   const progressBar = '<div class="wizard-progress">' +
@@ -1912,14 +1945,16 @@ VIEWS['campaign-launch'] = function(){
   if(w.step===1){
     content = renderLaunchStep1();
   } else if(isGoogle){
-    if(w.step===2) content = renderGoogleStep2();
-    else if(w.step===3) content = renderGoogleStep3();
-    else if(w.step===4) content = renderGoogleStep4();
-    else if(w.step===5) content = renderGoogleStep5();
-    else if(w.step===6) content = renderGoogleStep6();
-    else if(w.step===7) content = renderGoogleStep7();
-    else if(w.step===8) content = renderGoogleStep8();
-    else if(w.step===9) content = renderGoogleStep9();
+    if(w.step===2) content = renderGoogleStep2();          // Campaign type
+    else if(w.step===3) content = renderGoogleWebsite();    // Website / landing page
+    else if(w.step===4) content = renderGoogleLocation();   // Geo targeting
+    else if(w.step===5) content = renderGoogleStep4();      // Budget + bid strategy + networks
+    else if(w.step===6) content = renderGoogleStep3();      // Keywords
+    else if(w.step===7) content = renderGoogleStep5();      // Headlines
+    else if(w.step===8) content = renderGoogleStep6();      // Descriptions
+    else if(w.step===9) content = renderGoogleStep7();      // Extensions
+    else if(w.step===10) content = renderGoogleStep8();     // Preview
+    else if(w.step===11) content = renderGoogleStep9();     // Done
   } else {
     if(w.step===2)  content = renderMetaFBPage();
     else if(w.step===3)  content = renderMetaStep2();
@@ -1934,7 +1969,7 @@ VIEWS['campaign-launch'] = function(){
     else if(w.step===12) content = renderMetaStep10();
   }
 
-  const isWide = isGoogle && (w.step===5 || w.step===6);
+  const isWide = isGoogle && (w.step===7 || w.step===8);
   const maxW = isWide ? '960px' : '640px';
   return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">AI sets everything up — you just confirm and go</div></div></div>' +
     progressBar + '<div style="max-width:'+maxW+'; margin:0 auto;">' + content + '</div>';
@@ -2660,6 +2695,82 @@ function renderGoogleStep2(){
     '</div>';
 }
 
+// ---- Google step 3: website / landing page (must come BEFORE keywords) ----
+function renderGoogleWebsite(){
+  const w = state.launchWizard;
+  const val = w.gWebsite || '';
+  return googlePlatformBanner() +
+    '<div class="ai-bubble mb-20">' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
+    '<div class="msg"><strong>Where should your ads send people?</strong> Google reads this page — including its headings and copy — to suggest keywords and check that your ads match what you actually offer. A full website works better than a single landing page, because there\'s more content for Google to learn from.</div>' +
+    '</div>' +
+
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">' +
+    '<label style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:8px;">Website or landing page <span style="color:var(--red);">*</span></label>' +
+    '<input type="text" value="'+val.replace(/"/g,'&quot;')+'" placeholder="https://mikesplumbing.ca" onchange="state.launchWizard.gWebsite=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid '+(val?'var(--green)':'var(--border)')+'; border-radius:8px; padding:11px 14px; color:var(--text); font-size:14px;">' +
+    (val
+      ? '<div class="small mt-8" style="color:var(--green);">✓ I\'ll scan this page and suggest keywords from it on the next steps</div>'
+      : '<div class="small mt-8" style="color:var(--yellow);">⚠ Required — Google needs a destination before the campaign can run</div>') +
+
+    '<div style="background:var(--card-bg-2); border-radius:10px; padding:14px 16px; margin-top:18px;">' +
+    '<div style="font-size:12.5px; font-weight:700; margin-bottom:6px;">Website or landing page?</div>' +
+    '<div class="small muted" style="line-height:1.6;">Use your <strong>website</strong> if you have one — more pages and content mean Google finds more ways to match you to searches. A landing page is fine for a single promo, but gives Google less to work with.</div>' +
+    '</div>' +
+    '</div>' +
+
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(4)" '+(val?'':'disabled style="opacity:0.45;cursor:not-allowed;"')+'>Continue →</button>' +
+    '</div>';
+}
+
+// ---- Google step 4: location targeting (mandatory in Google Ads) ----
+function renderGoogleLocation(){
+  const w = state.launchWizard;
+  const geo = w.gGeo || [];
+  const suggestions = ['Toronto, ON','Mississauga, ON','Scarborough, ON','North York, ON','Etobicoke, ON','Brampton, ON'];
+  const chips = geo.map(function(g,i){
+    return '<span style="display:inline-flex; align-items:center; gap:6px; background:var(--orange-dim); color:var(--orange); border:1px solid var(--orange); border-radius:99px; padding:6px 12px; font-size:12.5px; font-weight:600; margin:0 6px 6px 0;">'+g+
+      '<span onclick="removeGoogleGeo('+i+')" style="cursor:pointer; opacity:0.8;">✕</span></span>';
+  }).join('') || '<span class="small muted">No locations selected yet</span>';
+  const avail = suggestions.filter(function(s){ return geo.indexOf(s) === -1; });
+
+  return googlePlatformBanner() +
+    '<div class="ai-bubble mb-20">' +
+    '<div class="av">'+FOXY_MINI+'</div>' +
+    '<div class="msg"><strong>Where should your ads show?</strong> Google requires a location — it decides who sees you and heavily affects your cost per click. Tighter areas usually mean cheaper clicks and better-fit leads.</div>' +
+    '</div>' +
+
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Target locations <span style="color:var(--red);">*</span></div>' +
+    '<div style="margin-bottom:16px;">'+chips+'</div>' +
+    (avail.length ?
+      '<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Add from your service area:</div>' +
+      '<div style="display:flex; flex-wrap:wrap; gap:8px;">' +
+      avail.map(function(s){
+        return '<div onclick="addGoogleGeo(\''+s.replace(/'/g,"\\'")+'\')" style="cursor:pointer; padding:7px 13px; border-radius:99px; font-size:12.5px; border:1px solid var(--border); background:var(--card-bg-2); color:var(--text-secondary);">+ '+s+'</div>';
+      }).join('') + '</div>'
+      : '') +
+    (geo.length === 0
+      ? '<div class="small mt-10" style="color:var(--yellow);">⚠ Pick at least one location — Google won\'t run the campaign without it</div>'
+      : '') +
+    '</div>' +
+
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(5)" '+(geo.length?'':'disabled style="opacity:0.45;cursor:not-allowed;"')+'>Continue →</button>' +
+    '</div>';
+}
+function addGoogleGeo(name){
+  if(!state.launchWizard.gGeo) state.launchWizard.gGeo = [];
+  if(state.launchWizard.gGeo.indexOf(name) === -1) state.launchWizard.gGeo.push(name);
+  navigateTo('campaign-launch');
+}
+function removeGoogleGeo(i){
+  if(state.launchWizard.gGeo) state.launchWizard.gGeo.splice(i,1);
+  navigateTo('campaign-launch');
+}
+
 function renderGoogleStep3(){
   const w = state.launchWizard;
   const matchTypes = w.gMatchTypes || w.gKeywords.map(function(){ return 'broad'; });
@@ -2691,68 +2802,109 @@ function renderGoogleStep3(){
     '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(4)">Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(7)">Continue →</button>' +
     '</div>';
 }
 
 function renderGoogleStep4(){
   const w = state.launchWizard;
-  const total = w.gBudget * w.gDuration;
+  const isPmax = w.gCampaignType === 'pmax';
   const cpcLow = 8, cpcHigh = 15;
-  const clicksLow = Math.round(total / cpcHigh);
-  const clicksHigh = Math.round(total / cpcLow);
-  const durOptions = [7,14,30,60,90];
+  const monthly = w.gBudget * 30;
+  const clicksLow = Math.round(w.gBudget / cpcHigh);
+  const clicksHigh = Math.round(w.gBudget / cpcLow);
 
-  const durationChips = durOptions.map(function(d){
-    const sel = w.gDuration === d;
-    return '<div onclick="state.launchWizard.gDuration='+d+'; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(sel?'600':'400')+'; border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">'+d+' days</div>';
-  }).join('') +
-  '<div onclick="state.launchWizard.gDuration=0; navigateTo(\'campaign-launch\')" style="cursor:pointer; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:'+(w.gDuration===0?'600':'400')+'; border:2px solid '+(w.gDuration===0?'var(--orange)':'var(--border)')+'; background:'+(w.gDuration===0?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(w.gDuration===0?'var(--orange)':'var(--text-muted)')+'; white-space:nowrap;">Custom</div>';
+  // Budget guidance from the Google specialist review.
+  let budgetWarn = '';
+  if(w.gBudget < 50){
+    budgetWarn = '<div style="background:var(--yellow-dim); border:1px solid var(--yellow); border-radius:10px; padding:12px 14px; margin-top:14px; font-size:12.5px; color:var(--yellow); line-height:1.55;">' +
+      '<strong>Below $50/day is usually too thin.</strong> At a $15–20 CPC that\'s only 2–3 clicks a day, and your ads land on low positions. Worth it only in cheap niches or small geos where a click costs under $1.</div>';
+  } else if(monthly < 1000){
+    budgetWarn = '<div style="background:var(--yellow-dim); border:1px solid var(--yellow); border-radius:10px; padding:12px 14px; margin-top:14px; font-size:12.5px; color:var(--yellow); line-height:1.55;">' +
+      '<strong>Under $1,000/month rarely works on Google.</strong> With a $10–15 lead cost you\'d get a handful of leads, and clicks tend to land on page 2–3 — you want the top of the page.</div>';
+  }
+
+  const strategies = isPmax
+    ? [ {val:'max_conv',       label:'Maximize conversions',       desc:'PMax bids for conversions, not clicks — this is the standard choice.'},
+        {val:'max_conv_value', label:'Maximize conversion value',  desc:'Use when different jobs are worth very different amounts.'} ]
+    : [ {val:'max_clicks',     label:'Maximize clicks',            desc:'Most visits for your budget. Best for a first Search campaign while you gather data.'},
+        {val:'max_conv',       label:'Maximize conversions',       desc:'Needs conversion tracking and some history — switch here once leads come in.'},
+        {val:'target_cpa',     label:'Target CPA',                 desc:'Aim for a set cost per lead. Needs roughly 15–30 conversions a month first.'} ];
+
+  const stratRows = strategies.map(function(s){
+    const sel = w.gBidStrategy === s.val;
+    return '<div onclick="state.launchWizard.gBidStrategy=\''+s.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; border-radius:10px; padding:12px 14px; margin-bottom:8px;">' +
+      '<div style="font-weight:700; font-size:13.5px; color:'+(sel?'var(--orange)':'var(--text)')+'; margin-bottom:2px;">'+s.label+'</div>' +
+      '<div class="small muted" style="line-height:1.5;">'+s.desc+'</div>' +
+    '</div>';
+  }).join('');
+
+  const netRow = function(key, label, desc){
+    const on = w[key];
+    return '<div style="display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">' +
+      '<div onclick="state.launchWizard.'+key+'=!state.launchWizard.'+key+'; navigateTo(\'campaign-launch\')" style="cursor:pointer; flex-shrink:0; width:38px; height:22px; border-radius:99px; background:'+(on?'var(--orange)':'var(--card-bg-3)')+'; border:1px solid '+(on?'var(--orange)':'var(--border)')+'; position:relative; transition:background .15s;">' +
+        '<div style="position:absolute; top:2px; left:'+(on?'18px':'2px')+'; width:16px; height:16px; border-radius:50%; background:'+(on?'#1a1206':'var(--text-muted)')+'; transition:left .15s;"></div>' +
+      '</div>' +
+      '<div><div style="font-size:13px; font-weight:600; margin-bottom:2px;">'+label+' <span class="small" style="color:'+(on?'var(--yellow)':'var(--green)')+'; font-weight:700;">'+(on?'ON':'OFF')+'</span></div>' +
+      '<div class="small muted" style="line-height:1.5;">'+desc+'</div></div>' +
+    '</div>';
+  };
 
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>$'+w.gBudget+'/day is a solid starting point for local search in Toronto.</strong> Set your daily budget and campaign duration — I\'ll calculate your total spend and estimated clicks so you know exactly what to expect before committing.</div>' +
+    '<div class="msg"><strong>I\'d start at $'+w.gBudget+'/day for local search in Toronto.</strong> There\'s no end date — we keep the campaign running and judge it on results, same as Meta. I size the budget from your geo, niche, search volume and average cost per click.</div>' +
     '</div>' +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
 
     // Daily budget
-    '<div style="margin-bottom:24px;">' +
+    '<div style="margin-bottom:8px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Daily budget</div>' +
     '<div style="text-align:center; margin-bottom:16px;">' +
     '<span style="font-size:52px; font-weight:700; color:var(--orange);" id="lw-gb-day">$'+w.gBudget+'</span>' +
     '<span style="font-size:16px; color:var(--text-muted); margin-left:6px;">/ day</span>' +
+    '<div class="small muted" style="margin-top:6px;">≈ $'+monthly+' / month · runs until you pause it</div>' +
     '</div>' +
-    '<input type="range" min="15" max="150" value="'+w.gBudget+'" oninput="state.launchWizard.gBudget=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:6px;">' +
-    '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$150/day</span></div>' +
-    '</div>' +
-
-    // Duration
-    '<div style="margin-bottom:24px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Campaign duration</div>' +
-    '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">' + durationChips + '</div>' +
-    (w.gDuration===0 ?
-      '<input type="number" min="1" max="365" placeholder="Enter days…" oninput="state.launchWizard.gDuration=parseInt(this.value)||0; updateGoogleBudgetCalc()" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '') +
+    '<input type="range" min="15" max="200" value="'+w.gBudget+'" oninput="state.launchWizard.gBudget=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:6px;">' +
+    '<div style="display:flex; justify-content:space-between;"><span class="small muted">$15/day</span><span class="small muted">$200/day</span></div>' +
+    budgetWarn +
     '</div>' +
 
-    // Calculator result
-    '<div style="background:var(--card-bg-2); border-radius:10px; padding:18px 20px;" id="lw-gb-calc">' +
+    // Estimate
+    '<div style="background:var(--card-bg-2); border-radius:10px; padding:18px 20px; margin-top:24px;" id="lw-gb-calc">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px;">Estimate</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">' +
-    '<div><div style="font-size:22px; font-weight:700; color:var(--text);" id="lw-gb-total">$'+total+'</div><div class="small muted" style="margin-top:3px;">Total spend</div></div>' +
-    '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--text);" id="lw-gb-days">'+(w.gDuration||'—')+'</div><div class="small muted" style="margin-top:3px;">Days</div></div>' +
-    '<div><div style="font-size:22px; font-weight:700; color:var(--green);" id="lw-gb-clicks">'+clicksLow+'–'+clicksHigh+'</div><div class="small muted" style="margin-top:3px;">Est. clicks</div></div>' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--text);">$'+monthly+'</div><div class="small muted" style="margin-top:3px;">Per month</div></div>' +
+    '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--green);">'+clicksLow+'–'+clicksHigh+'</div><div class="small muted" style="margin-top:3px;">Clicks / day</div></div>' +
+    '<div><div style="font-size:22px; font-weight:700; color:var(--text);">$'+cpcLow+'–'+cpcHigh+'</div><div class="small muted" style="margin-top:3px;">Est. CPC</div></div>' +
     '</div>' +
-    '<div class="small muted mt-10" style="text-align:center; line-height:1.5;" id="lw-gb-note">Based on avg. CPC $8–$15 for plumbing in Toronto · adjust after first 7 days</div>' +
+    '<div class="small muted mt-10" style="text-align:center; line-height:1.5;">Based on avg. CPC for plumbing in Toronto · I\'ll refine this after the first 7 days of real data</div>' +
+    '</div>' +
+
+    // Bid strategy
+    '<div style="margin-top:26px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Bid strategy</div>' +
+    '<div class="small muted" style="margin-bottom:12px; line-height:1.5;">' + (isPmax
+      ? 'Performance Max only bids on conversions — you pay per conversion, not per click.'
+      : 'On Search you pay per click. Start with clicks, then move to conversions once tracking has data.') + '</div>' +
+    stratRows +
+    '</div>' +
+
+    // Networks
+    '<div style="margin-top:26px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Networks</div>' +
+    '<div class="small muted" style="margin-bottom:6px; line-height:1.5;">Google switches both of these on by default. We keep them off — they spend your Search budget in the wrong places.</div>' +
+    netRow('gSearchPartners','Search partners','Third-party sites outside Google Search. In the US and Canada these perform poorly — leave off.') +
+    netRow('gDisplayNetwork','Display Network','Banner placements across the web. Tanks your Search CTR — run display separately via Performance Max instead.') +
     '</div>' +
 
     '</div>' +
 
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(6)">Continue →</button>' +
     '</div>';
 }
 
@@ -2781,8 +2933,8 @@ function renderGoogleStep5(){
     '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(4)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(6)">Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(6)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(8)">Continue →</button>' +
     '</div>';
 }
 
@@ -2811,8 +2963,8 @@ function renderGoogleStep6(){
     '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(5)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(7)">Continue →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(7)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(9)">Continue →</button>' +
     '</div>';
 }
 
@@ -2846,8 +2998,8 @@ function renderGoogleStep7(){
     '</div>' +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(6)">← Back</button>' +
-    '<button class="btn primary" onclick="setLaunchStep(8)">Preview →</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(8)">← Back</button>' +
+    '<button class="btn primary" onclick="setLaunchStep(10)">Preview →</button>' +
     '</div>';
 }
 
@@ -2883,7 +3035,7 @@ function renderGoogleStep8(){
     serpMockup +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-    '<button class="link-btn muted" onclick="setLaunchStep(7)">← Back</button>' +
+    '<button class="link-btn muted" onclick="setLaunchStep(9)">← Back</button>' +
     '<button class="btn primary" onclick="submitGoogleCampaign()">Send for review →</button>' +
     '</div>';
 }
@@ -2924,9 +3076,14 @@ function resetLaunchWizard(){
   state.launchWizard = {
     step:1, platform:'meta', prefilled:false, aiGenerating:false, aiGenDone:false, selectedCreatives:[0,1,2],
     gCampaignType:'search',
+    gWebsite:'',
+    gGeo:['Toronto, ON'],
+    gBidStrategy:'max_clicks',
+    gSearchPartners:false,
+    gDisplayNetwork:false,
     gKeywords:['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
     gMatchTypes:['exact','phrase','broad','broad'],
-    gBudget:30,
+    gBudget:50,
     gHeadlines:['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
     gDescriptions:['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
     gSitelinks:true, gCall:true, gLocation:true,
@@ -3016,7 +3173,7 @@ function submitLaunchCampaign(){
   showToast('Campaign submitted to Meta for review ✓', {success:true});
 }
 function submitGoogleCampaign(){
-  setLaunchStep(9);
+  setLaunchStep(11);
   showToast('Campaign submitted to Google Ads for review ✓', {success:true});
 }
 </script>
@@ -4868,6 +5025,11 @@ function ico(name, size){
   return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; display:inline-block;">'+(ICO[name]||'')+'</svg>';
 }
 
+// Compact "Foxy's take" conclusion line, tied to the bottom of a report section.
+function foxyTake(text){
+  return '<div class="rs-take"><div class="foxy-chat-av" style="width:26px; height:26px;">'+FOXY_MINI+'</div>'+
+    '<div class="rs-take-txt"><b>Foxy\'s take</b> — '+text+'</div></div>';
+}
 // Renders an inline recommendation styled as if spoken by Foxy, the AI marketer.
 function foxyNote(text, hero){
   return '<div class="foxy-note'+(hero?' hero':'')+'">'+
