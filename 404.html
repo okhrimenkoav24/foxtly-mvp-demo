@@ -28,6 +28,35 @@
     --blue-dim: rgba(96,165,250,0.12);
     --purple: #a78bfa;
     --purple-dim: rgba(167,139,250,0.12);
+    --shadow: rgba(0,0,0,0.35);
+    --hairline: var(--hairline);
+  }
+  /* Light theme — variable overrides applied via data-theme on <html> */
+  :root[data-theme="light"]{
+    --bg: #f6f6f9;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --card-bg-2: #f1f1f5;
+    --card-bg-3: #e9e9ef;
+    --border: #e3e3e9;
+    --border-light: #d3d3dc;
+    --text: #1a1a22;
+    --text-secondary: #52525c;
+    --text-muted: #6b6b76;
+    --orange: #d9720c;
+    --orange-dim: rgba(217,114,12,0.12);
+    --green: #0f9d6b;
+    --green-dim: rgba(15,157,107,0.12);
+    --red: #dc2626;
+    --red-dim: rgba(220,38,38,0.10);
+    --yellow: #b45309;
+    --yellow-dim: rgba(180,83,9,0.12);
+    --blue: #2563eb;
+    --blue-dim: rgba(37,99,235,0.10);
+    --purple: #7c3aed;
+    --purple-dim: rgba(124,58,237,0.10);
+    --shadow: rgba(20,20,40,0.10);
+    --hairline: rgba(0,0,0,0.04);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{height:100%;}
@@ -201,7 +230,7 @@
   /* ============ BADGES ============ */
   .badge{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
   .badge.green{ background:var(--green-dim); color:var(--green); }
-  .badge.gray{ background:rgba(255,255,255,0.06); color:var(--text-muted); }
+  .badge.gray{ background:var(--hairline); color:var(--text-muted); }
   .badge.yellow{ background:var(--yellow-dim); color:var(--yellow); }
   .badge.red{ background:var(--red-dim); color:var(--red); }
   .badge.blue{ background:var(--blue-dim); color:var(--blue); }
@@ -1587,19 +1616,19 @@ function renderKbStrategy(){
           </div>
         </div>
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;">
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
+          <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Budget</div>
             <div style="font-weight:700; font-size:14px;">${s.budget}</div>
           </div>
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
+          <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Est. CPL</div>
             <div style="font-weight:700; font-size:14px;">${s.cpl}</div>
           </div>
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
+          <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Leads / mo</div>
             <div style="font-weight:700; font-size:14px;">${s.leads}</div>
           </div>
-          <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px;">
+          <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Platform</div>
             <div style="font-weight:700; font-size:12px; line-height:1.3;">${s.platform}</div>
           </div>
@@ -3869,7 +3898,7 @@ function renderCreativeTile(c, removable){
     .filter(([k]) => state.creatives.placements.includes(k))
     .map(([k, p]) => {
       const matches = c.aspectRatio === p.ratio;
-      return '<span style="font-size:9px; padding:2px 4px; border-radius:3px; background:' + (matches ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.04)') + '; color:' + (matches ? 'var(--green)' : 'var(--text-muted)') + '; border:1px solid ' + (matches ? 'rgba(52,211,153,0.3)' : 'var(--border)') + '; white-space:nowrap;">' + (matches ? '✓' : '–') + ' ' + p.label + '</span>';
+      return '<span style="font-size:9px; padding:2px 4px; border-radius:3px; background:' + (matches ? 'rgba(52,211,153,0.15)' : 'var(--hairline)') + '; color:' + (matches ? 'var(--green)' : 'var(--text-muted)') + '; border:1px solid ' + (matches ? 'rgba(52,211,153,0.3)' : 'var(--border)') + '; white-space:nowrap;">' + (matches ? '✓' : '–') + ' ' + p.label + '</span>';
     }).join('');
   return `<div class="card tight" style="padding:8px;">
     <div style="position:relative; border-radius:8px; background:${c.gradient}; overflow:hidden; margin-bottom:8px;">
@@ -4213,11 +4242,92 @@ function renderApprovalsHistory(){
 <!-- ===================== VIEW: 11 NOTIFICATION SETTINGS ===================== -->
 <script>
 VIEWS['settings'] = function(){
+  const tab = state.settingsTab || 'account';
+  const tabs = [['account','Account'],['appearance','Appearance'],['notifications','Notifications'],['billing','Billing']];
+  return `
+    <div class="topbar"><div><h1>Settings</h1><div class="greeting">Account, appearance, billing, and preferences</div></div></div>
+    <div class="tabs" style="margin-bottom:20px;">
+      ${tabs.map(t=>`<button class="tab ${tab===t[0]?'active':''}" onclick="setSettingsTab('${t[0]}')">${t[1]}</button>`).join('')}
+    </div>
+    ${tab==='account' ? renderSettingsAccount()
+      : tab==='appearance' ? renderSettingsAppearance()
+      : tab==='billing' ? renderSettingsBilling()
+      : renderSettingsNotifications()}
+  `;
+};
+function setSettingsTab(t){ state.settingsTab = t; navigateTo('settings'); }
+
+function renderSettingsAccount(){
+  if(!state.account) state.account = { fullName:'', email:'mike@mikesplumbing.com' };
+  const a = state.account;
+  return `
+    <div class="card mb-16">
+      <h2 class="mb-8">Profile information</h2>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Full name</label><input type="text" id="set-name" value="${a.fullName}" placeholder="Your full name"></div>
+        <div class="field"><label class="field-label">Email</label><input type="email" id="set-email" value="${a.email}"></div>
+      </div>
+      <button class="btn primary" onclick="saveAccountProfile()">Save profile</button>
+    </div>
+    <div class="card mb-16">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+        <div><div class="ttl">Product tour</div><div class="desc">Replay the guided walkthrough of Foxy.</div></div>
+        <button class="btn" onclick="navigateTo('decision-center'); setTimeout(replayTour, 200);">↺ Replay tour</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+        <div><div class="ttl">Sign out</div><div class="desc">End your current session.</div></div>
+        <button class="btn danger" onclick="navigateAuth('landing')">↪ Sign out</button>
+      </div>
+    </div>
+  `;
+}
+function saveAccountProfile(){
+  const n = document.getElementById('set-name'), e = document.getElementById('set-email');
+  if(!state.account) state.account = {};
+  if(n) state.account.fullName = n.value;
+  if(e) state.account.email = e.value;
+  showToast('Profile saved.', {success:true});
+}
+function renderSettingsAppearance(){
+  const mode = state.themeMode || 'dark';
+  const opts = [ {id:'dark',label:'Dark',icon:'🌙'}, {id:'light',label:'Light',icon:'☀️'}, {id:'system',label:'System',icon:'🖥'} ];
+  return `
+    <div class="card">
+      <h2 class="mb-8">Theme</h2>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+        ${opts.map(o=>`
+          <div onclick="setTheme('${o.id}')" style="cursor:pointer; border:2px solid ${mode===o.id?'var(--orange)':'var(--border)'}; background:${mode===o.id?'var(--orange-dim)':'var(--card-bg-2)'}; border-radius:12px; padding:18px 16px; text-align:left;">
+            <div style="font-size:20px; margin-bottom:10px;">${o.icon}</div>
+            <div style="font-weight:600; font-size:14px; color:${mode===o.id?'var(--orange)':'var(--text)'};">${o.label}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="small muted mt-10">“System” follows your device’s light / dark setting.</div>
+    </div>
+  `;
+}
+function renderSettingsBilling(){
+  const b = state.billing; const planObj = PLANS.find(p=>p.name===b.plan) || {price:0};
+  return `
+    <div class="card">
+      <div class="flex justify-between items-start" style="flex-wrap:wrap; gap:12px;">
+        <div>
+          <div class="small muted mb-4">Current plan</div>
+          <div style="font-size:24px; font-weight:800;">$${planObj.price}<span class="muted" style="font-size:14px; font-weight:400;">/month</span></div>
+          <div style="font-weight:600; margin-top:2px;">${b.plan} Plan</div>
+        </div>
+        <span class="badge yellow">Trial — ${b.trialTotal - b.trialDay} days left</span>
+      </div>
+      <div class="mt-16"><button class="btn primary" onclick="navigateTo('billing')">Manage billing →</button></div>
+    </div>
+  `;
+}
+function renderSettingsNotifications(){
   const p = state.notifPrefs;
   const allOff = !p.campaign_status && !p.ai_action && !p.morning_digest && !p.weekly_report && !p.new_lead && !p.lead_stale;
   return `
-    <div class="topbar"><div><h1>Notification preferences</h1><div class="greeting">mike@mikesplumbing.com — <a class="link-btn small" onclick="showToast('Account settings coming soon.')">Change email</a></div></div></div>
-
     ${allOff ? `<div class="card mb-16" style="border-color:var(--yellow);"><span style="color:var(--yellow);">⚠ You won't be notified about campaign activity — we recommend keeping at least daily digests on.</span></div>` : ''}
 
     <div class="card mb-16">
@@ -4284,17 +4394,9 @@ VIEWS['settings'] = function(){
       </div>
     </div>
 
-    <div class="card mb-16">
-      <h2 class="mb-8">Product tour</h2>
-      <div class="flex justify-between items-center">
-        <p class="small muted">Take the guided tour of the Foxtly workspace again.</p>
-        <button class="btn" onclick="navigateTo('decision-center'); setTimeout(replayTour, 200);">Replay tour</button>
-      </div>
-    </div>
-
     <button class="btn primary" onclick="showToast('Preferences saved.', {success:true})">Save preferences</button>
   `;
-};
+}
 
 function toggleNotif(key){
   state.notifPrefs[key] = !state.notifPrefs[key];
@@ -4353,7 +4455,7 @@ VIEWS['billing'] = function(){
       <h2 class="mb-8">Payment method</h2>
       ${b.paymentMethod
         ? `<div class="flex justify-between items-center"><div class="small">💳 Visa ending in ${b.paymentMethod}</div><button class="link-btn small" onclick="addPaymentMethod()">Update</button></div>`
-        : `<div class="small muted">No payment method on file.</div>`}
+        : `<div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;"><div class="small muted">No payment method on file.</div><button class="btn primary small" onclick="addPaymentMethod()">Add payment method</button></div>`}
     </div>
 
     <div class="card mb-16">
@@ -4452,11 +4554,15 @@ const CAMPAIGNS = [
 ];
 
 VIEWS['advertising'] = function(){
+  const showNew = state.advertisingTab !== 'creatives';
   return `
-    <div class="tabs">
-      <button class="tab ${state.advertisingTab==='campaigns'?'active':''}" onclick="setAdvertisingTab('campaigns')">Campaigns</button>
-      <button class="tab ${state.advertisingTab==='analytics'?'active':''}" onclick="setAdvertisingTab('analytics')">Analytics</button>
-      <button class="tab ${state.advertisingTab==='creatives'?'active':''}" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:0;">
+      <div class="tabs" style="margin-bottom:0;">
+        <button class="tab ${state.advertisingTab==='campaigns'?'active':''}" onclick="setAdvertisingTab('campaigns')">Campaigns</button>
+        <button class="tab ${state.advertisingTab==='analytics'?'active':''}" onclick="setAdvertisingTab('analytics')">Analytics</button>
+        <button class="tab ${state.advertisingTab==='creatives'?'active':''}" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
+      </div>
+      ${showNew ? `<button class="btn primary" onclick="resetLaunchWizard()">+ New Campaign</button>` : ''}
     </div>
     ${state.advertisingTab==='analytics' ? renderAdvertisingAnalytics()
       : state.advertisingTab==='creatives' ? renderAdvertisingCreatives()
@@ -4474,7 +4580,6 @@ function renderCampaignsList(){
         <div class="period-toggle">
           ${['today','7d','30d'].map(p=>`<button class="${state.campaignsPeriod===p?'active':''}" onclick="setCampaignsPeriod('${p}')">${p==='today'?'Today':p==='7d'?'7 days':'30 days'}</button>`).join('')}
         </div>
-        <button class="btn primary" onclick="resetLaunchWizard()">+ New Campaign</button>
       </div>
     </div>
     <div class="table-card">
@@ -6317,6 +6422,31 @@ function finishOnboarding(){
 <!-- VIEW MODULES WILL BE INSERTED HERE -->
 <script>
 // ---------- Boot ----------
+// ---------- Theme (dark / light / system) ----------
+function resolveTheme(mode){
+  if(mode === 'system'){
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+  }
+  return mode === 'light' ? 'light' : 'dark';
+}
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', resolveTheme(state.themeMode || 'dark'));
+}
+function setTheme(mode){
+  state.themeMode = mode;
+  try{ localStorage.setItem('foxtly_theme', mode); }catch(e){}
+  applyTheme();
+  if(state.currentView === 'settings') navigateTo('settings');
+}
+(function initTheme(){
+  try{ const saved = localStorage.getItem('foxtly_theme'); if(saved) state.themeMode = saved; }catch(e){}
+  if(!state.themeMode) state.themeMode = 'dark';
+  applyTheme();
+  if(window.matchMedia){
+    try{ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', ()=>{ if(state.themeMode==='system') applyTheme(); }); }catch(e){}
+  }
+})();
+
 window.addEventListener('DOMContentLoaded', ()=>{
   detectBasePath();
   const route = pathToRoute();
