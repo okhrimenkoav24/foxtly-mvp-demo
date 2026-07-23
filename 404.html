@@ -773,6 +773,9 @@ const state = {
     leadDestination: 'instant_form',
     audienceDescription: '',
     monthlyBudget: 1000,
+    leadDelivery: { email:true, sms:true, crm:false },
+    leadEmail: 'mike@mikesplumbing.com',
+    leadPhone: '(416) 555-0100',
   },
   creativeTokens: 40,
   creatives: {
@@ -2062,6 +2065,10 @@ function renderLaunchStep1(){
     '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg">Based on your profile <strong>(local plumbing, Toronto, lead gen)</strong>, Meta Ads will get you leads faster — home services convert 3× better on Facebook under $1K/month. Google is great for high-intent searches like "emergency plumber near me". Both platforms are ready to go.</div>' +
     '</div>' +
+    (function(){
+      var last = CAMPAIGNS.filter(function(c){ return c.platform==='Meta'; })[0];
+      return last ? '<div style="display:flex; justify-content:flex-end; margin-bottom:16px;"><button class="btn small" onclick="reuseLastCampaign()">↻ Use my last campaign’s settings</button></div>' : '';
+    })() +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px;">' +
 
     '<div onclick="setLaunchPlatform(\'meta\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(w.platform==='meta'?'var(--orange)':'var(--border)')+'; border-radius:14px; padding:24px 20px; position:relative;">' +
@@ -2092,10 +2099,12 @@ function renderMetaFBPage(){
   const meta = state.integrations.meta;
   const pages = [
     { val:'mikes_plumbing',        label:"Mike's Plumbing Services" },
-    { val:'mikes_plumbing_toronto',label:"Mike's Plumbing Toronto" },
+    { val:'mikes_plumbing_toronto',label:"Mike's Plumbing Toronto", pick:true, reason:"Matches your service area (Toronto) and has the most followers." },
     { val:'mikes_plumbing_gta',    label:"Mike's Plumbing — GTA" },
   ];
   const connected = meta.status === 'connected';
+  // P1-1: Foxy pre-selects the best-fit page (changeable) — no "Required" cold start.
+  if(connected && !meta.facebookPage) meta.facebookPage = 'mikes_plumbing_toronto';
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Meta requires a Facebook Page to publish ads.</strong> Your ad will appear as coming from this page — it\'s shown in the "Sponsored" label on every placement. Select the page that best represents this business.</div>' +
@@ -2106,13 +2115,16 @@ function renderMetaFBPage(){
       '<div style="display:flex; flex-direction:column; gap:10px;">' +
       pages.map(function(p){
         const sel = meta.facebookPage === p.val;
-        return '<div onclick="state.integrations.meta.facebookPage=\''+p.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg-2); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px;">' +
+        return '<div onclick="state.integrations.meta.facebookPage=\''+p.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg-2); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:10px; padding:14px 16px; display:flex; align-items:flex-start; gap:12px;">' +
           '<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1877f2,#0d5ebf);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">f</div>' +
-          '<div style="font-weight:600; font-size:14px; flex:1;">'+p.label+'</div>' +
-          '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">'+(sel?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'')+'</div>' +
+          '<div style="flex:1; min-width:0;">' +
+          '<div style="font-weight:600; font-size:14px;">'+p.label+(p.pick?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:600; margin-left:6px;">Foxy’s pick</span>':'')+'</div>' +
+          (p.reason ? '<div class="small muted" style="margin-top:3px; line-height:1.45;">'+p.reason+'</div>' : '') +
+          '</div>' +
+          '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;">'+(sel?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'')+'</div>' +
           '</div>';
       }).join('') +
-      (meta.facebookPage ? '<div class="small mt-10" style="color:var(--green);">✓ Ads will publish from this page</div>' : '<div class="small mt-10" style="color:var(--yellow);">⚠ Required to continue</div>') +
+      (meta.facebookPage ? '<div class="small mt-10" style="color:var(--green);">✓ Ads will publish from this page — change it anytime above.</div>' : '') +
       '</div>'
     :
       '<div style="text-align:center; padding:16px 0;">' +
@@ -2149,6 +2161,7 @@ function renderMetaStep2(){
     '<option value="other"'+(cb.service==='other'?' selected':'')+'>Other (custom)</option>' +
     '</select>' +
     (cb.service==='other' ? '<input type="text" placeholder="Enter your service…" onchange="state.campaignBuilder.service=this.value" style="width:100%; margin-top:10px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '') +
+    '<div class="small muted" style="margin-top:10px; line-height:1.5;">One service per campaign — for a different service, launch a separate campaign so each gets its own budget and targeting.</div>' +
     '</div>' +
     '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:28px;">' +
     goals.map(function(g){
@@ -2166,9 +2179,12 @@ function renderMetaStep2(){
         '</div>';
     }).join('') +
     '</div>' +
+    '<div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(2)">← Back</button>' +
     '<button class="btn primary" onclick="setLaunchStep(state.campaignBuilder.goal===\'leads\'?4:5)">Continue →</button>' +
+    '</div>' +
+    (!cb.service ? '<div class="small" style="color:var(--yellow); text-align:right; margin-top:8px;">Pick the service you want leads for.</div>' : '') +
     '</div>';
 }
 
@@ -2199,10 +2215,27 @@ function renderMetaLeadDestination(){
         '</div>';
     }).join('') +
     '</div>' +
+    // P1-2: where should leads go?
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Where should leads go?</div>' +
+    [['email','Email',cb.leadEmail],['sms','SMS',(cb.leadPhone||'Add phone')],['crm','CRM / Zapier',(cb.leadDelivery.crm?'Connected':'Optional')]].map(function(r){
+      var on = cb.leadDelivery[r[0]];
+      return '<div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);">' +
+        '<div onclick="toggleLeadChannel(\''+r[0]+'\')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid '+(on?'var(--orange)':'var(--border-light)')+'; background:'+(on?'var(--orange)':'transparent')+'; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;">'+(on?'✓':'')+'</div>' +
+        '<div style="flex:1;"><span style="font-size:13px; font-weight:600;">'+r[1]+'</span> <span class="small muted">· '+r[2]+'</span></div>' +
+        (r[0]==='crm' && !on ? '<button class="btn small" onclick="toggleLeadChannel(\'crm\')">Connect</button>' : '') +
+      '</div>';
+    }).join('') +
+    '<div class="ai-bubble" style="margin-top:14px; margin-bottom:0;"><div class="av">'+FOXY_MINI+'</div><div class="msg">I\'ll notify you the moment a lead comes in, so you can call back fast — speed is what wins the job.</div></div>' +
+    '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(3)">← Back</button>' +
     '<button class="btn primary" onclick="setLaunchStep(5)">Continue →</button>' +
     '</div>';
+}
+function toggleLeadChannel(ch){
+  state.campaignBuilder.leadDelivery[ch] = !state.campaignBuilder.leadDelivery[ch];
+  navigateTo('campaign-launch');
 }
 
 var CB_CITIES = [
@@ -2244,6 +2277,13 @@ function renderMetaStep3(){
     '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+cb.ageMax+' within '+cb.radius+' km of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
     '</div>' +
+
+    (function(){
+      var overlap = CAMPAIGNS.find(function(c){
+        return c.status!=='Paused' && c.geo && cityList.indexOf(c.geo)!==-1 && !(cb.ageMax < c.ageMin || cb.ageMin > c.ageMax);
+      });
+      return overlap ? '<div style="background:var(--yellow-dim); border:1px solid var(--yellow); border-radius:12px; padding:14px 16px; margin-bottom:20px; display:flex; gap:11px; align-items:flex-start;"><div class="foxy-chat-av" style="width:30px;height:30px; flex-shrink:0;">'+FOXY_MINI+'</div><div class="small" style="color:var(--text-secondary); line-height:1.6;"><strong style="color:var(--yellow);">Heads up — this overlaps with “'+overlap.name+'”.</strong> Same audience (same city + age range) can bid against itself and raise your cost per lead. Consider a different city, age range, or offer.</div></div>' : '';
+    })() +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
 
@@ -2320,6 +2360,12 @@ function renderMetaStep4(){
     '<div class="av">'+FOXY_MINI+'</div>' +
     '<div class="msg"><strong>New campaign = test phase.</strong> We start below your monthly budget on purpose, then — only if results are good — step the daily spend up by 20–30% every 3–4 days until it reaches your budget. We never go over the monthly number you set. Enter your monthly budget and I\'ll work out the right daily amount to start.</div>' +
     '</div>' +
+
+    (function(){
+      var oa = CAMPAIGNS.filter(function(c){ return c.status!=='Paused'; });
+      var ob = oa.reduce(function(s,c){ return s+(c.monthlyBudget||0); }, 0);
+      return ob ? '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:var(--text-secondary); line-height:1.6;">You already spend <strong style="color:var(--text);">$'+ob.toLocaleString()+'/mo</strong> across '+oa.length+' campaign'+(oa.length===1?'':'s')+'. Adding this brings your total to <strong style="color:var(--orange);">$'+(ob+monthly).toLocaleString()+'/mo</strong>.</div>' : '';
+    })() +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
 
@@ -2506,6 +2552,7 @@ function renderMetaStep7(){
       '<div style="padding:7px 9px; background:var(--card-bg-2);">' +
       '<div style="font-size:10px; color:var(--text-muted);">' + (c.type==='video'?'🎬 ':'📷 ') + c.tag + '</div>' +
       '<div style="font-size:11px; font-weight:500; margin-top:1px;">' + c.format + '</div>' +
+      '<button onclick="event.stopPropagation(); regenerateOneCreative(' + i + ')" style="margin-top:6px; width:100%; background:none; border:1px solid var(--border); border-radius:5px; color:var(--text-muted); font-size:10px; padding:3px 6px; cursor:pointer;">↻ Regenerate · 1 token</button>' +
       '</div>' +
       (sel ? '<div class="check">✓</div>' : '') +
       '</div>';
@@ -2601,6 +2648,24 @@ function renderMetaStep9(){
   const ad = state.adCopy;
   const cb = state.campaignBuilder;
   const bc = state.creatives.branding.color;
+  const daily = cb.budget;
+  const monthly = cb.monthlyBudget || daily*30;
+  const hasPayment = !!state.billing.paymentMethod;
+  const leadCh = [];
+  if(cb.leadDelivery && cb.leadDelivery.email) leadCh.push('email');
+  if(cb.leadDelivery && cb.leadDelivery.sms) leadCh.push('SMS');
+  if(cb.leadDelivery && cb.leadDelivery.crm) leadCh.push('CRM');
+  const confirmBlock =
+    '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:14px;">' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Before you submit</div>' +
+    '<div class="small" style="color:var(--text-secondary); line-height:1.75;">You\'re starting at <strong style="color:var(--text);">$'+daily+'/day</strong>, up to <strong style="color:var(--text);">$'+monthly+'/month</strong>.' +
+    (hasPayment ? ' Billed to <strong style="color:var(--text);">Visa ending '+state.billing.paymentMethod+'</strong>.' : '') +
+    (leadCh.length ? ' Leads → <strong style="color:var(--text);">'+leadCh.join(' + ')+'</strong>.' : '') +
+    ' You can pause anytime.</div></div>';
+  const payGate = hasPayment ? '' :
+    '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">' +
+    '<div class="small">Add a payment method to launch — your ads can\'t run without one.</div>' +
+    '<button class="btn primary small" onclick="navigateTo(\'billing\')">Add payment method →</button></div>';
 
   const feedMockup =
     '<div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4); width:240px;">' +
@@ -2646,41 +2711,54 @@ function renderMetaStep9(){
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Stories</div>' +
     storiesMockup + '</div>' +
     '</div>' +
+    confirmBlock + payGate +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(10)">← Back</button>' +
-    '<button class="btn primary" onclick="submitLaunchCampaign()">Send for review →</button>' +
+    '<button class="btn primary" '+(hasPayment?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(hasPayment?'submitLaunchCampaign()':'return false')+'">Submit to Meta →</button>' +
     '</div>';
 }
 
 function renderMetaStep10(){
   const cb = state.campaignBuilder;
-  return '<div style="text-align:center; padding:8px 0 24px;">' +
-    '<div style="font-size:52px; margin-bottom:12px;">🚀</div>' +
-    '<h2 style="font-size:22px; margin-bottom:8px;">Campaign sent for review</h2>' +
-    '<p class="muted" style="font-size:14px; max-width:400px; margin:0 auto 28px;">Your "'+cb.offer+'" campaign is in Meta\'s review queue. Ads typically approve within 24 hours — I\'ll notify you as soon as it goes live.</p>' +
+  const name = state.lastSubmittedCampaign || metaCampaignName();
+  const daily = cb.budget;
+  const monthly = cb.monthlyBudget || daily*30;
+  const pm = state.billing.paymentMethod ? ('Visa ending '+state.billing.paymentMethod) : 'your payment method';
+  const leadCh = [];
+  if(cb.leadDelivery && cb.leadDelivery.email) leadCh.push('email');
+  if(cb.leadDelivery && cb.leadDelivery.sms) leadCh.push('SMS');
+  if(cb.leadDelivery && cb.leadDelivery.crm) leadCh.push('CRM');
+  const steps = [
+    { icon:'🕐', title:'Review (~24h)',              desc:'Meta checks your ad against its policies. No action needed.' },
+    { icon:'🚀', title:'Goes live automatically',    desc:'As soon as it\'s approved, Foxy launches it and starts at $'+daily+'/day.' },
+    { icon:'📥', title:'Leads come in',              desc:'New leads appear in Leads and Foxy notifies you. First results usually within 48–72h.' },
+  ];
+  return '<div style="text-align:center; padding:8px 0 20px;">' +
+    '<div style="font-size:52px; margin-bottom:12px;">✅</div>' +
+    '<h2 style="font-size:22px; margin-bottom:8px;">Campaign submitted ✓</h2>' +
+    '<p class="muted" style="font-size:14px; max-width:420px; margin:0 auto;">Foxy sent “'+name+'” to Meta for review.</p>' +
     '</div>' +
-    '<div class="card mb-24" style="padding:20px;">' +
+    '<div class="card mb-16" style="padding:20px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:16px;">What happens next</div>' +
     '<div style="display:flex; flex-direction:column; gap:0;">' +
-    [
-      { icon:'⏳', title:'Now',         desc:'Campaign submitted to Meta\'s automated review system' },
-      { icon:'✅', title:'~24 hours',   desc:'Meta approves and campaign goes live automatically' },
-      { icon:'📊', title:'48–72 hours', desc:'First performance data appears in your dashboard' },
-      { icon:'🔔', title:'7 days',      desc:'I send you a performance report and budget recommendation' },
-    ].map(function(r,i,arr){
+    steps.map(function(r,i,arr){
       return '<div style="display:flex; gap:14px; align-items:flex-start;">' +
         '<div style="display:flex; flex-direction:column; align-items:center;">' +
         '<div style="width:32px;height:32px;border-radius:50%;background:'+(i===0?'var(--green-dim)':'var(--card-bg-2)')+';color:'+(i===0?'var(--green)':'var(--text-muted)')+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+r.icon+'</div>' +
-        (i<arr.length-1 ? '<div style="width:2px;height:24px;background:var(--border);margin:4px 0;"></div>' : '') +
+        (i<arr.length-1 ? '<div style="width:2px;height:22px;background:var(--border);margin:4px 0;"></div>' : '') +
         '</div>' +
         '<div style="padding-top:6px;"><div style="font-weight:600; font-size:13px;">'+r.title+'</div><div class="small muted">'+r.desc+'</div></div>' +
         '</div>';
     }).join('') +
-    '</div>' +
-    '</div>' +
-    '<div style="display:flex; gap:10px; justify-content:center;">' +
-    '<button class="btn" onclick="navigateTo(\'advertising\')">View in Campaigns</button>' +
-    '<button class="btn primary" onclick="navigateTo(\'dashboard\')">Back to Dashboard</button>' +
+    '</div></div>' +
+    '<div class="card mb-24" style="padding:14px 18px;">' +
+    '<div class="small" style="color:var(--text-secondary); line-height:1.7;">' +
+    '<strong style="color:var(--text);">Monthly budget:</strong> $'+monthly+' · billed to '+pm +
+    (leadCh.length ? '<br><strong style="color:var(--text);">Leads →</strong> '+leadCh.join(' + ') : '') +
+    '</div></div>' +
+    '<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">' +
+    '<button class="btn primary" onclick="state.advertisingTab=\'campaigns\'; navigateTo(\'advertising\')">Go to Campaigns →</button>' +
+    '<button class="btn" onclick="resetLaunchWizard()">Launch another campaign</button>' +
     '</div>';
 }
 
@@ -3378,6 +3456,10 @@ function regenerateCreatives(){
     showToast('✦ Foxy: New batch of creatives is ready', {success:true});
   }, 2800);
 }
+// P2-1: regenerate a single creative for 1 token, leaving the others untouched.
+function regenerateOneCreative(i){
+  showToast('✦ Foxy: Regenerated creative '+(i+1)+' · 1 token used', {success:true});
+}
 function toggleLaunchCreative(i){
   const idx = state.launchWizard.selectedCreatives.indexOf(i);
   if(idx===-1) state.launchWizard.selectedCreatives.push(i);
@@ -3424,9 +3506,45 @@ function cycleMatchType(i){
   state.launchWizard.gMatchTypes[i] = next;
   navigateTo('campaign-launch');
 }
+function metaCampaignName(){
+  const cb = state.campaignBuilder;
+  return (cb.offer ? cb.offer : 'New Campaign') + ' — Plumbing';
+}
 function submitLaunchCampaign(){
-  setLaunchStep(11);
-  showToast('Campaign submitted to Meta for review ✓', {success:true});
+  const cb = state.campaignBuilder;
+  if(!state.billing.paymentMethod){ navigateTo('billing'); showToast('Add a payment method to launch.'); return; }
+  const name = metaCampaignName();
+  // P2-3: the submitted campaign appears in the list as "In review".
+  if(!CAMPAIGNS.find(c=>c.name===name && c.status==='In review')){
+    CAMPAIGNS.unshift({
+      id:'c'+Date.now(), name:name, platform:'Meta', status:'In review', spend:0, leads:0, cpl:null, change:0, anomaly:false,
+      geo:(cb.cities&&cb.cities[0])||cb.location||'Toronto, ON', ageMin:cb.ageMin, ageMax:cb.ageMax, monthlyBudget:cb.monthlyBudget,
+      creatives:[], audience:'Homeowners, '+cb.ageMin+'-'+cb.ageMax+', '+((cb.cities&&cb.cities.join(', '))||cb.location),
+      aiComment:'Submitted to Meta for review — waiting on approval.' });
+  }
+  state.lastSubmittedCampaign = name;
+  setLaunchStep(12);
+  showToast('Submitted to Meta for review ✓', {success:true});
+}
+// P1-3: duplicate a campaign — prefill the wizard from an existing one (keep name/offer blank).
+function duplicateCampaign(id){
+  const c = CAMPAIGNS.find(x=>x.id===id); if(!c) return;
+  state.launchWizard = Object.assign({}, state.launchWizard, {step:2, maxStep:2, platform:'meta', prefilled:true, aiGenerating:false, aiGenDone:false});
+  const cb = state.campaignBuilder;
+  cb.platform = 'meta';
+  cb.cities = [c.geo || 'Toronto, ON'];
+  cb.location = c.geo || 'Toronto, ON';
+  cb.ageMin = c.ageMin || 25; cb.ageMax = c.ageMax || 65;
+  cb.monthlyBudget = c.monthlyBudget || 1000;
+  cb._budgetOverridden = false; cb.budget = calcRecommendedDaily(cb.monthlyBudget);
+  cb.offer = '';
+  navigateTo('campaign-launch');
+  showToast('Copied settings from “'+c.name+'” — set the offer and launch.');
+}
+function reuseLastCampaign(){
+  const last = CAMPAIGNS.filter(function(c){ return c.platform==='Meta'; })[0];
+  if(!last){ showToast('No previous campaign to copy from.'); return; }
+  duplicateCampaign(last.id);
 }
 function submitGoogleCampaign(){
   setLaunchStep(12);
@@ -4533,6 +4651,7 @@ state.advertisingTab = 'campaigns';
 
 const CAMPAIGNS = [
   { id:'c1', name:'Free Estimate — Plumbing', platform:'Meta', status:'Active', spend:168, leads:9, cpl:18.70, change:-11, anomaly:false,
+    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:1000,
     creatives:[
       {name:'Free Estimate Photo', spend:128, leads:9, cpl:14.20, badge:'Top performer'},
       {name:'Team at Work', spend:40, leads:0, cpl:null, badge:null},
@@ -4540,12 +4659,14 @@ const CAMPAIGNS = [
     audience:'Homeowners, 25-65, within 15 miles of Toronto, ON, interested in home improvement, homeownership, DIY.',
     aiComment:"This audience is performing well — cost per lead is 24% below your target. No changes recommended right now." },
   { id:'c2', name:'Same-Day Service', platform:'Meta', status:'Active', spend:76, leads:3, cpl:25.30, change:4, anomaly:false,
+    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:800,
     creatives:[
       {name:'Same-Day Banner', spend:76, leads:3, cpl:25.30, badge:null},
     ],
     audience:'Homeowners, 25-65, within 10 miles of Toronto, ON, searched "emergency plumber" recently.',
     aiComment:"Performance is stable. We'll keep monitoring for the next few days before suggesting changes." },
   { id:'c3', name:'Spring Promo', platform:'Meta', status:'Paused', spend:40, leads:0, cpl:null, change:0, anomaly:true,
+    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:600,
     creatives:[
       {name:'Generic Banner', spend:40, leads:0, cpl:null, badge:'Underperforming'},
     ],
@@ -4573,6 +4694,8 @@ VIEWS['advertising'] = function(){
 function setAdvertisingTab(t){ state.advertisingTab = t; navigateTo('advertising'); }
 
 function renderCampaignsList(){
+  const active = CAMPAIGNS.filter(c=>c.status!=='Paused');
+  const totalBudget = active.reduce((s,c)=>s+(c.monthlyBudget||0),0);
   return `
     <div class="topbar">
       <div><h1>Campaigns</h1><div class="greeting">${CAMPAIGNS.length} campaigns across Meta Ads</div></div>
@@ -4582,6 +4705,7 @@ function renderCampaignsList(){
         </div>
       </div>
     </div>
+    ${totalBudget ? `<div class="card mb-16" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;"><div class="small muted">Total monthly budget across your live campaigns</div><div style="font-weight:700;">$${totalBudget.toLocaleString()}/mo <span class="small muted" style="font-weight:400;">· ${active.length} campaign${active.length===1?'':'s'}</span></div></div>` : ''}
     <div class="table-card">
       <table>
         <thead><tr><th>Campaign</th><th>Status</th><th>Spend</th><th>Leads</th><th>Cost / Lead</th><th></th></tr></thead>
@@ -4589,11 +4713,11 @@ function renderCampaignsList(){
           ${CAMPAIGNS.map(c=>`
             <tr onclick="openCampaignDetail('${c.id}')">
               <td><strong>${c.name}</strong> <span class="small muted">· ${c.platform} Ads</span> ${c.anomaly?`<span title="Spend up with no leads — Foxy is reviewing">🔴</span>`:''}</td>
-              <td><span class="badge ${c.status==='Active'?'green':'yellow'}">${c.status}</span></td>
+              <td><span class="badge ${c.status==='Active'?'green':c.status==='In review'?'blue':'yellow'}">${c.status}</span></td>
               <td>$${c.spend}</td>
               <td>${c.leads}</td>
               <td>${c.cpl ? '$'+c.cpl.toFixed(2) : '—'} ${c.change ? `<span class="small ${c.change<0?'kpi-delta down':'kpi-delta bad'}" style="display:inline;">${c.change<0?'↓':'↑'} ${Math.abs(c.change)}%</span>` : ''}</td>
-              <td><button class="link-btn small" onclick="event.stopPropagation(); openCampaignDetail('${c.id}')">View →</button></td>
+              <td style="white-space:nowrap;"><button class="link-btn small" onclick="event.stopPropagation(); duplicateCampaign('${c.id}')">Duplicate</button> · <button class="link-btn small" onclick="event.stopPropagation(); openCampaignDetail('${c.id}')">View →</button></td>
             </tr>
           `).join('')}
         </tbody>
