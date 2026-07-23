@@ -4723,6 +4723,9 @@ function renderCampaignsList(){
         </tbody>
       </table>
     </div>
+    <div style="display:flex; justify-content:center; margin-top:16px;">
+      <button class="btn primary" onclick="resetLaunchWizard()">+ New Campaign</button>
+    </div>
   `;
 }
 function setCampaignsPeriod(p){ state.campaignsPeriod = p; navigateTo('advertising'); }
