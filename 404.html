@@ -2068,6 +2068,25 @@ state.launchMode = 'chat';
 state.metaChat = { step:0, done:false };
 function setLaunchMode(m){ state.launchMode = m; navigateTo('campaign-launch'); }
 function setChatService(s){ state.campaignBuilder.service = s; navigateTo('campaign-launch'); }
+function metaChatToCreatives(){
+  // Hand the finished chat setup over to the visual creatives → ad copy → preview steps.
+  // state.campaignBuilder is shared, so everything set in the chat carries over.
+  state.launchMode = 'wizard';
+  state.launchWizard.step = 9;                 // Creatives
+  state.launchWizard.maxStep = Math.max(state.launchWizard.maxStep || 1, 9);
+  if(!state.launchWizard.aiGenDone){
+    state.launchWizard.aiGenerating = true;
+    navigateTo('campaign-launch');
+    setTimeout(function(){
+      state.launchWizard.aiGenerating = false;
+      state.launchWizard.aiGenDone = true;
+      navigateTo('campaign-launch');
+      showToast('✦ Foxy: Your creatives are ready — 2 images + 1 video', {success:true});
+    }, 2800);
+  } else {
+    navigateTo('campaign-launch');
+  }
+}
 function metaChatEdit(i){ state.metaChat.step = i; navigateTo('campaign-launch'); }
 function metaChatConfirm(){
   const mc = state.metaChat, cb = state.campaignBuilder;
@@ -2078,7 +2097,6 @@ function metaChatConfirm(){
 }
 function metaChatSubmit(){
   const cb = state.campaignBuilder;
-  if(!state.billing.paymentMethod){ navigateTo('billing'); showToast('Add a payment method to launch.'); return; }
   const name = metaCampaignName();
   if(!CAMPAIGNS.find(c=>c.name===name && c.status==='In review')){
     CAMPAIGNS.unshift({ id:'c'+Date.now(), name:name, platform:'Meta', status:'In review', spend:0, leads:0, cpl:null, change:0, anomaly:false,
@@ -2105,7 +2123,7 @@ function chatActiveTurn(i, t){
     t.control +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="'+(i===0?'setLaunchStep(1)':'metaChatEdit('+(i-1)+')')+'">← Back</button>' +
-    '<button class="btn primary" '+(t.valid?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(t.valid?'metaChatConfirm()':'return false')+'">'+t.cta+'</button>' +
+    '<button class="btn primary" '+(t.valid?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(t.valid?(t.action||'metaChatConfirm()'):'return false')+'">'+t.cta+'</button>' +
     '</div></div>';
 }
 function renderMetaChat(){
@@ -2153,8 +2171,16 @@ function renderMetaChat(){
     { msg:'Your ad captures leads with an <strong>Instant Form</strong> — Facebook auto-fills name, email and phone, so people apply in two taps with no landing page (it works for every service business, which is why I default to it). The moment a lead comes in I’ll ping you so you can call back fast — speed wins the job. Where should I send them?',
       control:[['email','Email',cb.leadEmail],['sms','SMS',(cb.leadPhone||'Add phone')],['crm','CRM / Zapier',(cb.leadDelivery.crm?'Connected':'Optional')]].map(function(r){var on=cb.leadDelivery[r[0]];return '<div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border);"><div onclick="toggleLeadChannel(\''+r[0]+'\')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid '+(on?'var(--orange)':'var(--border-light)')+'; background:'+(on?'var(--orange)':'transparent')+'; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">'+(on?'✓':'')+'</div><div style="flex:1;"><span style="font-size:13px; font-weight:600;">'+r[1]+'</span> <span class="small muted">· '+r[2]+'</span></div></div>';}).join('')+'<div style="height:6px;"></div>',
       cta:'Notify me there →', valid:true, summary:'Leads → '+(leadCh.join(' + ')||'—') },
-    { msg:'I’ll generate <strong>several creatives</strong> — different images plus a short video, each in feed (1:1, 4:5) and story (9:16) sizes, all on-brand with your offer. Once it’s live I’ll <strong>A/B test the audiences and creatives automatically</strong> and shift budget to the winners — you never have to manage that. Ready for me to create the first set?',
-      control:'', cta:'Yes, generate them →', valid:true, summary:'Creatives + auto A/B testing (Foxy)' },
+    { msg:'When should it go live? I recommend starting <strong>right after Meta approves it</strong> (~24h) and letting it run until you pause — I auto-pause weak ads for you.',
+      control:'<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:6px;">'+
+        '<div onclick="state.campaignBuilder.schedule=\'immediate\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; border:1.5px solid '+(cb.schedule!=='scheduled'?'var(--orange)':'var(--border)')+'; background:'+(cb.schedule!=='scheduled'?'var(--orange-dim)':'var(--card-bg-2)')+';"><span style="font-size:10px; background:var(--orange); color:#1a1206; padding:2px 6px; border-radius:4px; font-weight:700; flex-shrink:0;">Foxy’s pick</span><span style="font-size:13px; font-weight:600; color:'+(cb.schedule!=='scheduled'?'var(--orange)':'var(--text-secondary)')+';">Start after Meta approval (~24h)</span></div>'+
+        '<div onclick="state.campaignBuilder.schedule=\'scheduled\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; border:1.5px solid '+(cb.schedule==='scheduled'?'var(--orange)':'var(--border)')+'; background:'+(cb.schedule==='scheduled'?'var(--orange-dim)':'var(--card-bg-2)')+';"><span style="width:16px; flex-shrink:0;"></span><span style="font-size:13px; font-weight:600; color:'+(cb.schedule==='scheduled'?'var(--orange)':'var(--text-secondary)')+';">Choose a start date</span></div>'+
+        (cb.schedule==='scheduled' ? '<input type="date" value="'+(cb.startDate||'')+'" onchange="state.campaignBuilder.startDate=this.value; navigateTo(\'campaign-launch\')" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px;">' : '')+
+        '</div>',
+      cta:(cb.schedule==='scheduled'?'Start on my date →':'Start after approval →'), valid:(cb.schedule!=='scheduled' || !!cb.startDate),
+      summary:((cb.schedule==='scheduled' && cb.startDate) ? ('Starts '+cb.startDate+' · runs until you pause') : 'Starts after approval · runs until you pause') },
+    { msg:'Perfect. Now I’ll generate your <strong>creatives</strong> — 2 images + a short video, on-brand with your offer. You’ll see them, fine-tune the ad text, then preview the final ad before we submit. Once it’s live I <strong>A/B test audiences and creatives automatically</strong> and shift budget to the winners.',
+      control:'', cta:'Generate my creatives →', valid:true, action:'metaChatToCreatives()', summary:'Creatives + auto A/B testing (Foxy)' },
   ];
 
   let html = '<div class="ai-bubble mb-16"><div class="av">'+FOXY_MINI+'</div><div class="msg"><strong>I’ll set this up like your media buyer would</strong> — I recommend each setting and tell you why, you confirm or tweak. Takes about a minute.</div></div>';
@@ -2169,15 +2195,13 @@ function renderMetaChat(){
     const confirmBlock = '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:14px;">' +
       '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Before you submit</div>' +
       '<div class="small" style="color:var(--text-secondary); line-height:1.75;">You’re running <strong style="color:var(--text);">$'+daily+'/day for '+days+' days</strong> (~$'+total+' total).' +
-      (hasPayment ? ' Billed to <strong style="color:var(--text);">Visa ending '+state.billing.paymentMethod+'</strong>.' : '') +
-      (leadCh.length ? ' Leads → <strong style="color:var(--text);">'+leadCh.join(' + ')+'</strong> via Instant Form.' : '') + ' You can pause anytime.</div></div>';
-    const payGate = hasPayment ? '' :
-      '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;"><div class="small">Add a payment method to launch — your ads can’t run without one.</div><button class="btn primary small" onclick="navigateTo(\'billing\')">Add payment method →</button></div>';
+      (leadCh.length ? ' Leads → <strong style="color:var(--text);">'+leadCh.join(' + ')+'</strong> via Instant Form.' : '') +
+      ' Meta bills your ad spend to the card on your Meta Ads account — your Foxtly subscription is separate. You can pause anytime.</div></div>';
     html += '<div class="ai-bubble mb-12"><div class="av">'+FOXY_MINI+'</div><div class="msg">That’s the whole plan. If it looks good, I’ll send it to Meta for review — approval usually takes about a day, then it goes live automatically.</div></div>' +
-      confirmBlock + payGate +
+      confirmBlock +
       '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-      '<button class="link-btn muted" onclick="metaChatEdit(5)">← Back</button>' +
-      '<button class="btn primary" '+(hasPayment?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(hasPayment?'metaChatSubmit()':'return false')+'">Submit to Meta →</button>' +
+      '<button class="link-btn muted" onclick="metaChatEdit(6)">← Back</button>' +
+      '<button class="btn primary" onclick="metaChatSubmit()">Submit to Meta →</button>' +
       '</div>';
   }
   return html;
@@ -2789,7 +2813,6 @@ function renderMetaStep9(){
   const bc = state.creatives.branding.color;
   const daily = cb.budget;
   const monthly = cb.monthlyBudget || daily*30;
-  const hasPayment = !!state.billing.paymentMethod;
   const leadCh = [];
   if(cb.leadDelivery && cb.leadDelivery.email) leadCh.push('email');
   if(cb.leadDelivery && cb.leadDelivery.sms) leadCh.push('SMS');
@@ -2798,13 +2821,9 @@ function renderMetaStep9(){
     '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:14px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Before you submit</div>' +
     '<div class="small" style="color:var(--text-secondary); line-height:1.75;">You\'re starting at <strong style="color:var(--text);">$'+daily+'/day</strong>, up to <strong style="color:var(--text);">$'+monthly+'/month</strong>.' +
-    (hasPayment ? ' Billed to <strong style="color:var(--text);">Visa ending '+state.billing.paymentMethod+'</strong>.' : '') +
     (leadCh.length ? ' Leads → <strong style="color:var(--text);">'+leadCh.join(' + ')+'</strong>.' : '') +
-    ' You can pause anytime.</div></div>';
-  const payGate = hasPayment ? '' :
-    '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">' +
-    '<div class="small">Add a payment method to launch — your ads can\'t run without one.</div>' +
-    '<button class="btn primary small" onclick="navigateTo(\'billing\')">Add payment method →</button></div>';
+    ' Meta bills your ad spend to the card on your Meta Ads account — your Foxtly subscription is separate. You can pause anytime.</div></div>';
+  const payGate = '';
 
   const feedMockup =
     '<div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4); width:240px;">' +
@@ -2853,7 +2872,7 @@ function renderMetaStep9(){
     confirmBlock + payGate +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(10)">← Back</button>' +
-    '<button class="btn primary" '+(hasPayment?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(hasPayment?'submitLaunchCampaign()':'return false')+'">Submit to Meta →</button>' +
+    '<button class="btn primary" onclick="submitLaunchCampaign()">Submit to Meta →</button>' +
     '</div>';
 }
 
@@ -2862,7 +2881,6 @@ function renderMetaStep10(){
   const name = state.lastSubmittedCampaign || metaCampaignName();
   const daily = cb.budget;
   const monthly = cb.monthlyBudget || daily*30;
-  const pm = state.billing.paymentMethod ? ('Visa ending '+state.billing.paymentMethod) : 'your payment method';
   const leadCh = [];
   if(cb.leadDelivery && cb.leadDelivery.email) leadCh.push('email');
   if(cb.leadDelivery && cb.leadDelivery.sms) leadCh.push('SMS');
@@ -2892,7 +2910,7 @@ function renderMetaStep10(){
     '</div></div>' +
     '<div class="card mb-24" style="padding:14px 18px;">' +
     '<div class="small" style="color:var(--text-secondary); line-height:1.7;">' +
-    '<strong style="color:var(--text);">Monthly budget:</strong> $'+monthly+' · billed to '+pm +
+    '<strong style="color:var(--text);">Monthly budget:</strong> $'+monthly+' · Meta bills your ad spend to your Meta Ads account' +
     (leadCh.length ? '<br><strong style="color:var(--text);">Leads →</strong> '+leadCh.join(' + ') : '') +
     '</div></div>' +
     '<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">' +
@@ -3559,6 +3577,7 @@ function resetLaunchWizard(){
     gDuration:30,
   };
   state.metaChat = { step:0, done:false };
+  state.launchMode = 'chat';   // next campaign starts in the conversational flow again
   navigateTo('campaign-launch');
 }
 function setLaunchStep(n){
@@ -3652,7 +3671,6 @@ function metaCampaignName(){
 }
 function submitLaunchCampaign(){
   const cb = state.campaignBuilder;
-  if(!state.billing.paymentMethod){ navigateTo('billing'); showToast('Add a payment method to launch.'); return; }
   const name = metaCampaignName();
   // P2-3: the submitted campaign appears in the list as "In review".
   if(!CAMPAIGNS.find(c=>c.name===name && c.status==='In review')){
