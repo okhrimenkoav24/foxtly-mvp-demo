@@ -2147,11 +2147,24 @@ function renderMetaChat(){
 
   const turns = [
     { msg:'Let’s build your Meta campaign together. I’ll run it as <strong>Lead Generation</strong> — that optimises for real inquiries (calls & form fills), not just views. Which service do you want leads for?',
-      control:'<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">'+services.map(function(s){var sel=cb.service===s;return '<div onclick="setChatService(\''+s.replace(/'/g,"\\'")+'\')" style="cursor:pointer; padding:8px 14px; border-radius:20px; font-size:13px; border:1.5px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-secondary)')+';">'+s+'</div>';}).join('')+'</div>',
+      control:'<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">'+services.map(function(s){var sel=cb.service===s;return '<div onclick="setChatService(\''+s.replace(/'/g,"\\'")+'\')" style="cursor:pointer; padding:8px 14px; border-radius:20px; font-size:13px; border:1.5px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-secondary)')+';">'+s+'</div>';}).join('')+'</div>'+
+        '<div class="small muted mb-4">Don’t see it? Add your own:</div>'+
+        '<input type="text" value="'+((services.indexOf(cb.service)===-1 && cb.service) ? cb.service.replace(/"/g,'&quot;') : '')+'" onchange="setChatService(this.value)" placeholder="e.g. Sump Pump Repair, Bathroom Renovation…" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 13px; color:var(--text); font-size:13px; margin-bottom:14px;">',
       cta:'That’s the one →', valid:!!cb.service, summary:'Lead Generation · <strong>'+(cb.service||'—')+'</strong>' },
     { msg:'I’ll target <strong>homeowners '+cb.ageMin+'–'+cb.ageMax+'</strong> within <strong>'+cb.radius+' km of '+cityLabel+'</strong> — homeowners are 4× more likely to hire a plumber. Tweak if you like.',
-      control:'<div style="margin-bottom:14px;"><div class="small muted mb-4">Radius: '+cb.radius+' km</div><input type="range" min="5" max="80" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:12px;"><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div><div class="small muted mb-4">Min age: '+cb.ageMin+'</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div><div><div class="small muted mb-4">Max age: '+cb.ageMax+'</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div></div></div>',
-      cta:'Looks right →', valid:true, summary:'Homeowners '+cb.ageMin+'–'+cb.ageMax+' · '+cb.radius+' km · '+cityLabel },
+      control:'<div style="margin-bottom:14px;">'+
+        '<div class="small muted mb-4">Target cities</div>'+
+        '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">'+((cb.cities||[]).length?(cb.cities||[]).map(function(ct,ci){return '<span style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:16px; font-size:12px; background:var(--orange-dim); color:var(--orange); border:1px solid var(--orange);">'+ct+' <span onclick="removeCampaignCity('+ci+')" style="cursor:pointer; font-weight:800;" title="Remove">×</span></span>';}).join(''):'<span class="small" style="color:var(--yellow);">Add at least one city.</span>')+'</div>'+
+        '<div style="display:flex; gap:8px; flex-wrap:wrap;">'+
+          '<select id="cb-city-select" style="flex:1; min-width:150px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:var(--text); font-size:13px; cursor:pointer;">'+
+            '<option value="">Add a city…</option>'+CB_CITIES.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('')+
+          '</select>'+
+          '<button class="btn small" onclick="addCampaignCity()">Add</button>'+
+        '</div>'+
+        '<input type="text" placeholder="Or type a city…" onchange="addCustomCampaignCity(this.value); this.value=\'\';" style="width:100%; margin-top:8px; box-sizing:border-box; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px;">'+
+        '<div style="height:14px;"></div>'+
+        '<div class="small muted mb-4">Radius: '+cb.radius+' km</div><input type="range" min="5" max="80" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:12px;"><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div><div class="small muted mb-4">Min age: '+cb.ageMin+'</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div><div><div class="small muted mb-4">Max age: '+cb.ageMax+'</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div></div></div>',
+      cta:'Looks right →', valid:!!(cb.cities && cb.cities.length>0), summary:'Homeowners '+cb.ageMin+'–'+cb.ageMax+' · '+cb.radius+' km · '+cityLabel },
     { msg:'New campaigns start lean and scale only once the numbers work. I’d run <strong>$'+daily+'/day for '+days+' days</strong> — about <strong>$'+total+'</strong> total. Adjust the daily amount or how long it runs:',
       control:'<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">'+
         '<div><div class="small muted mb-4">Daily budget</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid '+(daily<15?'var(--yellow)':'var(--border)')+'; border-radius:8px; padding:8px 12px;"><span style="color:var(--text-muted);">$</span><input type="number" min="15" max="1000" value="'+daily+'" onchange="var v=parseInt(this.value)||15; state.campaignBuilder.budget=v; state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">/day</span></div></div>'+
@@ -2419,6 +2432,13 @@ function addCampaignCity(){
 }
 function removeCampaignCity(idx){
   state.campaignBuilder.cities.splice(idx,1);
+  navigateTo('campaign-launch');
+}
+function addCustomCampaignCity(val){
+  val = (val||'').trim();
+  if(!val) return;
+  if(!state.campaignBuilder.cities) state.campaignBuilder.cities = [];
+  if(state.campaignBuilder.cities.indexOf(val)===-1) state.campaignBuilder.cities.push(val);
   navigateTo('campaign-launch');
 }
 
