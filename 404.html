@@ -536,7 +536,7 @@
       <button class="nav-subitem" data-subtab="analytics" onclick="setAdvertisingTab('analytics')">Analytics</button>
       <button class="nav-subitem" data-subtab="creatives" onclick="setAdvertisingTab('creatives')">Ad Creatives</button>
     </div>
-    <button class="nav-item" data-view="approvals" data-tour="nav-approvals"  onclick="navigateTo('approvals')"><span class="ic">☑</span> Approvals <span class="nav-badge" id="approvals-badge">3</span></button>
+    <button class="nav-item" data-view="approvals" data-tour="nav-approvals"  onclick="navigateTo('approvals')"><span class="ic">☑</span> Approvals <span class="nav-badge" id="approvals-badge">1</span></button>
     <button class="nav-item" data-view="leads" onclick="navigateTo('leads')"><span class="ic">◎</span> Leads</button>
     <button class="nav-item" data-view="reports" onclick="navigateTo('reports')"><span class="ic">▥</span> Report Builder</button>
     <button class="nav-item" data-view="knowledge-base" data-tour="nav-knowledge-base" onclick="navigateTo('knowledge-base')"><span class="ic">◐</span> Knowledge Base <span class="nav-arrow">▲</span></button>
@@ -722,15 +722,15 @@ const state = {
   setupProgress: { profile:true, meta:true, google:false, firstCampaign:false },
   pendingIntegrationNudge: false,
   pendingActions: [
-    { id:'pa1', type:'urgent', icon:'⚠', title:"Foxy recommends pausing \"Spring Promo\" creative",
+    { id:'pa1', type:'urgent', icon:'⚠', kind:'approval', title:"Foxy recommends pausing \"Spring Promo\" creative",
       desc:"Spending $40/day with 0 leads in the last 48 hours.", reversibility:'green',
       explain:"This creative has spent $40 over 48 hours with 0 leads. Pausing it will save ~$20/day. Your other creative ('Free Estimate Photo') is performing well (CPL $14) and will continue running.",
       diff:["Status: Active → Paused"], status:'proposed' },
-    { id:'pa2', type:'warn', icon:'⎆', title:"Connect your Google Ads account",
+    { id:'pa2', type:'warn', icon:'⎆', kind:'attention', title:"Connect your Google Ads account",
       desc:"Finish setup to unlock full optimization across platforms.", reversibility:'green',
       explain:"Google Ads connection is temporarily unavailable while we complete Google's API verification. We'll notify you the moment it's ready.",
       diff:[], status:'proposed', linkView:'integrations' },
-    { id:'pa3', type:'info', icon:'◎', title:"3 new leads need a status update",
+    { id:'pa3', type:'info', icon:'◎', kind:'attention', title:"3 new leads need a status update",
       desc:"Lead pipeline hasn't been updated in 3+ days.", reversibility:'green',
       explain:"Updating lead status helps Foxy understand which campaigns are producing real customers, not just clicks.",
       diff:[], status:'proposed', linkView:'leads' },
@@ -765,8 +765,9 @@ const state = {
     radius: 15,
     ageMin: 25, ageMax: 65,
     interests: ['Home improvement', 'Homeownership', 'DIY'],
-    budget: 33,
-    offer: 'Free Estimate',
+    budget: 15,
+    durationDays: 14,
+    offer: '$50 off your first service',
     schedule: 'immediate',
     startDate: '',
     service: '',
@@ -962,7 +963,7 @@ function navigateAuth(screenId, opts){
 }
 
 function updateApprovalsBadge(){
-  const n = state.pendingActions.filter(a=>a.status==='proposed').length;
+  const n = state.pendingActions.filter(a=>a.status==='proposed' && a.kind==='approval').length;
   const badge = document.getElementById('approvals-badge');
   if(!badge) return;
   if(n>0){ badge.style.display='flex'; badge.textContent=n; } else { badge.style.display='none'; }
@@ -1027,7 +1028,9 @@ const REVERS_LABEL = {
 };
 
 VIEWS['decision-center'] = function(){
-  const pending = state.pendingActions.filter(a=>a.status!=='done' && a.status!=='rejected');
+  // Dashboard shows only "attention" items; approvals live in their own queue (no duplication).
+  const pending = state.pendingActions.filter(a=>a.status!=='done' && a.status!=='rejected' && a.kind!=='approval');
+  const approvalCount = state.pendingActions.filter(a=>a.status==='proposed' && a.kind==='approval').length;
   const metaOk = state.integrations.meta.status === 'connected';
   const googleOk = state.integrations.google && state.integrations.google.status === 'connected';
   const noAccounts = !metaOk && !googleOk;
@@ -1121,9 +1124,9 @@ VIEWS['decision-center'] = function(){
         </div>
       </div>
       <div class="action-list" id="action-list">
-        ${pending.length ? pending.map(a=>renderActionCard(a)).join('') : `<div class="card" style="text-align:center;color:var(--text-secondary);">✓ All caught up — nothing needs your review right now.</div>`}
+        ${approvalCount ? `<div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-left:3px solid var(--orange);"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:18px;">☑</span><div><strong>${approvalCount} approval${approvalCount>1?'s':''} waiting</strong><div class="small muted">Foxy has proposed ${approvalCount>1?'actions':'an action'} that need your yes/no.</div></div></div><button class="btn small primary" onclick="navigateTo('approvals')">Review in Approval Queue →</button></div>` : ''}
+        ${pending.length ? pending.map(a=>renderActionCard(a)).join('') : (approvalCount ? '' : `<div class="card" style="text-align:center;color:var(--text-secondary);">✓ All caught up — nothing needs your review right now.</div>`)}
       </div>
-      ${pending.length ? `<div style="text-align:right;margin-top:8px;"><button class="link-btn small" onclick="navigateTo('approvals')">View all approvals →</button></div>` : ''}
     </div>
 
     <div class="section">
@@ -2043,11 +2046,142 @@ VIEWS['campaign-launch'] = function(){
     else if(w.step===12) content = renderMetaStep10();
   }
 
+  // Conversational Meta flow (default). Classic wizard stays available via state.launchMode.
+  if(!isGoogle && state.launchMode==='chat' && w.step>=2){
+    return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">Chat with Foxy — your AI media buyer sets it up, you confirm</div></div></div>' +
+      '<div style="max-width:680px; margin:0 auto;">' + renderMetaChat() +
+      (state.metaChat && state.metaChat.done ? '' : '<div class="small muted" style="text-align:center; margin-top:22px;">Prefer the classic step-by-step version? <a class="link-btn small" onclick="setLaunchMode(\'wizard\')">Switch to wizard</a></div>') +
+      '</div>';
+  }
+
   const isWide = isGoogle && (w.step===8 || w.step===9);
   const maxW = isWide ? '960px' : '640px';
+  const modeSwitch = (!isGoogle) ? '<div class="small muted" style="text-align:center; margin-top:22px;">Want Foxy to walk you through it in a chat? <a class="link-btn small" onclick="setLaunchMode(\'chat\')">Switch to chat setup</a></div>' : '';
   return '<div class="topbar"><div><h1>Launch a campaign</h1><div class="greeting">Foxy sets everything up — you just confirm and go</div></div></div>' +
-    progressBar + '<div style="max-width:'+maxW+'; margin:0 auto;">' + content + '</div>';
+    progressBar + '<div style="max-width:'+maxW+'; margin:0 auto;">' + content + modeSwitch + '</div>';
 };
+
+// ======================= CONVERSATIONAL META FLOW (chat with Foxy) =======================
+// Alternative to the step-by-step Meta wizard. Toggle with state.launchMode ('chat' | 'wizard').
+// The classic wizard functions are untouched, so switching back is instant.
+state.launchMode = 'chat';
+state.metaChat = { step:0, done:false };
+function setLaunchMode(m){ state.launchMode = m; navigateTo('campaign-launch'); }
+function setChatService(s){ state.campaignBuilder.service = s; navigateTo('campaign-launch'); }
+function metaChatEdit(i){ state.metaChat.step = i; navigateTo('campaign-launch'); }
+function metaChatConfirm(){
+  const mc = state.metaChat, cb = state.campaignBuilder;
+  if(mc.step===0 && !cb.service){ showToast('Pick a service first.'); return; }
+  if(mc.step===3 && !cb.offer){ showToast('Add an offer first.'); return; }
+  mc.step++;
+  navigateTo('campaign-launch');
+}
+function metaChatSubmit(){
+  const cb = state.campaignBuilder;
+  if(!state.billing.paymentMethod){ navigateTo('billing'); showToast('Add a payment method to launch.'); return; }
+  const name = metaCampaignName();
+  if(!CAMPAIGNS.find(c=>c.name===name && c.status==='In review')){
+    CAMPAIGNS.unshift({ id:'c'+Date.now(), name:name, platform:'Meta', status:'In review', spend:0, leads:0, cpl:null, change:0, anomaly:false,
+      geo:(cb.cities&&cb.cities[0])||cb.location||'Toronto, ON', ageMin:cb.ageMin, ageMax:cb.ageMax, monthlyBudget:cb.monthlyBudget,
+      creatives:[], audience:'Homeowners, '+cb.ageMin+'-'+cb.ageMax+', '+((cb.cities&&cb.cities.join(', '))||cb.location),
+      aiComment:'Submitted to Meta for review — waiting on approval.' });
+  }
+  state.lastSubmittedCampaign = name;
+  state.metaChat.done = true;
+  navigateTo('campaign-launch');
+  showToast('Submitted to Meta for review ✓', {success:true});
+}
+function chatConfirmedRow(i, summary){
+  return '<div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:12px;">' +
+    '<div class="foxy-chat-av" style="width:28px; height:28px; flex-shrink:0;">'+FOXY_MINI+'</div>' +
+    '<div style="flex:1; background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; padding:9px 13px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">' +
+    '<div class="small" style="color:var(--text-secondary);">✓ '+summary+'</div>' +
+    '<button class="link-btn small" onclick="metaChatEdit('+i+')">Edit</button>' +
+    '</div></div>';
+}
+function chatActiveTurn(i, t){
+  return '<div class="ai-bubble mb-12"><div class="av">'+FOXY_MINI+'</div><div class="msg">'+t.msg+'</div></div>' +
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:16px;">' +
+    t.control +
+    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+    '<button class="link-btn muted" onclick="'+(i===0?'setLaunchStep(1)':'metaChatEdit('+(i-1)+')')+'">← Back</button>' +
+    '<button class="btn primary" '+(t.valid?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(t.valid?'metaChatConfirm()':'return false')+'">'+t.cta+'</button>' +
+    '</div></div>';
+}
+function renderMetaChat(){
+  const cb = state.campaignBuilder;
+  const mc = state.metaChat || (state.metaChat = {step:0, done:false});
+  if(mc.done) return renderMetaStep10();
+  const monthly = cb.monthlyBudget || 1000;
+  const recDaily = 15;                          // meeting: $15/day is both the minimum and the recommended start
+  if(!cb._budgetOverridden) cb.budget = recDaily;
+  const daily = cb.budget;
+  const days = cb.durationDays || 14;
+  const total = daily * days;
+  const impliedMonthly = daily * 30;
+  const overBudget = impliedMonthly > monthly;   // warn if the daily rate implies more than their monthly budget
+  const cityLabel = (cb.cities && cb.cities.length===1) ? cb.cities[0] : ((cb.cities&&cb.cities.length||0)+' cities');
+  const leadCh = []; if(cb.leadDelivery.email) leadCh.push('email'); if(cb.leadDelivery.sms) leadCh.push('SMS'); if(cb.leadDelivery.crm) leadCh.push('CRM');
+  const services = ['Plumbing Repair','Emergency Plumbing','Water Heater Installation','Drain Cleaning','Pipe Repair'];
+  const offerRecs = ['$50 off your first service','Free camera inspection ($90 value) with any drain job','10% off for first-time customers'];
+  const weakOffer = /free estimate|free quote|free consultation/i.test(cb.offer||'');
+  const hasPayment = !!state.billing.paymentMethod;
+
+  const turns = [
+    { msg:'Let’s build your Meta campaign together. I’ll run it as <strong>Lead Generation</strong> — that optimises for real inquiries (calls & form fills), not just views. Which service do you want leads for?',
+      control:'<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">'+services.map(function(s){var sel=cb.service===s;return '<div onclick="setChatService(\''+s.replace(/'/g,"\\'")+'\')" style="cursor:pointer; padding:8px 14px; border-radius:20px; font-size:13px; border:1.5px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+'; color:'+(sel?'var(--orange)':'var(--text-secondary)')+';">'+s+'</div>';}).join('')+'</div>',
+      cta:'That’s the one →', valid:!!cb.service, summary:'Lead Generation · <strong>'+(cb.service||'—')+'</strong>' },
+    { msg:'I’ll target <strong>homeowners '+cb.ageMin+'–'+cb.ageMax+'</strong> within <strong>'+cb.radius+' km of '+cityLabel+'</strong> — homeowners are 4× more likely to hire a plumber. Tweak if you like.',
+      control:'<div style="margin-bottom:14px;"><div class="small muted mb-4">Radius: '+cb.radius+' km</div><input type="range" min="5" max="80" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:12px;"><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div><div class="small muted mb-4">Min age: '+cb.ageMin+'</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div><div><div class="small muted mb-4">Max age: '+cb.ageMax+'</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div></div></div>',
+      cta:'Looks right →', valid:true, summary:'Homeowners '+cb.ageMin+'–'+cb.ageMax+' · '+cb.radius+' km · '+cityLabel },
+    { msg:'New campaigns start lean and scale only once the numbers work. I’d run <strong>$'+daily+'/day for '+days+' days</strong> — about <strong>$'+total+'</strong> total. Adjust the daily amount or how long it runs:',
+      control:'<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">'+
+        '<div><div class="small muted mb-4">Daily budget</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid '+(daily<15?'var(--yellow)':'var(--border)')+'; border-radius:8px; padding:8px 12px;"><span style="color:var(--text-muted);">$</span><input type="number" min="15" max="1000" value="'+daily+'" onchange="var v=parseInt(this.value)||15; state.campaignBuilder.budget=v; state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">/day</span></div></div>'+
+        '<div><div class="small muted mb-4">Run for</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px;"><input type="number" min="3" max="90" value="'+days+'" onchange="var d=parseInt(this.value)||14; state.campaignBuilder.durationDays=d; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">days</span></div></div>'+
+        '</div>'+
+        '<div class="small muted" style="margin-bottom:8px;">≈ <strong style="color:var(--text);">$'+total+'</strong> total over '+days+' days.</div>'+
+        (daily<15?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ $15/day is the minimum for Meta to deliver enough to learn from.</div>':'')+
+        (overBudget?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ At $'+daily+'/day that runs ~$'+impliedMonthly+'/mo — above the $'+monthly+'/mo in your profile. You can still launch, or lower the daily amount.</div>':'')+
+        '<div style="height:6px;"></div>',
+      cta:'Go with $'+daily+'/day →', valid:daily>=15, summary:'$'+daily+'/day · '+days+' days (~$'+total+')' },
+    { msg:'The offer headlines every ad, so it has to make someone act now. Based on your service and what local competitors are running, here’s what I’d lead with — tap one or write your own:',
+      control:'<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">'+offerRecs.map(function(o,oi){var sel=cb.offer===o;return '<div onclick="state.campaignBuilder.offer=\''+o.replace(/'/g,"\\'")+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; border:1.5px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+';">'+(oi===0?'<span style="font-size:10px; background:var(--orange); color:#1a1206; padding:2px 6px; border-radius:4px; font-weight:700; flex-shrink:0;">Foxy’s pick</span>':'<span style="width:16px; flex-shrink:0;"></span>')+'<span style="font-size:13px; font-weight:600; color:'+(sel?'var(--orange)':'var(--text-secondary)')+';">'+o+'</span></div>';}).join('')+'</div>'+
+        '<div class="small muted mb-4">Or write your own:</div>'+
+        '<input type="text" value="'+(cb.offer||'').replace(/"/g,'&quot;')+'" onchange="state.campaignBuilder.offer=this.value; navigateTo(\'campaign-launch\')" placeholder="e.g. $50 off first service, free inspection…" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; margin-bottom:'+(weakOffer?'12px':'14px')+';">'+
+        (weakOffer?'<div class="ai-bubble" style="margin-bottom:12px;"><div class="av">'+FOXY_MINI+'</div><div class="msg" style="color:var(--yellow);">Heads up — “Free Estimate” is the most common offer in your market, so it rarely stands out, and it tends to pull the priciest, least-committed leads. A specific dollar or % deal converts better. I’d switch it.</div></div>':''),
+      cta:'Use this offer →', valid:!!cb.offer, summary:'Offer: “'+(cb.offer||'—')+'”' },
+    { msg:'Your ad captures leads with an <strong>Instant Form</strong> — Facebook auto-fills name, email and phone, so people apply in two taps with no landing page (it works for every service business, which is why I default to it). The moment a lead comes in I’ll ping you so you can call back fast — speed wins the job. Where should I send them?',
+      control:[['email','Email',cb.leadEmail],['sms','SMS',(cb.leadPhone||'Add phone')],['crm','CRM / Zapier',(cb.leadDelivery.crm?'Connected':'Optional')]].map(function(r){var on=cb.leadDelivery[r[0]];return '<div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border);"><div onclick="toggleLeadChannel(\''+r[0]+'\')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid '+(on?'var(--orange)':'var(--border-light)')+'; background:'+(on?'var(--orange)':'transparent')+'; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">'+(on?'✓':'')+'</div><div style="flex:1;"><span style="font-size:13px; font-weight:600;">'+r[1]+'</span> <span class="small muted">· '+r[2]+'</span></div></div>';}).join('')+'<div style="height:6px;"></div>',
+      cta:'Notify me there →', valid:true, summary:'Leads → '+(leadCh.join(' + ')||'—') },
+    { msg:'I’ll generate <strong>several creatives</strong> — different images plus a short video, each in feed (1:1, 4:5) and story (9:16) sizes, all on-brand with your offer. Once it’s live I’ll <strong>A/B test the audiences and creatives automatically</strong> and shift budget to the winners — you never have to manage that. Ready for me to create the first set?',
+      control:'', cta:'Yes, generate them →', valid:true, summary:'Creatives + auto A/B testing (Foxy)' },
+  ];
+
+  let html = '<div class="ai-bubble mb-16"><div class="av">'+FOXY_MINI+'</div><div class="msg"><strong>I’ll set this up like your media buyer would</strong> — I recommend each setting and tell you why, you confirm or tweak. Takes about a minute.</div></div>';
+  for(let i=0; i<turns.length; i++){
+    if(i < mc.step){ html += chatConfirmedRow(i, turns[i].summary); }
+    else if(i === mc.step){ html += chatActiveTurn(i, turns[i]); break; }
+    else break;
+  }
+  if(mc.step >= turns.length){
+    // all confirmed → review + submit
+    turns.forEach(function(t,i){ html += chatConfirmedRow(i, t.summary); });
+    const confirmBlock = '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:14px;">' +
+      '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Before you submit</div>' +
+      '<div class="small" style="color:var(--text-secondary); line-height:1.75;">You’re running <strong style="color:var(--text);">$'+daily+'/day for '+days+' days</strong> (~$'+total+' total).' +
+      (hasPayment ? ' Billed to <strong style="color:var(--text);">Visa ending '+state.billing.paymentMethod+'</strong>.' : '') +
+      (leadCh.length ? ' Leads → <strong style="color:var(--text);">'+leadCh.join(' + ')+'</strong> via Instant Form.' : '') + ' You can pause anytime.</div></div>';
+    const payGate = hasPayment ? '' :
+      '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;"><div class="small">Add a payment method to launch — your ads can’t run without one.</div><button class="btn primary small" onclick="navigateTo(\'billing\')">Add payment method →</button></div>';
+    html += '<div class="ai-bubble mb-12"><div class="av">'+FOXY_MINI+'</div><div class="msg">That’s the whole plan. If it looks good, I’ll send it to Meta for review — approval usually takes about a day, then it goes live automatically.</div></div>' +
+      confirmBlock + payGate +
+      '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+      '<button class="link-btn muted" onclick="metaChatEdit(5)">← Back</button>' +
+      '<button class="btn primary" '+(hasPayment?'':'disabled style="opacity:0.5;cursor:not-allowed;"')+' onclick="'+(hasPayment?'metaChatSubmit()':'return false')+'">Submit to Meta →</button>' +
+      '</div>';
+  }
+  return html;
+}
 
 // ---- SHARED: Step 1 Platform ----
 function renderLaunchStep1(){
@@ -2057,7 +2191,7 @@ function renderLaunchStep1(){
     '<span style="font-size:18px; flex-shrink:0; margin-top:1px;">✦</span>' +
     '<div>' +
     '<div style="font-weight:700; font-size:13px; color:var(--orange); margin-bottom:6px;">Campaign pre-filled from your research</div>' +
-    '<div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">Platform: <strong>Meta Ads</strong> · Goal: <strong>Lead Generation</strong> · Location: <strong>Toronto, ON · 15 mi</strong> · Budget: <strong>$1,000/month</strong> · Offer: <strong>Free Estimate</strong></div>' +
+    '<div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">Platform: <strong>Meta Ads</strong> · Goal: <strong>Lead Generation</strong> · Location: <strong>Toronto, ON · 15 km</strong> · Budget: <strong>$15/day</strong> · Offer: <strong>$50 off first service</strong></div>' +
     '</div>' +
     '</div>' : '';
   return prefilledBanner +
@@ -2143,10 +2277,11 @@ function renderMetaFBPage(){
 
 function renderMetaStep2(){
   const cb = state.campaignBuilder;
+  const isEcom = (state.onboarding && state.onboarding.businessFormat==='ecommerce');
   const goals = [
     { val:'leads',     icon:'📋', label:'Lead Generation',  desc:'Collect contact info via forms and messages. Foxy’s pick for local services.' },
-    { val:'sales',     icon:'💰', label:'Sales',             desc:'Drive purchases or bookings. Optimized for high-intent conversions.' },
     { val:'awareness', icon:'📣', label:'Brand Awareness',   desc:'Get your name seen — build recognition on Facebook & Instagram. This is about being remembered, not direct leads today; best when you want people to know you before they need you.' },
+    { val:'sales',     icon:'💰', label:'Sales',             desc:'Drive online purchases on your website. Best when people buy directly from you — online stores, ticketing, paid bookings.', ecommerceOnly:true },
   ];
   const serviceOptions = ['Plumbing Repair','Emergency Plumbing','Water Heater Installation','Drain Cleaning','Pipe Repair'];
   return '<div class="ai-bubble mb-20">' +
@@ -2167,15 +2302,19 @@ function renderMetaStep2(){
     goals.map(function(g){
       const sel = cb.goal === g.val;
       const isAI = g.val === 'leads';
-      return '<div onclick="state.campaignBuilder.goal=\''+g.val+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px;">' +
+      const locked = g.ecommerceOnly && !isEcom;
+      const badge = isAI ? ' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">Foxy’s pick</span>'
+                   : (g.ecommerceOnly ? ' <span style="font-size:10px; background:var(--card-bg-3); color:var(--text-muted); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">E-commerce only</span>' : '');
+      return '<div '+(locked?'':'onclick="state.campaignBuilder.goal=\''+g.val+'\'; navigateTo(\'campaign-launch\')"')+' style="'+(locked?'opacity:0.55; cursor:not-allowed;':'cursor:pointer;')+' background:var(--card-bg); border:2px solid '+(sel?'var(--orange)':'var(--border)')+'; border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:14px;" '+(locked?'title="Available for e-commerce businesses — set your business format in your profile."':'')+'>' +
         '<div style="font-size:26px; flex-shrink:0;">'+g.icon+'</div>' +
         '<div style="flex:1; min-width:0;">' +
-        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+g.label+(isAI?' <span style="font-size:10px; background:var(--orange-dim); color:var(--orange); padding:1px 6px; border-radius:4px; font-weight:500; margin-left:6px;">Foxy’s pick</span>':'')+'</div>' +
+        '<div style="font-weight:600; font-size:14px; margin-bottom:3px;">'+g.label+badge+'</div>' +
         '<div class="small muted">'+g.desc+'</div>' +
         '</div>' +
-        '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+        (locked ? '<div style="flex-shrink:0; font-size:14px; color:var(--text-muted);">🔒</div>'
+                : '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--orange)':'var(--border)')+';background:'+(sel?'var(--orange)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
         (sel?'<span style="font-size:11px;font-weight:900;color:#000;">✓</span>':'') +
-        '</div>' +
+        '</div>') +
         '</div>';
     }).join('') +
     '</div>' +
@@ -3419,6 +3558,7 @@ function resetLaunchWizard(){
     gSitelinks:true, gCall:true, gLocation:true, gCallouts:true, gSnippets:true, gPromo:false,
     gDuration:30,
   };
+  state.metaChat = { step:0, done:false };
   navigateTo('campaign-launch');
 }
 function setLaunchStep(n){
@@ -4206,8 +4346,8 @@ state.expandedAction = null;
 state.rejectingAction = null;
 
 VIEWS['approvals'] = function(){
-  const pending = state.pendingActions.filter(a=>a.status==='proposed' || a.status==='applying');
-  const rejected = state.pendingActions.filter(a=>a.status==='rejected');
+  const pending = state.pendingActions.filter(a=>(a.status==='proposed' || a.status==='applying') && a.kind==='approval');
+  const rejected = state.pendingActions.filter(a=>a.status==='rejected' && a.kind==='approval');
   return `
     <div class="topbar"><div><h1>Approval Queue</h1><div class="greeting">Foxy never acts on its own — review what's proposed and decide.</div></div></div>
     <div class="tabs">
@@ -5819,6 +5959,7 @@ state.onboarding = {
   businessName: (state.businessProfile && state.businessProfile.name) ? state.businessProfile.name : "Mike's Plumbing",
   industry: 'Plumbing',
   industryOther: '',
+  businessFormat: 'service',
   teamSize: '2-5',
   location: 'Toronto, ON',
   serviceArea: 'Metro area',
@@ -6162,6 +6303,13 @@ function renderObStep(step){
         <label class="field-label">Please specify your industry</label>
         <input id="ob-industryOther" type="text" value="${ob.industryOther}">
       </div>` : ''}
+      <div class="ob-block field">
+        <label class="field-label">How does your business make money?</label>
+        <div class="chip-group" style="flex-wrap:wrap;">
+          ${[['service','Service business (leads, bookings, calls)'],['ecommerce','E-commerce / online store (direct sales)']].map(([val,lab])=>`<span class="chip ${(ob.businessFormat||'service')===val?'selected':''}" onclick="state.onboarding.businessFormat='${val}'; navigateAuth('onboarding')">${lab}</span>`).join('')}
+        </div>
+        <div class="small muted mt-6" style="line-height:1.5;">This isn't your industry — it's how you sell. It tells Foxy whether to optimise for <strong>leads</strong> or <strong>online sales</strong>.</div>
+      </div>
       <div class="ob-block field">
         <label class="field-label">How many people work at your business?</label>
         <select id="ob-teamSize" onchange="state.onboarding.teamSize=this.value">
