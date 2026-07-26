@@ -2138,6 +2138,10 @@ function renderMetaChat(){
   const total = daily * days;
   const impliedMonthly = daily * 30;
   const overBudget = impliedMonthly > monthly;   // warn if the daily rate implies more than their monthly budget
+  if(cb.radius>50) cb.radius=50;        // Meta caps a single radius at 50 mi
+  if(cb.ageMax>65) cb.ageMax=65;        // Meta tops out at 65+
+  if(cb.ageMin<18) cb.ageMin=18;        // Meta minimum age is 18
+  const ageMaxLabel = (cb.ageMax>=65) ? '65+' : (''+cb.ageMax);
   const cityLabel = (cb.cities && cb.cities.length===1) ? cb.cities[0] : ((cb.cities&&cb.cities.length||0)+' cities');
   const leadCh = []; if(cb.leadDelivery.email) leadCh.push('email'); if(cb.leadDelivery.sms) leadCh.push('SMS'); if(cb.leadDelivery.crm) leadCh.push('CRM');
   const services = ['Plumbing Repair','Emergency Plumbing','Water Heater Installation','Drain Cleaning','Pipe Repair'];
@@ -2151,7 +2155,7 @@ function renderMetaChat(){
         '<div class="small muted mb-4">Don’t see it? Add your own:</div>'+
         '<input type="text" value="'+((services.indexOf(cb.service)===-1 && cb.service) ? cb.service.replace(/"/g,'&quot;') : '')+'" onchange="setChatService(this.value)" placeholder="e.g. Sump Pump Repair, Bathroom Renovation…" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 13px; color:var(--text); font-size:13px; margin-bottom:14px;">',
       cta:'That’s the one →', valid:!!cb.service, summary:'Lead Generation · <strong>'+(cb.service||'—')+'</strong>' },
-    { msg:'I’ll target <strong>homeowners '+cb.ageMin+'–'+cb.ageMax+'</strong> within <strong>'+cb.radius+' km of '+cityLabel+'</strong> — homeowners are 4× more likely to hire a plumber. Tweak if you like.',
+    { msg:'I’ll target <strong>homeowners '+cb.ageMin+'–'+ageMaxLabel+'</strong> within <strong>'+cb.radius+' mi of '+cityLabel+'</strong> — homeowners are 4× more likely to hire a plumber. Tweak if you like.',
       control:'<div style="margin-bottom:14px;">'+
         '<div class="small muted mb-4">Target cities</div>'+
         '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">'+((cb.cities||[]).length?(cb.cities||[]).map(function(ct,ci){return '<span style="display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:16px; font-size:12px; background:var(--orange-dim); color:var(--orange); border:1px solid var(--orange);">'+ct+' <span onclick="removeCampaignCity('+ci+')" style="cursor:pointer; font-weight:800;" title="Remove">×</span></span>';}).join(''):'<span class="small" style="color:var(--yellow);">Add at least one city.</span>')+'</div>'+
@@ -2163,18 +2167,16 @@ function renderMetaChat(){
         '</div>'+
         '<input type="text" placeholder="Or type a city…" onchange="addCustomCampaignCity(this.value); this.value=\'\';" style="width:100%; margin-top:8px; box-sizing:border-box; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px;">'+
         '<div style="height:14px;"></div>'+
-        '<div class="small muted mb-4">Radius: '+cb.radius+' km</div><input type="range" min="5" max="80" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:12px;"><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div><div class="small muted mb-4">Min age: '+cb.ageMin+'</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div><div><div class="small muted mb-4">Max age: '+cb.ageMax+'</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div></div></div>',
-      cta:'Looks right →', valid:!!(cb.cities && cb.cities.length>0), summary:'Homeowners '+cb.ageMin+'–'+cb.ageMax+' · '+cb.radius+' km · '+cityLabel },
-    { msg:'New campaigns start lean and scale only once the numbers work. I’d run <strong>$'+daily+'/day for '+days+' days</strong> — about <strong>$'+total+'</strong> total. Adjust the daily amount or how long it runs:',
-      control:'<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">'+
-        '<div><div class="small muted mb-4">Daily budget</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid '+(daily<15?'var(--yellow)':'var(--border)')+'; border-radius:8px; padding:8px 12px;"><span style="color:var(--text-muted);">$</span><input type="number" min="15" max="1000" value="'+daily+'" onchange="var v=parseInt(this.value)||15; state.campaignBuilder.budget=v; state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">/day</span></div></div>'+
-        '<div><div class="small muted mb-4">Run for</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px;"><input type="number" min="3" max="90" value="'+days+'" onchange="var d=parseInt(this.value)||14; state.campaignBuilder.durationDays=d; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">days</span></div></div>'+
+        '<div class="small muted mb-4">Radius: '+cb.radius+' mi</div><input type="range" min="5" max="50" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%; margin-bottom:12px;"><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"><div><div class="small muted mb-4">Min age: '+cb.ageMin+'</div><input type="range" min="18" max="65" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div><div><div class="small muted mb-4">Max age: '+ageMaxLabel+'</div><input type="range" min="18" max="65" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"></div></div></div>',
+      cta:'Looks right →', valid:!!(cb.cities && cb.cities.length>0), summary:'Homeowners '+cb.ageMin+'–'+ageMaxLabel+' · '+cb.radius+' mi · '+cityLabel },
+    { msg:'New campaigns start lean and scale only once the numbers work. I’d run it at <strong>$'+daily+'/day</strong> and keep it live until you pause. Adjust the daily amount:',
+      control:'<div style="margin-bottom:10px;">'+
+        '<div class="small muted mb-4">Daily budget</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid '+(daily<15?'var(--yellow)':'var(--border)')+'; border-radius:8px; padding:8px 12px; max-width:220px;"><span style="color:var(--text-muted);">$</span><input type="number" min="15" max="1000" value="'+daily+'" onchange="var v=parseInt(this.value)||15; state.campaignBuilder.budget=v; state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">/day</span></div>'+
         '</div>'+
-        '<div class="small muted" style="margin-bottom:8px;">≈ <strong style="color:var(--text);">$'+total+'</strong> total over '+days+' days.</div>'+
         (daily<15?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ $15/day is the minimum for Meta to deliver enough to learn from.</div>':'')+
         (overBudget?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ At $'+daily+'/day that runs ~$'+impliedMonthly+'/mo — above the $'+monthly+'/mo in your profile. You can still launch, or lower the daily amount.</div>':'')+
         '<div style="height:6px;"></div>',
-      cta:'Go with $'+daily+'/day →', valid:daily>=15, summary:'$'+daily+'/day · '+days+' days (~$'+total+')' },
+      cta:'Go with $'+daily+'/day →', valid:daily>=15, summary:'$'+daily+'/day' },
     { msg:'The offer headlines every ad, so it has to make someone act now. Based on your service and what local competitors are running, here’s what I’d lead with — tap one or write your own:',
       control:'<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">'+offerRecs.map(function(o,oi){var sel=cb.offer===o;return '<div onclick="state.campaignBuilder.offer=\''+o.replace(/'/g,"\\'")+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; border:1.5px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+';">'+(oi===0?'<span style="font-size:10px; background:var(--orange); color:#1a1206; padding:2px 6px; border-radius:4px; font-weight:700; flex-shrink:0;">Foxy’s pick</span>':'<span style="width:16px; flex-shrink:0;"></span>')+'<span style="font-size:13px; font-weight:600; color:'+(sel?'var(--orange)':'var(--text-secondary)')+';">'+o+'</span></div>';}).join('')+'</div>'+
         '<div class="small muted mb-4">Or write your own:</div>'+
@@ -2207,7 +2209,7 @@ function renderMetaChat(){
     turns.forEach(function(t,i){ html += chatConfirmedRow(i, t.summary); });
     const confirmBlock = '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:14px;">' +
       '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Before you submit</div>' +
-      '<div class="small" style="color:var(--text-secondary); line-height:1.75;">You’re running <strong style="color:var(--text);">$'+daily+'/day for '+days+' days</strong> (~$'+total+' total).' +
+      '<div class="small" style="color:var(--text-secondary); line-height:1.75;">You’re running <strong style="color:var(--text);">$'+daily+'/day</strong>, live until you pause.' +
       (leadCh.length ? ' Leads → <strong style="color:var(--text);">'+leadCh.join(' + ')+'</strong> via Instant Form.' : '') +
       ' Meta bills your ad spend to the card on your Meta Ads account — your Foxtly subscription is separate. You can pause anytime.</div></div>';
     html += '<div class="ai-bubble mb-12"><div class="av">'+FOXY_MINI+'</div><div class="msg">That’s the whole plan. If it looks good, I’ll send it to Meta for review — approval usually takes about a day, then it goes live automatically.</div></div>' +
@@ -2228,7 +2230,7 @@ function renderLaunchStep1(){
     '<span style="font-size:18px; flex-shrink:0; margin-top:1px;">✦</span>' +
     '<div>' +
     '<div style="font-weight:700; font-size:13px; color:var(--orange); margin-bottom:6px;">Campaign pre-filled from your research</div>' +
-    '<div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">Platform: <strong>Meta Ads</strong> · Goal: <strong>Lead Generation</strong> · Location: <strong>Toronto, ON · 15 km</strong> · Budget: <strong>$15/day</strong> · Offer: <strong>$50 off first service</strong></div>' +
+    '<div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">Platform: <strong>Meta Ads</strong> · Goal: <strong>Lead Generation</strong> · Location: <strong>Toronto, ON · 15 mi</strong> · Budget: <strong>$15/day</strong> · Offer: <strong>$50 off first service</strong></div>' +
     '</div>' +
     '</div>' : '';
   return prefilledBanner +
@@ -2445,6 +2447,10 @@ function addCustomCampaignCity(val){
 function renderMetaStep3(){
   const cb = state.campaignBuilder;
   if(!cb.cities) cb.cities = [cb.location || 'Toronto, ON'];
+  if(cb.radius>50) cb.radius=50;
+  if(cb.ageMax>65) cb.ageMax=65;
+  if(cb.ageMin<18) cb.ageMin=18;
+  const ageMaxLabel = (cb.ageMax>=65) ? '65+' : (''+cb.ageMax);
   const cityList = cb.cities;
   const available = CB_CITIES.filter(function(c){ return cityList.indexOf(c)===-1; });
   const cityLabel = cityList.length===1 ? cityList[0] : cityList.length+' cities';
@@ -2458,7 +2464,7 @@ function renderMetaStep3(){
 
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+cb.ageMax+' within '+cb.radius+' km of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
+    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+ageMaxLabel+' within '+cb.radius+' mi of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
     '</div>' +
 
     (function(){
@@ -2490,17 +2496,17 @@ function renderMetaStep3(){
 
     // Radius
     '<div style="margin-bottom:22px;">' +
-    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Radius per city: <span id="lw-radius-lbl">'+cb.radius+' km</span></label>' +
-    '<input type="range" min="5" max="80" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); document.getElementById(\'lw-radius-lbl\').textContent=this.value+\' km\'" style="width:100%;">' +
-    '<div style="display:flex; justify-content:space-between; margin-top:4px;"><span class="small muted">5 km</span><span class="small muted">80 km</span></div>' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Radius per city: <span id="lw-radius-lbl">'+cb.radius+' mi</span></label>' +
+    '<input type="range" min="5" max="50" value="'+cb.radius+'" oninput="state.campaignBuilder.radius=parseInt(this.value); document.getElementById(\'lw-radius-lbl\').textContent=this.value+\' mi\'" style="width:100%;">' +
+    '<div style="display:flex; justify-content:space-between; margin-top:4px;"><span class="small muted">5 mi</span><span class="small muted">50 mi</span></div>' +
     '</div>' +
 
     // Age range
     '<div>' +
-    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Age range: '+cb.ageMin+'–'+cb.ageMax+'</label>' +
+    '<label style="display:block; font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Age range: '+cb.ageMin+'–'+ageMaxLabel+'</label>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">' +
-    '<div><div class="small muted mb-4">Min age</div><input type="range" min="18" max="60" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMin+'</div></div>' +
-    '<div><div class="small muted mb-4">Max age</div><input type="range" min="25" max="75" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMax+'</div></div>' +
+    '<div><div class="small muted mb-4">Min age</div><input type="range" min="18" max="65" value="'+cb.ageMin+'" oninput="state.campaignBuilder.ageMin=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+cb.ageMin+'</div></div>' +
+    '<div><div class="small muted mb-4">Max age</div><input type="range" min="18" max="65" value="'+cb.ageMax+'" oninput="state.campaignBuilder.ageMax=parseInt(this.value); navigateTo(\'campaign-launch\')" style="width:100%;"><div class="small muted" style="text-align:center;">'+ageMaxLabel+'</div></div>' +
     '</div></div>' +
 
     // Audience description
