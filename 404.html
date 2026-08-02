@@ -6025,6 +6025,9 @@ state.onboarding = {
   brandNote: '',
   brandColor: '#f0883e',
   logoUploaded: false,
+  website: '',
+  brandFont: '',
+  brandFetched: false,
   photosUploaded: 0,
 };
 state.signup = { method:null, email:'', password:'', businessName:'', showPassword:false, agreed:false, error:null, loading:false };
@@ -6297,7 +6300,7 @@ function verifyEmailContinue(){
 }
 
 /* ---------------- 05. ONBOARDING QUESTIONNAIRE ---------------- */
-const OB_TOTAL_STEPS = 6;
+const OB_TOTAL_STEPS = 7;
 AUTH_VIEWS['onboarding'] = function(){
   const ob = state.onboarding;
   if(ob.step > OB_TOTAL_STEPS) return renderObFinal();
@@ -6317,8 +6320,8 @@ AUTH_VIEWS['onboarding'] = function(){
       <div class="ob-actions">
         <div>${ob.step>1 ? `<button class="btn" onclick="onboardingBack()">Back</button>` : ''}</div>
         <div class="flex gap-8">
-          ${[3,6].includes(ob.step) ? `<button class="link-btn muted small" onclick="onboardingSkip()">Skip this step</button>` : ''}
-          <button class="btn primary" onclick="onboardingNext()">Continue</button>
+          ${[3,6,7].includes(ob.step) ? `<button class="link-btn muted small" onclick="onboardingSkip()">Skip this step</button>` : ''}
+          <button class="btn primary" onclick="onboardingNext()">${ob.step===OB_TOTAL_STEPS ? 'Finish' : 'Continue'}</button>
         </div>
       </div>
     </div>
@@ -6507,14 +6510,32 @@ function renderObStep(step){
     `;
   }
   if(step===7){
+    const fetched = ob.brandFetched;
     return `
       <h1>Brand &amp; creative assets</h1>
-      <p class="ob-sub">Optional — the logo, colour and style I'll use so generated ads look like <em>your</em> brand. You can skip this and add it later in Creative Studio.</p>
+      <p class="ob-sub">So generated ads look like <em>your</em> brand. Drop your website and I'll pull your logo, colours and fonts automatically — or set them by hand below. You can change any of this later in Creative Studio.</p>
+
+      <div class="ob-block field">
+        <label class="field-label">Your website <span class="muted">(optional — fastest way to set up your brand)</span></label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="ob-website" type="text" value="${ob.website||''}" placeholder="e.g. mikesplumbing.com" style="flex:1;">
+          <button class="btn small primary" onclick="fetchBrandFromSite()" style="white-space:nowrap; flex-shrink:0;">${fetched ? 'Re-scan' : 'Pull brand ✦'}</button>
+        </div>
+        ${fetched ? `<div class="card tight" style="margin-top:10px; border-color:var(--green);">
+          <div class="small" style="color:var(--green); font-weight:600; margin-bottom:10px;">✓ Pulled from ${ob.website||'your site'} — edit anything below</div>
+          <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;"><div style="width:34px;height:34px;border-radius:7px;background:var(--card-bg-3);display:flex;align-items:center;justify-content:center;font-size:16px;">🖼</div><span class="small muted">Logo found</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><div style="width:22px;height:22px;border-radius:5px;background:${ob.brandColor};border:1px solid var(--border);"></div><span class="small muted">${ob.brandColor}</span></div>
+            <div style="display:flex; align-items:center; gap:8px;"><span style="font-weight:700; font-size:16px;">Aa</span><span class="small muted">${ob.brandFont||'Inter'}</span></div>
+          </div>
+        </div>` : ''}
+      </div>
+
       <div class="ob-block">
         <label class="field-label">Logo</label>
         ${ob.logoUploaded
-          ? `<div class="card tight small">✅ logo-mikesplumbing.png uploaded</div>`
-          : `<button class="btn small" onclick="state.onboarding.logoUploaded=true; navigateAuth('onboarding')">Upload logo</button>`}
+          ? `<div class="card tight small">✅ logo${fetched?' pulled from your site':'-mikesplumbing.png uploaded'}</div>`
+          : `<button class="btn small" onclick="state.onboarding.logoUploaded=true; navigateAuth('onboarding')">Upload logo manually</button>`}
       </div>
       <div class="ob-block field">
         <label class="field-label">Brand color <span class="muted">(optional)</span></label>
@@ -6532,6 +6553,19 @@ function renderObStep(step){
   return '';
 }
 
+function fetchBrandFromSite(){
+  const el = document.getElementById('ob-website');
+  const url = el ? (el.value||'').trim() : (state.onboarding.website||'');
+  if(!url){ showToast('Enter your website first.'); return; }
+  // Prototype: simulate scraping the site for brand assets (like creative generation).
+  state.onboarding.website = url;
+  state.onboarding.logoUploaded = true;
+  state.onboarding.brandColor = '#1f6feb';
+  state.onboarding.brandFont = 'Poppins';
+  state.onboarding.brandFetched = true;
+  navigateAuth('onboarding');
+  showToast('✦ Pulled your logo, colours and fonts from '+url, {success:true});
+}
 function toggleObService(s){
   const arr = state.onboarding.services;
   const i = arr.indexOf(s);
@@ -6568,7 +6602,7 @@ function syncObFields(){
     'ob-businessName':'businessName', 'ob-industryOther':'industryOther', 'ob-teamSize':'teamSize',
     'ob-location':'location', 'ob-serviceArea':'serviceArea', 'ob-offer':'offer', 'ob-address':'address',
     'ob-priceMin':'priceMin', 'ob-priceMax':'priceMax', 'ob-financialGoal':'financialGoal',
-    'ob-brandNote':'brandNote',
+    'ob-brandNote':'brandNote', 'ob-website':'website',
   };
   Object.entries(map).forEach(([id,key])=>{
     const el = document.getElementById(id);
