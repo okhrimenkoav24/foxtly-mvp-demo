@@ -420,6 +420,15 @@
   .ai-bubble .msg::before{ content:'Foxy tip'; display:block; font-size:10px; font-weight:800; letter-spacing:0.6px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; }
   .ai-bubble .msg::after{ content:''; position:absolute; left:-7px; top:13px; width:0; height:0; border-top:6px solid transparent; border-bottom:8px solid transparent; border-right:8px solid var(--card-bg-2); filter:drop-shadow(-1px 0 0 var(--border-light)); }
   .ai-bubble .msg strong{ color:var(--text); }
+  /* Conversational Meta flow — messenger-style entrance + typing indicator */
+  @keyframes foxyChatIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .chat-in{ animation:foxyChatIn 0.34s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes foxyTypeBounce{ 0%,60%,100%{ transform:translateY(0); opacity:.35; } 30%{ transform:translateY(-4px); opacity:1; } }
+  .foxy-typing{ display:inline-flex; align-items:center; }
+  .foxy-typing span{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--text-muted); margin:0 2.5px; animation:foxyTypeBounce 1.1s infinite; }
+  .foxy-typing span:nth-child(2){ animation-delay:.15s; }
+  .foxy-typing span:nth-child(3){ animation-delay:.30s; }
+  @media (prefers-reduced-motion: reduce){ .chat-in{ animation:none; } .foxy-typing span{ animation:none; } }
   .setting-row{ background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; }
   .setting-row:hover{ border-color:var(--border-light); }
   .setting-row.open{ border-color:var(--orange); }
@@ -2066,7 +2075,7 @@ VIEWS['campaign-launch'] = function(){
 // The classic wizard functions are untouched, so switching back is instant.
 state.launchMode = 'chat';
 state.metaChat = { step:0, done:false };
-function setLaunchMode(m){ state.launchMode = m; navigateTo('campaign-launch'); }
+function setLaunchMode(m){ state.launchMode = m; if(m==='chat' && state.metaChat){ state.metaChat.animate = true; } navigateTo('campaign-launch'); }
 function setChatService(s){ state.campaignBuilder.service = s; navigateTo('campaign-launch'); }
 function metaChatToCreatives(){
   // Hand the finished chat setup over to the visual creatives → ad copy → preview steps.
@@ -2087,13 +2096,26 @@ function metaChatToCreatives(){
     navigateTo('campaign-launch');
   }
 }
-function metaChatEdit(i){ state.metaChat.step = i; navigateTo('campaign-launch'); }
+function metaChatEdit(i){ state.metaChat.step = i; state.metaChat.animate = true; state.metaChat.typing = false; navigateTo('campaign-launch'); }
+// Advance to the next turn with a short "Foxy is typing…" beat, like a real chat.
+function metaChatAdvance(){
+  const mc = state.metaChat;
+  mc.typing = true;
+  mc.animate = true;
+  navigateTo('campaign-launch');
+  clearTimeout(mc._typingTimer);
+  mc._typingTimer = setTimeout(function(){
+    mc.typing = false;
+    mc.animate = true;
+    navigateTo('campaign-launch');
+  }, 620);
+}
 function metaChatConfirm(){
   const mc = state.metaChat, cb = state.campaignBuilder;
   if(mc.step===0 && !cb.service){ showToast('Pick a service first.'); return; }
   if(mc.step===3 && !cb.offer){ showToast('Add an offer first.'); return; }
   mc.step++;
-  navigateTo('campaign-launch');
+  metaChatAdvance();
 }
 function metaChatSubmit(){
   const cb = state.campaignBuilder;
@@ -2116,6 +2138,9 @@ function chatConfirmedRow(i, summary){
     '<div class="small" style="color:var(--text-secondary);">✓ '+summary+'</div>' +
     '<button class="link-btn small" onclick="metaChatEdit('+i+')">Edit</button>' +
     '</div></div>';
+}
+function chatTypingBubble(){
+  return '<div class="ai-bubble mb-12"><div class="av">'+FOXY_MINI+'</div><div class="msg"><span class="foxy-typing"><span></span><span></span><span></span></span></div></div>';
 }
 function chatActiveTurn(i, t){
   return '<div class="ai-bubble mb-12"><div class="av">'+FOXY_MINI+'</div><div class="msg">'+t.msg+'</div></div>' +
@@ -2198,10 +2223,19 @@ function renderMetaChat(){
       control:'', cta:'Generate my creatives →', valid:true, action:'metaChatToCreatives()', summary:'Creatives + auto A/B testing (Foxy)' },
   ];
 
+  const anim = !!mc.animate; mc.animate = false;   // animate only the render right after a step change (not slider drags)
   let html = '<div class="ai-bubble mb-16"><div class="av">'+FOXY_MINI+'</div><div class="msg"><strong>I’ll set this up like your media buyer would</strong> — I recommend each setting and tell you why, you confirm or tweak. Takes about a minute.</div></div>';
   for(let i=0; i<turns.length; i++){
-    if(i < mc.step){ html += chatConfirmedRow(i, turns[i].summary); }
-    else if(i === mc.step){ html += chatActiveTurn(i, turns[i]); break; }
+    if(i < mc.step){
+      // The row the user just confirmed slides in like a sent message (only during the typing beat).
+      const justConfirmed = anim && mc.typing && i===mc.step-1;
+      html += justConfirmed ? '<div class="chat-in">'+chatConfirmedRow(i, turns[i].summary)+'</div>' : chatConfirmedRow(i, turns[i].summary);
+    }
+    else if(i === mc.step){
+      if(mc.typing){ html += '<div class="chat-in">'+chatTypingBubble()+'</div>'; }
+      else { html += anim ? '<div class="chat-in">'+chatActiveTurn(i, turns[i])+'</div>' : chatActiveTurn(i, turns[i]); }
+      break;
+    }
     else break;
   }
   if(mc.step >= turns.length){
@@ -3610,6 +3644,7 @@ function setLaunchStep(n){
   state.launchWizard.step = n;
   // Track the furthest step reached so completed steps stay reachable in both directions.
   state.launchWizard.maxStep = Math.max(state.launchWizard.maxStep || 1, n);
+  if(n===2 && state.launchMode==='chat' && state.metaChat){ state.metaChat.animate = true; }  // animate first message when the chat opens
   if(n===8 && state.launchWizard.platform==='meta' && !state.launchWizard.aiGenDone){
     state.launchWizard.aiGenerating = true;
     navigateTo('campaign-launch');
