@@ -4745,63 +4745,79 @@ function toggleNotif(key){
 <script>
 state.billing = {
   plan: 'Starter',
+  cycle: 'monthly',
   trialDay: 9,
   trialTotal: 14,
   paymentMethod: null,
 };
 const PLANS = [
-  {id:'starter', name:'Starter', price:49, desc:'For getting started with one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Weekly Foxy report','Email support']},
-  {id:'growth', name:'Growth', price:99, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration','Weekly Foxy report + recommendations','Priority email support']},
-  {id:'pro', name:'Pro', price:199, desc:'For established advertisers.', features:['Unlimited ad spend','All platforms','Advanced reporting & exports','Dedicated account manager']},
+  {id:'starter', name:'Starter', price:190, desc:'For owner-operators getting started on one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Foxy re-optimizes every 6 hours','Weekly Foxy report','Email support']},
+  {id:'growth', name:'Growth', price:390, popular:true, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration & lead sync','Daily digest + creative generation','Priority email support']},
+  {id:'pro', name:'Pro', price:590, desc:'For established, multi-location advertisers.', features:['Unlimited ad spend','All platforms','Advanced reporting & exports','Custom safety rails','Dedicated account manager']},
 ];
+// Annual billing = 10× monthly (2 months free). Returns effective /mo, yearly total and savings.
+function planPrice(monthly, cycle){
+  if(cycle==='annual'){ const billed = monthly*10; return { perMo: Math.round(billed/12), billed:billed, save: monthly*12 - billed }; }
+  return { perMo: monthly, billed: monthly, save: 0 };
+}
 
 VIEWS['billing'] = function(){
   const b = state.billing;
   const pct = Math.round(b.trialDay/b.trialTotal*100);
-  const planObj = PLANS.find(p=>p.name===b.plan);
+  const daysLeft = b.trialTotal - b.trialDay;
+  const planObj = PLANS.find(p=>p.name===b.plan) || PLANS[0];
+  const pr = planPrice(planObj.price, b.cycle);
+  const renew = new Date(Date.now() + daysLeft*86400000).toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'});
+  const cycleToggle = `
+    <div style="display:inline-flex; background:var(--card-bg-3); border:1px solid var(--border); border-radius:9px; padding:3px; gap:2px;">
+      <button class="btn small ${b.cycle==='monthly'?'primary':''}" style="box-shadow:none;" onclick="state.billing.cycle='monthly'; navigateTo('billing')">Monthly</button>
+      <button class="btn small ${b.cycle==='annual'?'primary':''}" style="box-shadow:none;" onclick="state.billing.cycle='annual'; navigateTo('billing')">Annual · save 17%</button>
+    </div>`;
   return `
-    <div class="topbar"><div><h1>Billing & subscription</h1></div></div>
+    <div class="topbar"><div><h1>Billing & subscription</h1><div class="greeting">Manage your Foxtly plan, payment method and invoices.</div></div></div>
+
+    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div class="small">${b.paymentMethod
+        ? `<strong>Your trial is active — ${daysLeft} days left.</strong> You're all set; billing starts ${renew}.`
+        : `<strong>You're on a free trial — ${daysLeft} days left.</strong> Add a payment method before ${renew} to keep your campaigns running.`}</div>
+      ${b.paymentMethod ? '<span class="badge green">Payment method on file ✓</span>' : `<button class="btn primary small" onclick="addPaymentMethod()">Add payment method</button>`}
+    </div>
 
     <div class="card mb-16">
       <div class="flex justify-between items-start" style="flex-wrap:wrap; gap:12px;">
         <div>
           <div class="small muted mb-4">Current plan</div>
-          <div style="font-size:18px; font-weight:700;">${b.plan} <span class="muted" style="font-weight:400;">— $${planObj.price}/month</span></div>
-          <div class="mt-8"><span class="badge yellow">Trial — ${b.trialTotal - b.trialDay} days left</span></div>
+          <div style="font-size:20px; font-weight:700;">${b.plan} <span class="muted" style="font-weight:400; font-size:15px;">— $${pr.perMo}/mo${b.cycle==='annual'?' billed annually':''}</span></div>
+          <div class="small muted mt-4">${b.cycle==='annual' ? `$${pr.billed}/yr · you save $${pr.save}/yr vs monthly` : `Billed monthly after your trial. Renews ${renew}.`}</div>
         </div>
-        <div class="flex gap-8">
-          <button class="btn" onclick="openPlanModal()">Change plan</button>
-          <button class="btn danger" onclick="openCancelModal()">Cancel subscription</button>
-        </div>
+        <div>${cycleToggle}</div>
       </div>
       <div class="mt-16">
-        <div class="flex justify-between small muted mb-4"><span>Day ${b.trialDay} of ${b.trialTotal}</span><span>${b.trialTotal - b.trialDay} days left</span></div>
+        <div class="flex justify-between small muted mb-4"><span>Trial day ${b.trialDay} of ${b.trialTotal}</span><span>${daysLeft} days left</span></div>
         <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
       </div>
-      ${!b.paymentMethod ? `
-        <div class="card tight mt-16" style="background:var(--orange-dim); border-color:var(--orange);">
-          <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;">
-            <span class="small">Add a payment method to continue without interruption when your trial ends.</span>
-            <button class="btn primary small" onclick="addPaymentMethod()">Add payment method</button>
-          </div>
-        </div>
-      ` : ''}
+      <div class="mt-16" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:8px 20px;">
+        ${planObj.features.map(f=>`<div class="small" style="color:var(--text-secondary); display:flex; gap:8px;"><span style="color:var(--green); flex-shrink:0;">✓</span><span>${f}</span></div>`).join('')}
+      </div>
+      <div class="mt-16"><button class="btn primary" onclick="openPlanModal()">Change plan</button></div>
     </div>
 
     <div class="card mb-16">
       <h2 class="mb-8">Payment method</h2>
       ${b.paymentMethod
-        ? `<div class="flex justify-between items-center"><div class="small">💳 Visa ending in ${b.paymentMethod}</div><button class="link-btn small" onclick="addPaymentMethod()">Update</button></div>`
+        ? `<div class="flex justify-between items-center"><div class="small">💳 Visa ending in ${b.paymentMethod} <span class="muted">· expires 08/29</span></div><button class="link-btn small" onclick="addPaymentMethod()">Update</button></div>`
         : `<div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;"><div class="small muted">No payment method on file.</div><button class="btn primary small" onclick="addPaymentMethod()">Add payment method</button></div>`}
+      <div class="small muted mt-10" style="display:flex; align-items:center; gap:6px;">🔒 Payments are securely processed by Stripe — Foxtly never stores your full card number.</div>
     </div>
 
     <div class="card mb-16">
       <h2 class="mb-8">Payment history</h2>
-      <div class="small muted">No payments yet — you're on a free trial.</div>
+      <div class="small muted">No payments yet — you're on a free trial. Your first invoice will appear here after ${renew}.</div>
     </div>
 
-    <div class="card">
-      <div class="small muted">Questions about your plan? <a class="link-btn small" onclick="showToast('This would open Cal.com to book a call with our team.')">Book a quick call with our team →</a></div>
+    <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px; padding:6px 2px;">
+      <div class="small muted">Questions about your plan? <a class="link-btn small" onclick="showToast('This would open Cal.com to book a call with our team.')">Book a quick call →</a></div>
+      <a class="link-btn small muted" onclick="openCancelModal()">Cancel subscription</a>
     </div>
   `;
 };
@@ -4825,21 +4841,37 @@ function confirmPaymentMethod(){
 }
 
 function openPlanModal(){
+  const b = state.billing;
+  const curPrice = (PLANS.find(p=>p.name===b.plan) || {price:0}).price;
+  const cycleToggle = `
+    <div style="display:flex; justify-content:center; margin-bottom:18px;">
+      <div style="display:inline-flex; background:var(--card-bg-3); border:1px solid var(--border); border-radius:9px; padding:3px; gap:2px;">
+        <button class="btn small ${b.cycle==='monthly'?'primary':''}" style="box-shadow:none;" onclick="state.billing.cycle='monthly'; openPlanModal()">Monthly</button>
+        <button class="btn small ${b.cycle==='annual'?'primary':''}" style="box-shadow:none;" onclick="state.billing.cycle='annual'; openPlanModal()">Annual · save 17%</button>
+      </div>
+    </div>`;
   openModal(`
     <div class="modal-head"><h3>Change plan</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    ${cycleToggle}
     <div class="choice-grid">
-      ${PLANS.map(p=>`
-        <div class="choice-card ${state.billing.plan===p.name?'selected':''}" style="position:relative;">
-          ${state.billing.plan===p.name ? '<span class="badge orange rec-badge">Current plan</span>' : ''}
+      ${PLANS.map(p=>{
+        const pr = planPrice(p.price, b.cycle);
+        const isCur = b.plan===p.name;
+        const cta = isCur ? 'Current plan' : (p.price>curPrice ? 'Upgrade →' : 'Downgrade');
+        const badge = isCur ? '<span class="badge orange rec-badge">Current plan</span>' : (p.popular ? '<span class="badge orange rec-badge">Most popular</span>' : '');
+        return `
+        <div class="choice-card ${isCur?'selected':''}" style="position:relative;">
+          ${badge}
           <div class="ttl">${p.name}</div>
-          <div class="kpi-value mt-4 mb-8" style="font-size:20px;">$${p.price}<span class="small muted" style="font-weight:400;">/mo</span></div>
+          <div class="kpi-value mt-4" style="font-size:22px;">$${pr.perMo}<span class="small muted" style="font-weight:400;">/mo</span></div>
+          <div class="small muted mb-8" style="min-height:15px;">${b.cycle==='annual'?`billed $${pr.billed}/yr · save $${pr.save}`:'billed monthly'}</div>
           <div class="desc mb-12">${p.desc}</div>
           <ul style="padding-left:18px; font-size:12px; color:var(--text-secondary); line-height:1.8;">
             ${p.features.map(f=>`<li>${f}</li>`).join('')}
           </ul>
-          <button class="btn block mt-12 ${state.billing.plan===p.name?'':'primary'}" ${state.billing.plan===p.name?'disabled':''} onclick="selectPlan('${p.name}')">${state.billing.plan===p.name?'Current plan':'Select'}</button>
-        </div>
-      `).join('')}
+          <button class="btn block mt-12 ${isCur?'':'primary'}" ${isCur?'disabled':''} onclick="selectPlan('${p.name}')">${cta}</button>
+        </div>`;
+      }).join('')}
     </div>
   `, true);
 }
@@ -6165,6 +6197,7 @@ AUTH_VIEWS['landing'] = function(){
       <div class="mkt-grid-3">
         <div class="pricing-card">
           <h3>Starter</h3>
+          <div style="font-size:26px; font-weight:800; margin:2px 0 2px;">$190<span style="font-size:14px; font-weight:500; color:var(--text-muted);">/mo</span></div>
           <div class="for">For owner-operators (1-3 employees)</div>
           <ul>
             <li>1 ad account (Meta or Google)</li>
@@ -6176,6 +6209,7 @@ AUTH_VIEWS['landing'] = function(){
         <div class="pricing-card popular">
           <div class="badge-pop"><span class="badge orange">Most Popular</span></div>
           <h3>Growth</h3>
+          <div style="font-size:26px; font-weight:800; margin:2px 0 2px;">$390<span style="font-size:14px; font-weight:500; color:var(--text-muted);">/mo</span></div>
           <div class="for">For growing teams (5-15 employees)</div>
           <ul>
             <li>Meta + Google Ads</li>
@@ -6186,6 +6220,7 @@ AUTH_VIEWS['landing'] = function(){
         </div>
         <div class="pricing-card">
           <h3>Pro</h3>
+          <div style="font-size:26px; font-weight:800; margin:2px 0 2px;">$590<span style="font-size:14px; font-weight:500; color:var(--text-muted);">/mo</span></div>
           <div class="for">For multi-location businesses (15-50)</div>
           <ul>
             <li>Multi-account management</li>
