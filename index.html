@@ -1179,17 +1179,17 @@ VIEWS['decision-center'] = function(){
       </div>
       <div class="grid-3">
         <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
-          <div class="flex justify-between items-center mb-8"><strong>Free Estimate — Plumbing</strong><span class="badge green">Active</span></div>
+          <div class="flex justify-between items-center mb-8"><strong>Free Estimate — Plumbing</strong>${state.billing.status==='trial_ended'?'<span class="badge yellow">Paused</span>':'<span class="badge green">Active</span>'}</div>
           <div class="small muted mb-10" style="display:flex; align-items:center; gap:6px;"><span style="background:#1877F2; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:3px;">f</span> Meta · Lead gen</div>
           <div class="flex justify-between small"><span>Spend: <strong>$168</strong></span><span>Leads: <strong>9</strong></span><span>CPL: <strong>$18.70</strong></span></div>
         </div>
         <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
-          <div class="flex justify-between items-center mb-8"><strong>Emergency Plumbing — Search</strong><span class="badge green">Active</span></div>
+          <div class="flex justify-between items-center mb-8"><strong>Emergency Plumbing — Search</strong>${state.billing.status==='trial_ended'?'<span class="badge yellow">Paused</span>':'<span class="badge green">Active</span>'}</div>
           <div class="small muted mb-10" style="display:flex; align-items:center; gap:6px;"><span style="background:#4285F4; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:3px;">G</span> Google · Search</div>
           <div class="flex justify-between small"><span>Spend: <strong>$94</strong></span><span>Clicks: <strong>11</strong></span><span>CPC: <strong>$8.50</strong></span></div>
         </div>
         <div class="card" style="cursor:pointer" onclick="state.advertisingTab='campaigns'; navigateTo('advertising')">
-          <div class="flex justify-between items-center mb-8"><strong>Same-Day Service</strong><span class="badge green">Active</span></div>
+          <div class="flex justify-between items-center mb-8"><strong>Same-Day Service</strong>${state.billing.status==='trial_ended'?'<span class="badge yellow">Paused</span>':'<span class="badge green">Active</span>'}</div>
           <div class="small muted mb-10" style="display:flex; align-items:center; gap:6px;"><span style="background:#1877F2; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:3px;">f</span> Meta · Lead gen</div>
           <div class="flex justify-between small"><span>Spend: <strong>$76</strong></span><span>Leads: <strong>3</strong></span><span>CPL: <strong>$25.30</strong></span></div>
         </div>
@@ -5938,6 +5938,7 @@ const TOUR_STEPS = [
 ];
 
 function openWelcomeTourModal(){
+  if(state.billing.status==='trial_ended') return;   // no onboarding tour in the post-trial read-only view
   document.getElementById('tour-modal').classList.add('open');
 }
 function skipTour(){
@@ -7001,7 +7002,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   const route = pathToRoute();
   renderFromLocation();
   initAI();
-  if(route.type==='view' && route.id==='decision-center') setTimeout(openWelcomeTourModal, 600);
+  if(route.type==='view' && route.id==='decision-center' && state.billing.status!=='trial_ended') setTimeout(openWelcomeTourModal, 600);
 });
 window.addEventListener('popstate', renderFromLocation);
 </script>
