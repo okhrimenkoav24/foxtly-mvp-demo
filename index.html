@@ -570,7 +570,7 @@
     <div class="nav-group-label">Setup</div>
     <button class="nav-item" data-view="integrations" data-tour="nav-integrations" onclick="navigateTo('integrations')"><span class="ic">⎆</span> Integrations</button>
     <button class="nav-item" data-view="settings" onclick="navigateTo('settings')"><span class="ic">⚙</span> Settings</button>
-    <button class="nav-item" data-view="billing" onclick="navigateTo('billing')"><span class="ic">▦</span> Billing</button>
+    <button class="nav-item" data-view="billing" onclick="navigateTo('billing')"><span class="ic">▦</span> Plan &amp; Billing</button>
 
     <div class="sidebar-footer">
       <div class="trial-badge" id="trial-badge-el" onclick="navigateTo('billing')">
@@ -4869,7 +4869,7 @@ VIEWS['billing'] = function(){
       <button class="btn small ${b.cycle==='annual'?'primary':''}" style="box-shadow:none;" onclick="state.billing.cycle='annual'; navigateTo('billing')">Annual · save 17%</button>
     </div>`;
   return `
-    <div class="topbar"><div><h1>Billing & subscription</h1><div class="greeting">Manage your Foxtly plan, payment method and invoices.</div></div></div>
+    <div class="topbar"><div><h1>Plan & Billing</h1><div class="greeting">Manage your Foxtly plan, payment method and invoices.</div></div></div>
 
     ${b.status==='trial_ended'
       ? `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
@@ -5011,8 +5011,33 @@ function openCancelModal(){
     <div class="modal-head"><h3>Cancel subscription</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
     <p class="small muted" style="line-height:1.6;">If you cancel, your campaigns will be paused and your account will switch to read-only access to your data and reports. You can reactivate anytime.</p>
     <div class="field mt-12"><label class="field-label">Why are you cancelling? (optional)</label><textarea placeholder="Let us know what we could improve..."></textarea></div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Never mind</button><button class="btn danger" onclick="closeModal(); showToast('Subscription cancelled.')">Cancel subscription</button></div>
+    <div class="modal-foot" style="align-items:center;"><button class="link-btn small muted" onclick="cancelWinbackModal()">Cancel subscription</button><button class="btn primary" onclick="closeModal()">Never mind, keep my plan</button></div>
   `);
+}
+function cancelWinbackModal(){
+  const b = state.billing;
+  const planObj = PLANS.find(p=>p.name===b.plan) || PLANS[0];
+  const pr = planPrice(planObj.price, b.cycle);
+  const disc = Math.round(pr.perMo*0.30);   // 70% off the first month
+  openModal(`
+    <div class="modal-head"><h3>Before you go…</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="text-align:center; padding:2px 4px 6px;">
+      <div style="font-size:34px; margin-bottom:8px;">🦊</div>
+      <div style="font-weight:700; font-size:16px; margin-bottom:8px;">We're sorry to see you go.</div>
+      <p class="small muted" style="line-height:1.65;">We're confident Foxtly will more than pay for itself in leads for your business. Stay with us and take <strong style="color:var(--orange);">70% off your first month</strong> — no strings, cancel anytime.</p>
+    </div>
+    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); text-align:center;">
+      <div style="font-weight:700; font-size:15px;">${b.plan} — <span style="text-decoration:line-through; color:var(--text-muted); font-weight:500;">$${pr.perMo}</span> $${disc} first month</div>
+      <div class="small muted mt-4">Then $${pr.perMo}/mo${b.cycle==='annual'?' billed annually':''}. Cancel anytime.</div>
+    </div>
+    <div class="modal-foot" style="align-items:center;"><button class="link-btn small muted" onclick="closeModal(); showToast('Subscription cancelled.')">Cancel anyway</button><button class="btn primary" onclick="applyCancelWinback()">Keep my plan — 70% off</button></div>
+  `);
+}
+function applyCancelWinback(){
+  state.billing.winbackApplied = true;
+  closeModal();
+  navigateTo('billing');
+  showToast('Great choice! 70% off applied to your next month.', {success:true});
 }
 </script>
 
