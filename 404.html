@@ -5066,13 +5066,14 @@ function selectPlan(name){
 
 // Multi-step cancellation flow: reason survey → tailored save offer (70% off OR +7 days) → cancel.
 const CANCEL_REASONS = [
-  {id:'price',       label:'Too expensive',                  offer:'discount'},
-  {id:'missing',     label:'Missing features I need',         offer:'extend'},
-  {id:'hard',        label:'Too hard to use',                 offer:'extend'},
-  {id:'one_project', label:'Only needed it for one project',  offer:'extend'},
-  {id:'technical',   label:'Ran into technical problems',     offer:'extend'},
-  {id:'rarely',      label:'I rarely use it',                 offer:'extend'},
-  {id:'other',       label:'Something else',                  offer:'discount'},
+  {id:'no_leads',    label:"I'm not getting enough leads",                offer:'extend'},
+  {id:'missing',     label:'Missing features I need',                     offer:'extend'},
+  {id:'price',       label:'Too expensive',                              offer:'discount'},
+  {id:'hard_setup',  label:'Too hard to set up',                         offer:'extend'},
+  {id:'ad_accounts', label:'Issues with my Meta / Google ad accounts',   offer:'extend'},
+  {id:'not_now',     label:'Not running ads right now',                  offer:'extend'},
+  {id:'agency',      label:'Switched to an agency or in-house marketer', offer:'discount'},
+  {id:'other',       label:'Something else',                             offer:'discount'},
 ];
 // Step 1 — apologise + ask why.
 function openCancelModal(){
@@ -5108,27 +5109,30 @@ function cancelOfferModal(){
     title = 'Before you go — 70% off';
     body = (r.id==='price')
       ? 'Totally fair — Foxtly should pay for itself. Take <strong style="color:var(--orange);">70% off your first month</strong> and let the leads roll in first.'
+      : (r.id==='agency')
+      ? 'Foxtly runs your ads for a fraction of an agency retainer — and you keep full control. Give it one more month at <strong style="color:var(--orange);">70% off</strong> before you decide.'
       : 'We\'d love a second chance. Take <strong style="color:var(--orange);">70% off your first month</strong>, on us.';
     offerCard = `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); text-align:center;"><div style="font-weight:700; font-size:15px;">${b.plan} — <span style="text-decoration:line-through; color:var(--text-muted); font-weight:500;">$${pr.perMo}</span> $${disc} first month</div><div class="small muted mt-4">Then $${pr.perMo}/mo. Cancel anytime.</div></div>`;
     acceptLabel = 'Keep my plan — 70% off';
     acceptFn = 'applyCancelWinback()';
     if(r.id==='price'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;">Prefer a smaller plan? <a class="link-btn small" onclick="closeModal(); openPlanModal()">Compare plans →</a></div>`; }
+    else if(r.id==='agency'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="pauseSubscription()">Pause instead — keep your data →</a></div>`; }
   } else {
     title = 'Stay 7 more days — on us';
     const endDate = new Date(Date.now()+(b.trialTotal-b.trialDay+7)*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     const map = {
+      no_leads:    'Leads take a couple of weeks of learning to ramp. Get <strong style="color:var(--orange);">7 more days free</strong> and I\'ll re-tune your targeting and creative to lift them.',
       missing:     'Tell us the feature you\'re missing and get <strong style="color:var(--orange);">7 more days free</strong> — it may already be on the way.',
-      hard:        'Get <strong style="color:var(--orange);">7 more days free</strong> plus a <strong>1:1 setup call</strong> with a specialist to make Foxy work for you.',
-      one_project: 'Not ready for an always-on plan? <strong>Pause</strong> and keep your data — or take <strong style="color:var(--orange);">7 more days free</strong>.',
-      technical:   'Get <strong style="color:var(--orange);">7 more days free</strong> while our team fixes what went wrong — priority support included.',
-      rarely:      'Only pay when you use it — <strong>pause</strong> your plan, or take <strong style="color:var(--orange);">7 more days free</strong> to give it another go.',
+      hard_setup:  'Get <strong style="color:var(--orange);">7 more days free</strong> plus a <strong>1:1 setup call</strong> with a specialist to get you fully live.',
+      ad_accounts: 'Get <strong style="color:var(--orange);">7 more days free</strong> while our team helps sort out your Meta / Google ad account — priority support included.',
+      not_now:     'Not advertising right now? <strong>Pause</strong> and keep your data — or take <strong style="color:var(--orange);">7 more days free</strong> for when you\'re ready.',
     };
     body = map[r.id] || 'Take <strong style="color:var(--orange);">7 more days free</strong> to give Foxy another go.';
     offerCard = `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); text-align:center;"><div style="font-weight:700; font-size:15px;">+7 days of full access — free</div><div class="small muted mt-4">Your trial extends to ${endDate}. No charge.</div></div>`;
     acceptLabel = 'Give me 7 more days';
     acceptFn = 'applyExtend7()';
-    if(r.id==='one_project' || r.id==='rarely'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="pauseSubscription()">Pause my subscription instead →</a></div>`; }
-    else if(r.id==='hard' || r.id==='missing' || r.id==='technical'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="closeModal(); showToast('This would open Cal.com to book a call with a specialist.')">Book a call with a specialist →</a></div>`; }
+    if(r.id==='not_now'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="pauseSubscription()">Pause my subscription instead →</a></div>`; }
+    else { const callLabel = (r.id==='no_leads') ? 'Book a free optimization review →' : 'Book a call with a specialist →'; extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="closeModal(); showToast('This would open Cal.com to book a call with our team.')">${callLabel}</a></div>`; }
   }
   openModal(`
     <div class="modal-head"><h3>${title}</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
