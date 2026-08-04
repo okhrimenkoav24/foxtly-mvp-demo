@@ -4630,17 +4630,47 @@ VIEWS['settings'] = function(){
 };
 function setSettingsTab(t){ state.settingsTab = t; navigateTo('settings'); }
 
+function accountInitials(a){
+  const src = ((a && (a.fullName || a.email)) || 'M').trim();
+  return (src.split(/\s+/).map(w=>w[0]).join('').slice(0,2) || 'M').toUpperCase();
+}
 function renderSettingsAccount(){
-  if(!state.account) state.account = { fullName:'', email:'mike@mikesplumbing.com' };
+  if(!state.account) state.account = {};
   const a = state.account;
+  if(a.fullName===undefined) a.fullName = 'Mike Thompson';
+  if(!a.email) a.email = 'mike@mikesplumbing.com';
+  if(a.username===undefined) a.username = 'mikesplumbing';
+  if(a.bio===undefined) a.bio = '';
+  if(!a.language) a.language = 'English';
+  const initials = accountInitials(a);
   return `
     <div class="card mb-16">
-      <h2 class="mb-8">Profile information</h2>
-      <div class="field-row">
-        <div class="field"><label class="field-label">Full name</label><input type="text" id="set-name" value="${a.fullName}" placeholder="Your full name"></div>
-        <div class="field"><label class="field-label">Email</label><input type="email" id="set-email" value="${a.email}"></div>
+      <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+        <div style="position:relative; width:64px; height:64px; flex-shrink:0;">
+          <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#f0883e,#e8590c); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#fff;">${initials}</div>
+          <div onclick="openEditProfileModal()" title="Edit profile" style="position:absolute; bottom:-2px; right:-2px; width:24px; height:24px; border-radius:50%; background:var(--card-bg-3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px;">✎</div>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:700; font-size:16px;">${a.fullName || 'Add your name'} <span class="small muted" style="font-weight:400;">@${a.username}</span></div>
+          <div class="small muted">${a.email}</div>
+          ${a.bio ? `<div class="small muted" style="margin-top:4px; line-height:1.5;">${a.bio}</div>` : ''}
+        </div>
+        <button class="btn" onclick="openEditProfileModal()">Edit profile</button>
       </div>
-      <button class="btn primary" onclick="saveAccountProfile()">Save profile</button>
+    </div>
+    <div class="card mb-16">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+        <div><div class="ttl">Password</div><div class="desc">Update your password using the button below.</div></div>
+        <button class="btn" onclick="openSetPasswordModal()">Set new password</button>
+      </div>
+    </div>
+    <div class="card mb-16">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+        <div><div class="ttl">Language</div><div class="desc">Interface language for Foxtly.</div></div>
+        <select onchange="setAccountLanguage(this.value)" style="background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; cursor:pointer;">
+          ${['English','Español','Français','Deutsch','Українська','Русский'].map(l=>`<option ${a.language===l?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
     </div>
     <div class="card mb-16">
       <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
@@ -4656,13 +4686,46 @@ function renderSettingsAccount(){
     </div>
   `;
 }
-function saveAccountProfile(){
-  const n = document.getElementById('set-name'), e = document.getElementById('set-email');
-  if(!state.account) state.account = {};
-  if(n) state.account.fullName = n.value;
-  if(e) state.account.email = e.value;
-  showToast('Profile saved.', {success:true});
+function openEditProfileModal(){
+  const a = state.account || (state.account = {});
+  const initials = accountInitials(a);
+  const bioLen = (a.bio||'').length;
+  openModal(`
+    <div class="modal-head"><h3>Edit profile</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="display:flex; justify-content:center; margin-bottom:18px;">
+      <div style="position:relative; width:72px; height:72px;">
+        <div style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#f0883e,#e8590c); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; color:#fff;">${initials}</div>
+        <div onclick="showToast('This would open your device to upload a photo.')" title="Change photo" style="position:absolute; bottom:0; right:0; width:26px; height:26px; border-radius:50%; background:var(--card-bg-3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">✎</div>
+      </div>
+    </div>
+    <div class="field"><label class="field-label">Name</label><input type="text" id="ep-name" value="${(a.fullName||'').replace(/"/g,'&quot;')}" placeholder="Your name"></div>
+    <div class="field"><label class="field-label">Username</label><input type="text" id="ep-username" value="${(a.username||'').replace(/"/g,'&quot;')}" placeholder="username"></div>
+    <div class="field"><label class="field-label">Email</label><input type="email" id="ep-email" value="${(a.email||'').replace(/"/g,'&quot;')}"></div>
+    <div class="field"><label class="field-label">Bio</label><textarea id="ep-bio" maxlength="140" rows="3" oninput="var el=document.getElementById('ep-bio-count'); if(el) el.textContent=(140-this.value.length);" placeholder="Tell the world a little about yourself…">${(a.bio||'').replace(/</g,'&lt;')}</textarea><div class="small muted" style="text-align:right; margin-top:-2px;"><span id="ep-bio-count">${140-bioLen}</span> characters left</div></div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveEditProfile()">Save changes</button></div>
+  `);
 }
+function saveEditProfile(){
+  const a = state.account || (state.account = {});
+  const g = (id)=>{ const el = document.getElementById(id); return el ? el.value : undefined; };
+  const n=g('ep-name'), u=g('ep-username'), e=g('ep-email'), b=g('ep-bio');
+  if(n!==undefined) a.fullName = n.trim();
+  if(u!==undefined) a.username = u.trim().replace(/^@/,'');
+  if(e!==undefined) a.email = e.trim();
+  if(b!==undefined) a.bio = b;
+  closeModal(); navigateTo('settings'); showToast('Profile updated.', {success:true});
+}
+function openSetPasswordModal(){
+  openModal(`
+    <div class="modal-head"><h3>Set a new password</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="field"><label class="field-label">Current password</label><input type="password" placeholder="••••••••"></div>
+    <div class="field"><label class="field-label">New password</label><input type="password" placeholder="At least 8 characters"></div>
+    <div class="field"><label class="field-label">Confirm new password</label><input type="password" placeholder="Re-enter new password"></div>
+    <div class="small muted mb-4">Use at least 8 characters with a mix of letters and numbers.</div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="closeModal(); showToast('Password updated.', {success:true})">Update password</button></div>
+  `);
+}
+function setAccountLanguage(v){ if(!state.account) state.account = {}; state.account.language = v; showToast('Language set to '+v+'.'); }
 function renderSettingsAppearance(){
   const mode = state.themeMode || 'dark';
   const opts = [ {id:'dark',label:'Dark',icon:'🌙'}, {id:'light',label:'Light',icon:'☀️'}, {id:'system',label:'System',icon:'🖥'} ];
