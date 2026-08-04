@@ -5001,38 +5001,100 @@ function selectPlan(name){
   showToast(`Plan changed to ${name}.`, {success:true});
 }
 
+// Multi-step cancellation flow: reason survey → tailored save offer (70% off OR +7 days) → cancel.
+const CANCEL_REASONS = [
+  {id:'price',       label:'Too expensive',                  offer:'discount'},
+  {id:'missing',     label:'Missing features I need',         offer:'extend'},
+  {id:'hard',        label:'Too hard to use',                 offer:'extend'},
+  {id:'one_project', label:'Only needed it for one project',  offer:'extend'},
+  {id:'technical',   label:'Ran into technical problems',     offer:'extend'},
+  {id:'rarely',      label:'I rarely use it',                 offer:'extend'},
+  {id:'other',       label:'Something else',                  offer:'discount'},
+];
+// Step 1 — apologise + ask why.
 function openCancelModal(){
+  const sel = state.billing.cancelReason;
   openModal(`
-    <div class="modal-head"><h3>Cancel subscription</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <p class="small muted" style="line-height:1.6;">If you cancel, your campaigns will be paused and your account will switch to read-only access to your data and reports. You can reactivate anytime.</p>
-    <div class="field mt-12"><label class="field-label">Why are you cancelling? (optional)</label><textarea placeholder="Let us know what we could improve..."></textarea></div>
-    <div class="modal-foot" style="align-items:center;"><button class="link-btn small muted" onclick="cancelWinbackModal()">Cancel subscription</button><button class="btn primary" onclick="closeModal()">Never mind, keep my plan</button></div>
+    <div class="modal-head"><h3>We're sorry to see you go</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <p class="small muted" style="line-height:1.6;">Let us know what happened so we can get better. Most owners tap into only a fraction of what Foxy can do — your answer helps us fix that.</p>
+    <div style="display:flex; flex-direction:column; gap:8px; margin:14px 0 4px;">
+      ${CANCEL_REASONS.map((r,i)=>{
+        const on = sel===r.id;
+        return `<div onclick="selectCancelReason('${r.id}')" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:10px 13px; border-radius:10px; border:1.5px solid ${on?'var(--orange)':'var(--border)'}; background:${on?'var(--orange-dim)':'var(--card-bg-2)'};">
+          <div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:${on?'var(--orange)':'var(--card-bg-3)'};color:${on?'#1a1206':'var(--text-muted)'};">${String.fromCharCode(65+i)}</div>
+          <span style="font-size:13px; font-weight:500; color:${on?'var(--orange)':'var(--text-secondary)'};">${r.label}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="modal-foot" style="align-items:center;">
+      <button class="link-btn small muted" ${sel?'':'disabled style="opacity:0.45;cursor:not-allowed;"'} onclick="${sel?'cancelOfferModal()':'return false'}">Continue to cancel</button>
+      <button class="btn primary" onclick="closeModal()">Never mind, keep my plan</button>
+    </div>
   `);
 }
-function cancelWinbackModal(){
+function selectCancelReason(id){ state.billing.cancelReason = id; openCancelModal(); }
+// Step 2 — save offer tailored to the reason.
+function cancelOfferModal(){
   const b = state.billing;
+  const r = CANCEL_REASONS.find(x=>x.id===b.cancelReason) || CANCEL_REASONS[0];
   const planObj = PLANS.find(p=>p.name===b.plan) || PLANS[0];
   const pr = planPrice(planObj.price, b.cycle);
-  const disc = Math.round(pr.perMo*0.30);   // 70% off the first month
+  const disc = Math.round(pr.perMo*0.30);
+  let title, body, offerCard, acceptLabel, acceptFn, extra='';
+  if(r.offer==='discount'){
+    title = 'Before you go — 70% off';
+    body = (r.id==='price')
+      ? 'Totally fair — Foxtly should pay for itself. Take <strong style="color:var(--orange);">70% off your first month</strong> and let the leads roll in first.'
+      : 'We\'d love a second chance. Take <strong style="color:var(--orange);">70% off your first month</strong>, on us.';
+    offerCard = `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); text-align:center;"><div style="font-weight:700; font-size:15px;">${b.plan} — <span style="text-decoration:line-through; color:var(--text-muted); font-weight:500;">$${pr.perMo}</span> $${disc} first month</div><div class="small muted mt-4">Then $${pr.perMo}/mo. Cancel anytime.</div></div>`;
+    acceptLabel = 'Keep my plan — 70% off';
+    acceptFn = 'applyCancelWinback()';
+    if(r.id==='price'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;">Prefer a smaller plan? <a class="link-btn small" onclick="closeModal(); openPlanModal()">Compare plans →</a></div>`; }
+  } else {
+    title = 'Stay 7 more days — on us';
+    const endDate = new Date(Date.now()+(b.trialTotal-b.trialDay+7)*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const map = {
+      missing:     'Tell us the feature you\'re missing and get <strong style="color:var(--orange);">7 more days free</strong> — it may already be on the way.',
+      hard:        'Get <strong style="color:var(--orange);">7 more days free</strong> plus a <strong>1:1 setup call</strong> with a specialist to make Foxy work for you.',
+      one_project: 'Not ready for an always-on plan? <strong>Pause</strong> and keep your data — or take <strong style="color:var(--orange);">7 more days free</strong>.',
+      technical:   'Get <strong style="color:var(--orange);">7 more days free</strong> while our team fixes what went wrong — priority support included.',
+      rarely:      'Only pay when you use it — <strong>pause</strong> your plan, or take <strong style="color:var(--orange);">7 more days free</strong> to give it another go.',
+    };
+    body = map[r.id] || 'Take <strong style="color:var(--orange);">7 more days free</strong> to give Foxy another go.';
+    offerCard = `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); text-align:center;"><div style="font-weight:700; font-size:15px;">+7 days of full access — free</div><div class="small muted mt-4">Your trial extends to ${endDate}. No charge.</div></div>`;
+    acceptLabel = 'Give me 7 more days';
+    acceptFn = 'applyExtend7()';
+    if(r.id==='one_project' || r.id==='rarely'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="pauseSubscription()">Pause my subscription instead →</a></div>`; }
+    else if(r.id==='hard' || r.id==='missing' || r.id==='technical'){ extra = `<div class="small muted" style="text-align:center; margin-bottom:12px;"><a class="link-btn small" onclick="closeModal(); showToast('This would open Cal.com to book a call with a specialist.')">Book a call with a specialist →</a></div>`; }
+  }
   openModal(`
-    <div class="modal-head"><h3>Before you go…</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div style="text-align:center; padding:2px 4px 6px;">
-      <div style="font-size:34px; margin-bottom:8px;">🦊</div>
-      <div style="font-weight:700; font-size:16px; margin-bottom:8px;">We're sorry to see you go.</div>
-      <p class="small muted" style="line-height:1.65;">We're confident Foxtly will more than pay for itself in leads for your business. Stay with us and take <strong style="color:var(--orange);">70% off your first month</strong> — no strings, cancel anytime.</p>
+    <div class="modal-head"><h3>${title}</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="text-align:center; padding:2px 4px 6px;"><div style="font-size:32px; margin-bottom:8px;">🦊</div><p class="small muted" style="line-height:1.65;">${body}</p></div>
+    ${offerCard}
+    ${extra}
+    <div class="modal-foot" style="align-items:center;">
+      <button class="link-btn small muted" onclick="proceedCancel()">Cancel anyway</button>
+      <button class="btn primary" onclick="${acceptFn}">${acceptLabel}</button>
     </div>
-    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); text-align:center;">
-      <div style="font-weight:700; font-size:15px;">${b.plan} — <span style="text-decoration:line-through; color:var(--text-muted); font-weight:500;">$${pr.perMo}</span> $${disc} first month</div>
-      <div class="small muted mt-4">Then $${pr.perMo}/mo${b.cycle==='annual'?' billed annually':''}. Cancel anytime.</div>
-    </div>
-    <div class="modal-foot" style="align-items:center;"><button class="link-btn small muted" onclick="closeModal(); showToast('Subscription cancelled.')">Cancel anyway</button><button class="btn primary" onclick="applyCancelWinback()">Keep my plan — 70% off</button></div>
   `);
 }
 function applyCancelWinback(){
   state.billing.winbackApplied = true;
-  closeModal();
-  navigateTo('billing');
+  closeModal(); navigateTo('billing');
   showToast('Great choice! 70% off applied to your next month.', {success:true});
+}
+function applyExtend7(){
+  state.billing.trialTotal += 7;
+  closeModal(); navigateTo('billing');
+  showToast('Done — 7 extra days added to your trial, free.', {success:true});
+}
+function pauseSubscription(){
+  closeModal();
+  showToast('Your subscription is paused. Reactivate anytime — your data stays safe.', {success:true});
+}
+function proceedCancel(){
+  closeModal();
+  showToast('Subscription cancelled. Your data stays read-only — reactivate anytime.');
 }
 </script>
 
