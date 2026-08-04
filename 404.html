@@ -135,6 +135,8 @@
     display:flex; align-items:center; justify-content:space-between;
   }
   .trial-badge span.days{ font-weight:700; }
+  .trial-badge.reactivate{ background:linear-gradient(135deg,#f0883e,#e8590c); color:#fff; border-color:transparent; box-shadow:0 3px 12px rgba(240,136,62,0.35); }
+  .trial-badge.reactivate span.days{ color:#fff; }
   .account{ display:flex; align-items:center; gap:10px; padding:6px 10px; }
   .avatar{
     width:30px; height:30px; border-radius:50%;
@@ -571,7 +573,7 @@
     <button class="nav-item" data-view="billing" onclick="navigateTo('billing')"><span class="ic">▦</span> Billing</button>
 
     <div class="sidebar-footer">
-      <div class="trial-badge" onclick="navigateTo('billing')">
+      <div class="trial-badge" id="trial-badge-el" onclick="navigateTo('billing')">
         <span>Free Trial</span>
         <span class="days">9 days left</span>
       </div>
@@ -936,6 +938,10 @@ function renderFromLocation(){
 // ---------- Router ----------
 function navigateTo(viewId, opts){
   opts = opts || {};
+  // Read-only gate after the trial ends: block campaign creation/launch.
+  if(state.billing.status==='trial_ended' && viewId==='campaign-launch' && !opts.skipPush){
+    openPaywall('Launching a campaign'); return;
+  }
   state.currentView = viewId;
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('auth-root').classList.remove('open');
@@ -950,8 +956,10 @@ function navigateTo(viewId, opts){
   });
   const root = document.getElementById('view-root');
   const renderer = VIEWS[viewId];
-  root.innerHTML = renderer ? renderer() : '<div class="card">Not found</div>';
+  const banner = (state.billing.status==='trial_ended' && viewId!=='billing') ? trialEndedBanner() : '';
+  root.innerHTML = banner + (renderer ? renderer() : '<div class="card">Not found</div>');
   root.scrollTop = 0;
+  updateTrialBadge();
   window.scrollTo(0,0);
   updateApprovalsBadge();
   updateIntegrationNudge();
@@ -980,6 +988,23 @@ function navigateAuth(screenId, opts){
   if(!opts.skipPush) updateUrl('auth', screenId);
 }
 
+function updateTrialBadge(){
+  const el = document.getElementById('trial-badge-el'); if(!el) return;
+  const b = state.billing;
+  if(b.status==='trial_ended'){
+    el.classList.add('reactivate');
+    el.innerHTML = '<span>Reactivate</span><span class="days">'+b.winbackPct+'% off</span>';
+    el.setAttribute('onclick','reactivateFlow()');
+  } else if(b.status==='active'){
+    el.classList.remove('reactivate');
+    el.innerHTML = '<span>'+b.plan+' plan</span><span class="days">Active</span>';
+    el.setAttribute('onclick',"navigateTo('billing')");
+  } else {
+    el.classList.remove('reactivate');
+    el.innerHTML = '<span>Free Trial</span><span class="days">'+(b.trialTotal-b.trialDay)+' days left</span>';
+    el.setAttribute('onclick',"navigateTo('billing')");
+  }
+}
 function updateApprovalsBadge(){
   const n = state.pendingActions.filter(a=>a.status==='proposed' && a.kind==='approval').length;
   const badge = document.getElementById('approvals-badge');
@@ -1292,6 +1317,7 @@ function openActionModal(id){
 }
 
 function approveAction(id){
+  if(state.billing.status==='trial_ended'){ closeModal(); openPaywall('Approving Foxy\'s actions'); return; }
   closeModal();
   const a = state.pendingActions.find(x=>x.id===id);
   if(!a) return;
@@ -4525,6 +4551,7 @@ function toggleExpandAction(id){
 }
 
 function approveQueueAction(id){
+  if(state.billing.status==='trial_ended'){ openPaywall('Approving Foxy\'s actions'); return; }
   const a = state.pendingActions.find(x=>x.id===id);
   if(!a) return;
   a.status = 'applying';
@@ -4764,8 +4791,60 @@ state.billing = {
   trialTotal: 14,
   paymentMethod: null,
   dangerOpen: false,
+  status: 'trial',      // 'trial' | 'trial_ended' | 'active'
+  winbackPct: 50,       // reactivation discount on first month
 };
 function toggleDangerZone(){ state.billing.dangerOpen = !state.billing.dangerOpen; navigateTo('billing'); }
+// Post-trial "read-only" state — reachable via a separate demo link (?trial=ended).
+function enterTrialEnded(){
+  state.billing.status = 'trial_ended';
+  state.billing.trialDay = state.billing.trialTotal;   // 0 days left
+  CAMPAIGNS.forEach(function(c){ if(c.status==='Active' || c.status==='In review'){ c.wasStatus = c.status; c.status = 'Paused'; } });
+}
+function reactivateFlow(){
+  const b = state.billing;
+  const planObj = PLANS.find(p=>p.name===b.plan) || PLANS[0];
+  const pr = planPrice(planObj.price, b.cycle);
+  const disc = Math.round(pr.perMo*(100-b.winbackPct)/100);
+  openModal(`
+    <div class="modal-head"><h3>Reactivate your subscription</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange);">
+      <div style="font-weight:700; font-size:15px;">${b.plan} — <span style="text-decoration:line-through; color:var(--text-muted); font-weight:500;">$${pr.perMo}</span> $${disc} first month</div>
+      <div class="small muted mt-4">${b.winbackPct}% off your first month, then $${pr.perMo}/mo${b.cycle==='annual'?' billed annually':''}. Cancel anytime.</div>
+    </div>
+    ${b.paymentMethod
+      ? `<div class="small muted mb-16">💳 Using Visa ending in ${b.paymentMethod}.</div>`
+      : `<div class="field"><label class="field-label">Card number</label><input type="text" placeholder="4242 4242 4242 4242"></div>
+         <div class="field-row"><div class="field"><label class="field-label">Expiry</label><input type="text" placeholder="MM/YY"></div><div class="field"><label class="field-label">CVC</label><input type="text" placeholder="123"></div></div>`}
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Not now</button><button class="btn primary" onclick="doReactivate()">Reactivate now →</button></div>
+  `);
+}
+function doReactivate(){
+  state.billing.paymentMethod = state.billing.paymentMethod || '4242';
+  state.billing.status = 'active';
+  CAMPAIGNS.forEach(function(c){ if(c.wasStatus){ c.status = c.wasStatus; delete c.wasStatus; } });
+  closeModal();
+  navigateTo('billing');
+  showToast('Welcome back! Your subscription is active and campaigns resumed.', {success:true});
+}
+function openPaywall(what){
+  const pct = state.billing.winbackPct;
+  openModal(`
+    <div class="modal-head"><h3>Reactivate to continue</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <p class="small muted" style="line-height:1.6;">${what || 'This action'} is paused because your free trial ended and your account is read-only. Reactivate — <strong>${pct}% off your first month</strong> — to pick up right where you left off.</p>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Not now</button><button class="btn primary" onclick="closeModal(); reactivateFlow()">Reactivate ${pct}% off →</button></div>
+  `);
+}
+function trialEndedBanner(){
+  const pct = state.billing.winbackPct;
+  return `<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    <div style="display:flex; gap:12px; align-items:flex-start;"><span style="font-size:18px;">🔒</span><div>
+      <div style="font-weight:700; font-size:14px;">Your free trial has ended — your account is read-only.</div>
+      <div class="small muted">Campaigns are paused and Foxy is on hold. Your data and reports are safe. Reactivate to resume.</div>
+    </div></div>
+    <button class="btn primary" onclick="reactivateFlow()">Reactivate · ${pct}% off →</button>
+  </div>`;
+}
 const PLANS = [
   {id:'starter', name:'Starter', price:190, desc:'For owner-operators getting started on one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Foxy re-optimizes every 6 hours','Weekly Foxy report','Email support']},
   {id:'growth', name:'Growth', price:390, popular:true, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration & lead sync','Daily digest + creative generation','Priority email support']},
@@ -4792,30 +4871,43 @@ VIEWS['billing'] = function(){
   return `
     <div class="topbar"><div><h1>Billing & subscription</h1><div class="greeting">Manage your Foxtly plan, payment method and invoices.</div></div></div>
 
-    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-      <div class="small">${b.paymentMethod
-        ? `<strong>Your trial is active — ${daysLeft} days left.</strong> You're all set; billing starts ${renew}.`
-        : `<strong>You're on a free trial — ${daysLeft} days left.</strong> Add a payment method before ${renew} to keep your campaigns running.`}</div>
-      ${b.paymentMethod ? '<span class="badge green">Payment method on file ✓</span>' : `<button class="btn primary small" onclick="addPaymentMethod()">Add payment method</button>`}
-    </div>
+    ${b.status==='trial_ended'
+      ? `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div class="small"><strong>🔒 Your free trial has ended.</strong> Your account is read-only and campaigns are paused — your data is safe. Reactivate to resume.</div>
+          <button class="btn primary small" onclick="reactivateFlow()">Reactivate · ${b.winbackPct}% off</button>
+        </div>`
+      : b.status==='active'
+      ? `<div class="card tight mb-16" style="background:rgba(52,199,89,0.12); border-color:var(--green); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div class="small"><strong>Subscription active.</strong> Your campaigns are running and Foxy is optimizing.</div>
+          <span class="badge green">Active ✓</span>
+        </div>`
+      : `<div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div class="small">${b.paymentMethod
+            ? `<strong>Your trial is active — ${daysLeft} days left.</strong> You're all set; billing starts ${renew}.`
+            : `<strong>You're on a free trial — ${daysLeft} days left.</strong> Add a payment method before ${renew} to keep your campaigns running.`}</div>
+          ${b.paymentMethod ? '<span class="badge green">Payment method on file ✓</span>' : `<button class="btn primary small" onclick="addPaymentMethod()">Add payment method</button>`}
+        </div>`}
 
     <div class="card mb-16">
       <div class="flex justify-between items-start" style="flex-wrap:wrap; gap:12px;">
         <div>
           <div class="small muted mb-4">Current plan</div>
           <div style="font-size:20px; font-weight:700;">${b.plan} <span class="muted" style="font-weight:400; font-size:15px;">— $${pr.perMo}/mo${b.cycle==='annual'?' billed annually':''}</span></div>
-          <div class="small muted mt-4">${b.cycle==='annual' ? `$${pr.billed}/yr · you save $${pr.save}/yr vs monthly` : `Billed monthly after your trial. Renews ${renew}.`}</div>
+          <div class="small muted mt-4">${b.status==='trial_ended' ? 'Reactivate to resume this plan and un-pause your campaigns.' : b.status==='active' ? (b.cycle==='annual' ? `$${pr.billed}/yr · you save $${pr.save}/yr vs monthly` : `Billed monthly. Renews ${renew}.`) : (b.cycle==='annual' ? `$${pr.billed}/yr · you save $${pr.save}/yr vs monthly` : `Billed monthly after your trial. Renews ${renew}.`)}</div>
         </div>
         <div>${cycleToggle}</div>
       </div>
-      <div class="mt-16">
+      ${b.status==='trial' ? `<div class="mt-16">
         <div class="flex justify-between small muted mb-4"><span>Trial day ${b.trialDay} of ${b.trialTotal}</span><span>${daysLeft} days left</span></div>
         <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
-      </div>
+      </div>` : b.status==='trial_ended' ? `<div class="mt-16">
+        <div class="flex justify-between small mb-4"><span style="color:var(--red); font-weight:600;">Trial ended</span><span class="muted">0 days left</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:100%; background:var(--red);"></div></div>
+      </div>` : ''}
       <div class="mt-16" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:8px 20px;">
         ${planObj.features.map(f=>`<div class="small" style="color:var(--text-secondary); display:flex; gap:8px;"><span style="color:var(--green); flex-shrink:0;">✓</span><span>${f}</span></div>`).join('')}
       </div>
-      <div class="mt-16"><button class="btn primary" onclick="openPlanModal()">Change plan</button></div>
+      <div class="mt-16">${b.status==='trial_ended' ? `<button class="btn primary" onclick="reactivateFlow()">Reactivate · ${b.winbackPct}% off →</button>` : `<button class="btn primary" onclick="openPlanModal()">Change plan</button>`}</div>
     </div>
 
     <div class="card mb-16">
@@ -6904,6 +6996,8 @@ function setTheme(mode){
 
 window.addEventListener('DOMContentLoaded', ()=>{
   detectBasePath();
+  // Separate demo link for the post-trial experience: ?trial=ended
+  try{ if(new URLSearchParams(location.search).get('trial')==='ended') enterTrialEnded(); }catch(e){}
   const route = pathToRoute();
   renderFromLocation();
   initAI();
