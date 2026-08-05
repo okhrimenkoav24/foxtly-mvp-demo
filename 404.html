@@ -5200,21 +5200,12 @@ const CAMPAIGNS = [
 ];
 
 VIEWS['advertising'] = function(){
-  const items = [['campaigns','Campaigns','🗂'],['analytics','Analytics','📊'],['creatives','Ad Creatives','🖼']];
-  const content = state.advertisingTab==='analytics' ? renderAdvertisingAnalytics()
-      : state.advertisingTab==='creatives' ? renderAdvertisingCreatives()
-      : (state.campaignsView==='detail' && state.selectedCampaign) ? renderCampaignDetail(CAMPAIGNS.find(c=>c.id===state.selectedCampaign))
-      : renderCampaignsList();
-  return `
-    <div class="settings-layout">
-      <nav class="settings-nav">
-        ${items.map(t=>`<button class="settings-nav-item ${state.advertisingTab===t[0]?'active':''}" onclick="setAdvertisingTab('${t[0]}')"><span class="ic">${t[2]}</span> ${t[1]}</button>`).join('')}
-      </nav>
-      <div class="settings-content">
-        ${content}
-      </div>
-    </div>
-  `;
+  // Section switching lives in the left sidebar (Campaigns / Analytics / Ad Creatives) —
+  // the content area just renders the active section full-width, no duplicate in-content nav.
+  if(state.advertisingTab==='analytics') return renderAdvertisingAnalytics();
+  if(state.advertisingTab==='creatives') return renderAdvertisingCreatives();
+  if(state.campaignsView==='detail' && state.selectedCampaign) return renderCampaignDetail(CAMPAIGNS.find(c=>c.id===state.selectedCampaign));
+  return renderCampaignsList();
 };
 function setAdvertisingTab(t){ state.advertisingTab = t; state.campaignsView = 'list'; navigateTo('advertising'); }
 function setAdPlatform(p){ state.adPlatform = p; navigateTo('advertising'); }
@@ -5230,7 +5221,7 @@ function renderCampaignsList(){
   const rows = CAMPAIGNS.filter(c=> plat==='all' || (c.platform||'').toLowerCase()===plat);
   const active = rows.filter(c=>c.status!=='Paused');
   const totalBudget = active.reduce((s,c)=>s+(c.monthlyBudget||0),0);
-  const platName = plat==='meta' ? 'Meta Ads' : plat==='google' ? 'Google Ads' : 'Meta & Google Ads';
+  const platName = plat==='meta' ? 'Meta Ads' : plat==='google' ? 'Google Ads' : 'All platforms';
   return `
     <div class="topbar">
       <div><h1>Campaigns</h1><div class="greeting">${rows.length} campaign${rows.length===1?'':'s'} · ${platName}</div></div>
