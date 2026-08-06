@@ -1356,14 +1356,11 @@ state.businessProfile = {
 };
 
 VIEWS['knowledge-base'] = function(){
+  // Section switching lives in the left sidebar (Business Profile / Market Research / Marketing Strategy).
+  const body = state.kbTab==='research' ? renderKbResearch() : state.kbTab==='strategy' ? renderKbStrategy() : renderKbProfile();
   return `
-    <div class="topbar"><div><h1>Knowledge Base</h1><div class="greeting">Everything Foxy knows about your business.</div></div></div>
-    <div class="tabs">
-      <button class="tab ${state.kbTab==='profile'?'active':''}" onclick="setKbTab('profile')">Business Profile</button>
-      <button class="tab ${state.kbTab==='research'?'active':''}" onclick="setKbTab('research')">Market Research</button>
-      <button class="tab ${state.kbTab==='strategy'?'active':''}" onclick="setKbTab('strategy')">Marketing Strategy</button>
-    </div>
-    ${state.kbTab==='profile' ? renderKbProfile() : state.kbTab==='research' ? renderKbResearch() : renderKbStrategy()}
+    <div class="topbar"><div><h1>Knowledge Base</h1><div class="greeting">Everything Foxy knows about your business — your single source of truth.</div></div></div>
+    ${body}
   `;
 };
 
@@ -1371,44 +1368,97 @@ function setKbTab(tab){ state.kbTab = tab; navigateTo('knowledge-base'); }
 
 function renderKbProfile(){
   const p = state.businessProfile;
-  const fields = [
+  const ob = state.onboarding || {};
+  const sectionLabel = (t, sub)=>`<div style="margin:26px 2px 12px;"><div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">${t}</div>${sub?`<div class="small muted" style="margin-top:3px;">${sub}</div>`:''}</div>`;
+
+  // Profile completeness — how ready Foxy is to work from this data.
+  const checklist = [
+    {label:'Business basics', done:true},
+    {label:'Services & pricing', done:true},
+    {label:'Location & service area', done:true},
+    {label:'Budget & goals', done:true},
+    {label:'Brand assets (logo & colours)', done: !!ob.logoUploaded},
+    {label:'Website connected', done: !!ob.website},
+  ];
+  const done = checklist.filter(x=>x.done).length;
+  const pct = Math.round(done/checklist.length*100);
+  const missing = checklist.filter(x=>!x.done);
+
+  const inputs = [
     {key:'industry', label:'Industry', icon:'briefcase'},
     {key:'location', label:'Location & service area', icon:'pin'},
     {key:'services', label:'Services offered', icon:'grid'},
     {key:'budget', label:'Monthly ad budget', icon:'dollar'},
-    {key:'goals', label:'Goals', icon:'target'},
-    {key:'offer', label:'Promotional offer', icon:'tag'},
+    {key:'goals', label:'Primary goal', icon:'target'},
+    {key:'offer', label:'Current offer', icon:'tag'},
     {key:'competitors', label:'Known competitors', icon:'users'},
   ];
+
+  // The AI-derived layer — what Foxy actually uses to run the account.
+  const derived = [
+    {title:'Ideal customer — who we target', body:'Homeowners aged 30–65 within 15 mi of Toronto who own their home and worry about aging pipes, water heaters and drains. They value fast, licensed, same-day service.', uses:'Audience targeting'},
+    {title:'Your angle — how we win', body:'Own the routine-service searches (drain cleaning & “free estimate” themes) where competitors underbid. Skip the pricey “emergency plumber” clicks until you have ad history.', uses:'Keyword & platform selection'},
+    {title:'Recommended offer', body:'Lead with a concrete deal — “$50 off your first service” or “Free camera inspection ($90 value)”. Beats a plain “Free Estimate”, which every competitor runs.', uses:'Ad creative & offer'},
+    {title:'Target economics', body:'~$600 average job × ~25% close rate → keep cost-per-lead under ~$45 to stay profitable. Foxy caps bids and daily budgets to protect this.', uses:'Budget & bid guardrails'},
+  ];
+
   return `
-    ${state.profileChanged ? `
-    <div class="card mb-16" style="border-color:var(--orange); background:var(--orange-dim);">
-      <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;">
-        <div><strong style="color:var(--orange);">Your profile changed</strong> — want Foxy to refresh your strategy?</div>
-        <button class="btn primary small" onclick="refreshStrategy()">Refresh analysis</button>
-      </div>
-    </div>` : ''}
-    <div class="card mb-16" style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div style="font-size:26px; line-height:1;">📋</div>
-        <div>
-          <div style="font-weight:700; font-size:14px; margin-bottom:2px;">Fill in your profile with a quick survey</div>
-          <div class="small muted">Answer a few guided questions and I'll complete this automatically — the more complete it is, the more accurate your campaigns.</div>
+    <div class="card mb-16">
+      <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; justify-content:space-between;">
+        <div style="display:flex; gap:12px; align-items:flex-start; flex:1; min-width:240px;">
+          <div class="foxy-chat-av" style="width:34px;height:34px;flex-shrink:0;">${FOXY_MINI}</div>
+          <div>
+            <div style="font-weight:700; font-size:15px; margin-bottom:2px;">This is your single source of truth</div>
+            <div class="small muted" style="line-height:1.55; max-width:580px;">Everything here drives the whole system — your market research, strategy, audience targeting, budgets and ad copy all come from it. The more complete it is, the sharper my recommendations.</div>
+          </div>
         </div>
+        <button class="btn primary" onclick="startQuestionnaire()">${pct===100?'Review with survey':'Complete your profile'} →</button>
       </div>
-      <button class="btn primary" onclick="startQuestionnaire()">Start survey →</button>
+      <div class="mt-16">
+        <div class="flex justify-between small muted mb-4"><span>Profile completeness</span><span>${pct}% · ${done}/${checklist.length}</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        ${missing.length ? `<div class="small muted mt-8">Still missing: <strong style="color:var(--text-secondary);">${missing.map(m=>m.label).join(' · ')}</strong> — add these to sharpen your creatives and targeting.</div>` : `<div class="small mt-8" style="color:var(--green);">✓ Fully complete — I have everything I need.</div>`}
+      </div>
     </div>
+
+    ${state.profileChanged ? `<div class="card mb-16" style="border-color:var(--orange); background:var(--orange-dim);"><div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;"><div><strong style="color:var(--orange);">Your profile changed</strong> — want Foxy to refresh your research &amp; strategy?</div><button class="btn primary small" onclick="refreshStrategy()">Refresh analysis</button></div></div>` : ''}
+
+    ${sectionLabel('What you told us', 'Your survey answers — edit anything and Foxy re-derives the rest.')}
     <div class="grid-2">
-      ${fields.map(f=>`
+      ${inputs.map(f=>`
         <div class="card">
           <div class="flex justify-between items-start mb-8">
             <div class="small muted" style="display:flex; align-items:center; gap:7px;"><span style="color:var(--orange); display:inline-flex;">${ico(f.icon,15)}</span> ${f.label}</div>
             <button class="link-btn small" onclick="editProfileField('${f.key}','${f.label}')">Edit</button>
           </div>
-          <div style="font-weight:600; font-size:14px;">${p[f.key]}</div>
+          <div style="font-weight:600; font-size:14px; line-height:1.5;">${p[f.key]}</div>
         </div>
       `).join('')}
     </div>
+
+    ${sectionLabel('What Foxy concluded from it', 'The working assumptions I actually use to build and run your campaigns.')}
+    <div class="grid-2">
+      ${derived.map(d=>`
+        <div class="card">
+          <div style="font-weight:700; font-size:14px; margin-bottom:6px;">${d.title}</div>
+          <div class="small" style="color:var(--text-secondary); line-height:1.6; margin-bottom:12px;">${d.body}</div>
+          <div style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--orange); background:var(--orange-dim); border:1px solid var(--orange); padding:4px 9px; border-radius:6px;">↳ drives: ${d.uses}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${sectionLabel('Your potential at a glance', 'A quick read on the opportunity — the full breakdown lives in Market Research.')}
+    <div class="grid-3" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card" style="text-align:center;"><div class="small muted mb-8">Market demand</div><div style="font-size:24px; font-weight:800;">Strong</div><div class="kpi-delta up" style="justify-content:center; margin-top:6px;">↑ 8% YoY · ~12k/mo</div></div>
+      <div class="card" style="text-align:center;"><div class="small muted mb-8">Expected cost / lead</div><div style="font-size:24px; font-weight:800;">$18–28</div><div class="small muted mt-4">below your $30 target</div></div>
+      <div class="card" style="text-align:center;"><div class="small muted mb-8">Leads / month potential</div><div style="font-size:24px; font-weight:800; color:var(--orange);">36–55</div><div class="small muted mt-4">at $1,000/mo</div></div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+      <button class="btn" onclick="setKbTab('research')">See full market research →</button>
+      <button class="btn" onclick="setKbTab('strategy')">View strategy →</button>
+    </div>
+
+    <div class="small muted" style="margin-top:22px; line-height:1.55;">🔎 Built from: your survey answers${ob.website?` · your website (${ob.website})`:''} · Meta Ad Library · Google Ads Transparency Center · local search volumes. Last updated Jun 5, 2026.</div>
   `;
 }
 
