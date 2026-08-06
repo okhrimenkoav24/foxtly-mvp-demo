@@ -1526,6 +1526,18 @@ function renderKbResearch(){
           `).join('')}
         </div>
       </div>
+      <div class="rs-panel" style="margin-top:14px;">
+        <div class="small muted mb-10">When demand peaks — relative searches by month</div>
+        <div style="display:flex; align-items:flex-end; gap:6px; height:64px;">
+          ${[['J',85,true],['F',92,true],['M',72],['A',80],['M',84],['J',55],['J',48],['A',52],['S',62],['O',68],['N',76],['D',82,true]].map(m=>`
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end;">
+              <div style="width:100%; background:${m[2]?'var(--orange)':'var(--border-light)'}; border-radius:4px 4px 0 0; height:${m[1]}%;"></div>
+              <div style="font-size:9px; color:var(--text-muted);">${m[0]}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="small muted mt-8">Peaks in <strong style="color:var(--orange);">winter</strong> (frozen pipes) and <strong style="color:var(--orange);">early spring</strong> (renovations). Foxy leans your budget into these windows.</div>
+      </div>
       ${foxyTake("Demand is healthy and growing <b>8%/yr</b>, so there's room to win new customers. The cheapest ways in are <b>drain cleaning</b> ($4.10) and <b>free estimate</b> ($3.50) — I'd avoid the pricey <b>emergency plumber</b> ($9.80 a click).")}
     </div>
 
@@ -1561,10 +1573,46 @@ function renderKbResearch(){
       ${foxyTake("<b>Rotorooter</b> is your toughest rival — heavy spend on both Meta and Google. Mr. Plumber runs Meta only, and Toronto Pro is quiet. Right now no competitor is seriously covering routine <b>drain-cleaning</b> and <b>free-estimate</b> searches.<br><span style=\"color:var(--text-muted); font-size:11.5px;\">Source: live ad data from Meta Ad Library and Google Ads Transparency Center, checked Jun 2026. Ad spend is an estimate — we recheck it as your campaigns run.</span>")}
     </div>
 
-    <!-- 3. Opportunity (hero) -->
-    <div class="rs-section hero">
+    <!-- 3. Benchmarks -->
+    <div class="rs-section">
       <div class="rs-head">
         <div class="rs-num">3</div>
+        <div><div class="rs-title">Where you stand</div><div class="rs-sub">You vs. the local market</div></div>
+      </div>
+      <table>
+        <thead><tr><th></th><th>You</th><th>Local market</th><th>Read</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Offer</strong></td><td style="font-size:13px;">Free Estimate</td><td style="font-size:13px;">Mostly “Free Estimate” / “24-7 emergency”</td><td><span class="badge yellow">Blends in</span></td></tr>
+          <tr><td><strong>Target cost / lead</strong></td><td style="font-size:13px;">$18–28</td><td style="font-size:13px;">~$30–45 average</td><td><span class="badge green">Below market</span></td></tr>
+          <tr><td><strong>Est. competitor spend</strong></td><td style="font-size:13px;">$1,000/mo</td><td style="font-size:13px;">Rotorooter ~$4–6k/mo</td><td><span class="badge gray">Out-spent</span></td></tr>
+          <tr><td><strong>Channels</strong></td><td style="font-size:13px;">Meta (Google soon)</td><td style="font-size:13px;">Meta + Google</td><td><span class="badge blue">Room on Google</span></td></tr>
+        </tbody>
+      </table>
+      ${foxyTake("You can't out-spend Rotorooter, so we out-<b>focus</b> them: a sharper offer than a generic \"free estimate,\" and cheaper routine-service clicks they aren't fighting for. Your target cost-per-lead already sits below the market average.")}
+    </div>
+
+    <!-- 4. Opportunity by service -->
+    <div class="rs-section">
+      <div class="rs-head">
+        <div class="rs-num">4</div>
+        <div><div class="rs-title">Opportunity by service</div><div class="rs-sub">Which of your services are the best bets right now</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Service</th><th>Demand</th><th>Competition</th><th>Est. CPL</th><th>Foxy’s call</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Drain cleaning</strong></td><td style="font-size:13px;">High</td><td><span class="badge green">Low</span></td><td style="font-size:13px;">$14–20</td><td><span class="badge orange">Start here</span></td></tr>
+          <tr><td><strong>Water heater install</strong></td><td style="font-size:13px;">Medium</td><td><span class="badge gray">Medium</span></td><td style="font-size:13px;">$22–30</td><td style="font-size:13px;">High-value job</td></tr>
+          <tr><td><strong>Pipe repair</strong></td><td style="font-size:13px;">Medium</td><td><span class="badge gray">Medium</span></td><td style="font-size:13px;">$20–28</td><td style="font-size:13px;">Steady</td></tr>
+          <tr><td><strong>Emergency plumbing</strong></td><td style="font-size:13px;">High</td><td><span class="badge red">High</span></td><td style="font-size:13px;">$32–48</td><td style="font-size:13px;">Later, once profitable</td></tr>
+        </tbody>
+      </table>
+      ${foxyTake("Because <b>one campaign = one service</b>, this decides what we launch first: <b>drain cleaning</b> — high demand, low competition, cheapest leads. <b>Water heater</b> earns its spot on ticket size. I'd hold <b>emergency</b> until your account has history.")}
+    </div>
+
+    <!-- 5. Opportunity (hero) -->
+    <div class="rs-section hero">
+      <div class="rs-head">
+        <div class="rs-num">5</div>
         <div><div class="rs-title">Where's your opening?</div><div class="rs-sub">My recommended focus</div></div>
       </div>
       ${foxyNote("<strong style=\"color:var(--orange);\">Go after routine service searches first.</strong><br>All three competitors bid heavily on \"emergency plumbing,\" where clicks cost $8–$12. The \"free estimate\" and drain-cleaning searches (these are keyword themes, not services) have far less competition at $3–$5 a click — so you get more leads per dollar while we build your ad history. Once your numbers are strong, we scale into the pricier keywords.<br><span style=\"color:var(--text-muted); font-size:11.5px;\">This is my recommendation from current competition data — a starting hypothesis, not a rule. I'll confirm it against your real results in the first 2 weeks and adjust if the data says otherwise.</span>", true)}
@@ -1573,7 +1621,7 @@ function renderKbResearch(){
     <!-- 4. Forecast -->
     <div class="rs-section">
       <div class="rs-head">
-        <div class="rs-num">4</div>
+        <div class="rs-num">6</div>
         <div><div class="rs-title">What could this return?</div><div class="rs-sub">Estimate at a $1,000 / month budget</div></div>
       </div>
       <div class="grid-3" style="grid-template-columns:repeat(3,1fr);">
@@ -1752,6 +1800,45 @@ function renderKbStrategy(){
         })()}
       </div>
     `).join('')}
+
+    <!-- 90-day roadmap -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin:26px 0 12px;">🗺 Your 90-day roadmap</div>
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">Whichever strategy you pick, here's how Foxy runs it over the first three months — learn first, then scale what works.</p>
+    <div class="grid-2">
+      ${[
+        {phase:'Weeks 1–2', title:'Learn', body:'Launch on Meta with your top service and offer. Foxy A/B-tests audiences & creatives and gathers your first real numbers.'},
+        {phase:'Weeks 3–4', title:'Optimize', body:'Pause weak ads, shift budget to winners, tighten targeting. Cost-per-lead starts dropping toward your target.'},
+        {phase:'Month 2', title:'Expand', body:'Add Google Search for high-intent queries once Meta is stable, and introduce a second service campaign.'},
+        {phase:'Month 3', title:'Scale', body:'Raise budget on proven winners, add retargeting, and layer seasonal offers around your demand peaks.'},
+      ].map((r,i)=>`
+        <div class="card">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--orange-dim);color:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${i+1}</div>
+            <div><span class="small muted">${r.phase}</span> · <strong>${r.title}</strong></div>
+          </div>
+          <div class="small" style="color:var(--text-secondary); line-height:1.6;">${r.body}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- What Foxy runs on autopilot -->
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin:26px 0 12px;">🤖 What Foxy runs on autopilot</div>
+    ${foxyNote("Once you approve a strategy, I run the day-to-day so you don't have to — and I only ask you before anything risky.", false)}
+    <div class="grid-2">
+      ${[
+        ['A/B testing','I test audiences, creatives and offers against each other and keep the winners.'],
+        ['Budget reallocation','I move spend from underperformers to whatever is driving cheap leads.'],
+        ['Pausing weak ads','I pause anything burning budget with no leads — with your OK on anything big.'],
+        ['Creative refresh','I spot ad fatigue and generate fresh creatives before results dip.'],
+        ['Weekly reporting','You get a plain-English summary of spend, leads and cost-per-lead.'],
+        ['Alerts & approvals','Anything material lands in your Approvals queue first — nothing risky happens on its own.'],
+      ].map(a=>`
+        <div class="card" style="display:flex; gap:10px; align-items:flex-start;">
+          <span style="color:var(--green); flex-shrink:0; font-weight:800;">✓</span>
+          <div><div style="font-weight:600; font-size:13px; margin-bottom:2px;">${a[0]}</div><div class="small muted" style="line-height:1.55;">${a[1]}</div></div>
+        </div>
+      `).join('')}
+    </div>
   `;
 }
 </script>
