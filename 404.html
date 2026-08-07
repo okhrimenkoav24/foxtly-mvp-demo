@@ -2294,7 +2294,7 @@ function metaChatSubmit(){
   const name = metaCampaignName();
   if(!CAMPAIGNS.find(c=>c.name===name && c.status==='In review')){
     CAMPAIGNS.unshift({ id:'c'+Date.now(), name:name, platform:'Meta', status:'In review', spend:0, leads:0, cpl:null, change:0, anomaly:false,
-      geo:(cb.cities&&cb.cities[0])||cb.location||'Toronto, ON', ageMin:cb.ageMin, ageMax:cb.ageMax, monthlyBudget:cb.monthlyBudget,
+      geo:(cb.cities&&cb.cities[0])||cb.location||'Toronto, ON', ageMin:cb.ageMin, ageMax:cb.ageMax, monthlyBudget:cb.monthlyBudget, dailyBudget:cb.budget,
       creatives:[], audience:'Homeowners, '+cb.ageMin+'-'+cb.ageMax+', '+((cb.cities&&cb.cities.join(', '))||cb.location),
       aiComment:'Submitted to Meta for review — waiting on approval.' });
   }
@@ -3909,7 +3909,7 @@ function submitLaunchCampaign(){
   if(!CAMPAIGNS.find(c=>c.name===name && c.status==='In review')){
     CAMPAIGNS.unshift({
       id:'c'+Date.now(), name:name, platform:'Meta', status:'In review', spend:0, leads:0, cpl:null, change:0, anomaly:false,
-      geo:(cb.cities&&cb.cities[0])||cb.location||'Toronto, ON', ageMin:cb.ageMin, ageMax:cb.ageMax, monthlyBudget:cb.monthlyBudget,
+      geo:(cb.cities&&cb.cities[0])||cb.location||'Toronto, ON', ageMin:cb.ageMin, ageMax:cb.ageMax, monthlyBudget:cb.monthlyBudget, dailyBudget:cb.budget,
       creatives:[], audience:'Homeowners, '+cb.ageMin+'-'+cb.ageMax+', '+((cb.cities&&cb.cities.join(', '))||cb.location),
       aiComment:'Submitted to Meta for review — waiting on approval.' });
   }
@@ -5310,10 +5310,11 @@ state.selectedCampaign = null;
 state.campaignTab = 'creatives';
 state.advertisingTab = 'campaigns';
 state.adPlatform = 'all';   // All | meta | google — shared platform filter across Advertising
+state.editingBudget = null; // campaign id whose daily-budget cell is in inline-edit mode
 
 const CAMPAIGNS = [
   { id:'c1', name:'Free Estimate — Plumbing', platform:'Meta', status:'Active', spend:168, leads:9, cpl:18.70, change:-11, anomaly:false,
-    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:1000,
+    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:1000, dailyBudget:40,
     creatives:[
       {name:'Free Estimate Photo', spend:128, leads:9, cpl:14.20, badge:'Top performer'},
       {name:'Team at Work', spend:40, leads:0, cpl:null, badge:null},
@@ -5321,14 +5322,14 @@ const CAMPAIGNS = [
     audience:'Homeowners, 25-65, within 15 miles of Toronto, ON, interested in home improvement, homeownership, DIY.',
     aiComment:"This audience is performing well — cost per lead is 24% below your target. No changes recommended right now." },
   { id:'c2', name:'Same-Day Service', platform:'Meta', status:'Active', spend:76, leads:3, cpl:25.30, change:4, anomaly:false,
-    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:800,
+    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:800, dailyBudget:25,
     creatives:[
       {name:'Same-Day Banner', spend:76, leads:3, cpl:25.30, badge:null},
     ],
     audience:'Homeowners, 25-65, within 10 miles of Toronto, ON, searched "emergency plumber" recently.',
     aiComment:"Performance is stable. We'll keep monitoring for the next few days before suggesting changes." },
   { id:'c3', name:'Spring Promo', platform:'Meta', status:'Paused', spend:40, leads:0, cpl:null, change:0, anomaly:true,
-    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:600,
+    geo:'Toronto, ON', ageMin:25, ageMax:65, monthlyBudget:600, dailyBudget:20,
     creatives:[
       {name:'Generic Banner', spend:40, leads:0, cpl:null, badge:'Underperforming'},
     ],
@@ -5380,7 +5381,7 @@ function renderCampaignsList(){
     ${totalBudget ? `<div class="card mb-16" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;"><div class="small muted">Total monthly budget across your live campaigns</div><div style="font-weight:700;">$${totalBudget.toLocaleString()}/mo <span class="small muted" style="font-weight:400;">· ${active.length} campaign${active.length===1?'':'s'}</span></div></div>` : ''}
     <div class="table-card">
       <table>
-        <thead><tr><th>Campaign</th><th>Status</th><th>Spend</th><th>Leads</th><th>Cost / Lead</th><th></th></tr></thead>
+        <thead><tr><th>Campaign</th><th>Status</th><th>Spend</th><th>Leads</th><th>Cost / Lead</th><th>Daily budget</th><th></th></tr></thead>
         <tbody>
           ${rows.map(c=>`
             <tr onclick="openCampaignDetail('${c.id}')">
@@ -5389,6 +5390,9 @@ function renderCampaignsList(){
               <td>$${c.spend}</td>
               <td>${c.leads}</td>
               <td>${c.cpl ? '$'+c.cpl.toFixed(2) : '—'} ${c.change ? `<span class="small ${c.change<0?'kpi-delta down':'kpi-delta bad'}" style="display:inline;">${c.change<0?'↓':'↑'} ${Math.abs(c.change)}%</span>` : ''}</td>
+              <td style="white-space:nowrap;" onclick="event.stopPropagation();">${state.editingBudget===c.id
+                ? `<span style="display:inline-flex; align-items:center; gap:3px;">$<input id="budget-input-${c.id}" type="number" min="1" max="1000" value="${c.dailyBudget}" onchange="saveDailyBudget('${c.id}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();} else if(event.key==='Escape'){cancelEditBudget();}" onblur="cancelEditBudget()" style="width:60px; background:var(--card-bg-3); border:1px solid var(--orange); border-radius:6px; padding:4px 6px; color:var(--text); font-size:13px;"><span class="small muted">/day</span></span>`
+                : `<span onclick="startEditBudget('${c.id}')" title="Click to edit" style="cursor:pointer; display:inline-flex; align-items:center; gap:5px; border-bottom:1px dashed var(--border-light);">$${c.dailyBudget}<span class="small muted">/day</span> <span style="color:var(--text-muted); font-size:11px;">✎</span></span>`}</td>
               <td style="white-space:nowrap;"><button class="link-btn small" onclick="event.stopPropagation(); duplicateCampaign('${c.id}')">Duplicate</button> · <button class="link-btn small" onclick="event.stopPropagation(); openCampaignDetail('${c.id}')">View →</button></td>
             </tr>
           `).join('')}
@@ -5398,7 +5402,56 @@ function renderCampaignsList(){
   `;
 }
 function setCampaignsPeriod(p){ state.campaignsPeriod = p; navigateTo('advertising'); }
+function startEditBudget(id){
+  state.editingBudget = id;
+  navigateTo('advertising');
+  setTimeout(function(){ var el = document.getElementById('budget-input-'+id); if(el){ el.focus(); el.select(); } }, 0);
+}
+function saveDailyBudget(id, val){
+  var v = Math.max(1, parseInt(val,10) || 0);
+  var c = CAMPAIGNS.find(function(x){ return x.id===id; });
+  if(c) c.dailyBudget = v;
+  state.editingBudget = null;
+  navigateTo('advertising');
+  showToast('Daily budget updated to $'+v+'/day', {success:true});
+}
+function cancelEditBudget(){
+  if(state.editingBudget){ state.editingBudget = null; navigateTo('advertising'); }
+}
 function openCampaignDetail(id){ state.selectedCampaign = id; state.campaignsView = 'detail'; state.campaignTab = 'creatives'; navigateTo('advertising'); }
+function openEditCampaignModal(id){
+  var c = CAMPAIGNS.find(function(x){ return x.id===id; });
+  if(!c) return;
+  openModal(`
+    <div class="modal-head"><h3>Edit campaign</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="field"><label class="field-label">Daily budget</label>
+      <div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:8px 12px; max-width:210px;"><span style="color:var(--text-muted);">$</span><input id="edit-camp-budget" type="number" min="1" max="1000" value="${c.dailyBudget}" style="flex:1; background:transparent; border:none; color:var(--text); font-size:15px; font-weight:700; min-width:0;"><span class="small muted">/day</span></div>
+    </div>
+    <div class="field"><label class="field-label">Location</label>
+      <input id="edit-camp-geo" type="text" value="${(c.geo||'').replace(/"/g,'&quot;')}" placeholder="e.g. Toronto, ON"></div>
+    <div class="field"><label class="field-label">Audience age</label>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div><div class="small muted mb-4">Min age</div><input id="edit-camp-agemin" type="number" min="18" max="65" value="${c.ageMin}"></div>
+        <div><div class="small muted mb-4">Max age</div><input id="edit-camp-agemax" type="number" min="18" max="65" value="${c.ageMax}"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveEditCampaign('${id}')">Save changes</button></div>
+  `);
+}
+function saveEditCampaign(id){
+  var c = CAMPAIGNS.find(function(x){ return x.id===id; });
+  if(!c) return;
+  var g = function(fid){ var el = document.getElementById(fid); return el ? el.value : undefined; };
+  var b = parseInt(g('edit-camp-budget'),10); if(b) c.dailyBudget = Math.max(1, b);
+  var geo = g('edit-camp-geo'); if(geo!==undefined && geo.trim()) c.geo = geo.trim();
+  var amin = parseInt(g('edit-camp-agemin'),10), amax = parseInt(g('edit-camp-agemax'),10);
+  if(amin) c.ageMin = Math.min(65, Math.max(18, amin));
+  if(amax) c.ageMax = Math.min(65, Math.max(18, amax));
+  c.audience = 'Homeowners, '+c.ageMin+'-'+c.ageMax+', within 15 miles of '+c.geo+'.';
+  closeModal();
+  navigateTo('advertising');
+  showToast('Campaign updated ✓', {success:true});
+}
 
 function renderCampaignDetail(c){
   const pendingForCampaign = state.pendingActions.find(a=>a.status==='proposed' && a.title.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()));
@@ -5408,9 +5461,9 @@ function renderCampaignDetail(c){
         <button class="link-btn muted small mb-8" onclick="state.campaignsView='list'; navigateTo('advertising')">← Back to campaigns</button>
         <h1>${c.name} <span class="badge ${c.status==='Active'?'green':'yellow'}" style="vertical-align:middle;">${c.status}</span></h1>
       </div>
-      <div class="topbar-right">
-        <button class="btn" onclick="requestCampaignAction('${c.id}','pause')">${c.status==='Active'?'Pause':'Resume'}</button>
-        <button class="btn" onclick="requestCampaignAction('${c.id}','budget')">Edit budget</button>
+      <div class="topbar-right" style="gap:10px;">
+        <button class="btn" style="padding:10px 22px; font-size:14px;" onclick="requestCampaignAction('${c.id}','pause')">${c.status==='Active'?'⏸ Pause':'▶ Resume'}</button>
+        <button class="btn primary" style="padding:10px 22px; font-size:14px;" onclick="openEditCampaignModal('${c.id}')">✎ Edit</button>
       </div>
     </div>
 
