@@ -1399,7 +1399,7 @@ function renderKbProfile(){
     {title:'Ideal customer — who we target', body:'Homeowners aged 30–65 within 15 mi of Toronto who own their home and worry about aging pipes, water heaters and drains. They value fast, licensed, same-day service.', uses:'Audience targeting'},
     {title:'Your angle — how we win', body:'Own the routine-service searches (drain cleaning & “free estimate” themes) where competitors underbid. Skip the pricey “emergency plumber” clicks until you have ad history.', uses:'Keyword & platform selection'},
     {title:'Recommended offer', body:'Lead with a concrete deal — “$50 off your first service” or “Free camera inspection ($90 value)”. Beats a plain “Free Estimate”, which every competitor runs.', uses:'Ad creative & offer'},
-    {title:'Target economics', body:'~$600 average job × ~25% close rate → keep cost-per-lead under ~$45 to stay profitable. Foxy caps bids and daily budgets to protect this.', uses:'Budget & bid guardrails'},
+    {title:'Target economics', body:'~$600 average job × ~25% close rate → keep cost per lead under ~$45 to stay profitable. Foxy caps bids and daily budgets to protect this.', uses:'Budget & bid guardrails'},
   ];
 
   return `
@@ -1412,7 +1412,7 @@ function renderKbProfile(){
             <div class="small muted" style="line-height:1.55; max-width:580px;">Everything here drives the whole system — your market research, strategy, audience targeting, budgets and ad copy all come from it. The more complete it is, the sharper my recommendations.</div>
           </div>
         </div>
-        <button class="btn primary" onclick="startQuestionnaire()">${pct===100?'Review with survey':'Complete your profile'} →</button>
+        <button class="btn primary" onclick="startQuestionnaire()">${pct===100?'Review with survey':'Finish your profile'} →</button>
       </div>
       <div class="mt-16">
         <div class="flex justify-between small muted mb-4"><span>Profile completeness</span><span>${pct}% · ${done}/${checklist.length}</span></div>
@@ -1588,7 +1588,7 @@ function renderKbResearch(){
           <tr><td><strong>Channels</strong></td><td style="font-size:13px;">Meta (Google soon)</td><td style="font-size:13px;">Meta + Google</td><td><span class="badge blue">Room on Google</span></td></tr>
         </tbody>
       </table>
-      ${foxyTake("You can't out-spend Rotorooter, so we out-<b>focus</b> them: a sharper offer than a generic \"free estimate,\" and cheaper routine-service clicks they aren't fighting for. Your target cost-per-lead already sits below the market average.")}
+      ${foxyTake("You can't out-spend Rotorooter, so we out-<b>focus</b> them: a sharper offer than a generic \"free estimate,\" and cheaper routine-service clicks they aren't fighting for. Your target cost per lead already sits below the market average.")}
     </div>
 
     <!-- 4. Opportunity by service -->
@@ -1830,7 +1830,7 @@ function renderKbStrategy(){
         ['Budget reallocation','I move spend from underperformers to whatever is driving cheap leads.'],
         ['Pausing weak ads','I pause anything burning budget with no leads — with your OK on anything big.'],
         ['Creative refresh','I spot ad fatigue and generate fresh creatives before results dip.'],
-        ['Weekly reporting','You get a plain-English summary of spend, leads and cost-per-lead.'],
+        ['Weekly reporting','You get a plain-English summary of spend, leads and cost per lead.'],
         ['Alerts & approvals','Anything material lands in your Approvals queue first — nothing risky happens on its own.'],
       ].map(a=>`
         <div class="card" style="display:flex; gap:10px; align-items:flex-start;">
@@ -2670,7 +2670,7 @@ function renderMetaStep3(){
 
   return '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+ageMaxLabel+' within '+cb.radius+' mi of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost-per-lead. You can always expand later once you have data.</div>' +
+    '<div class="msg"><strong>Targeting homeowners aged '+cb.ageMin+'–'+ageMaxLabel+' within '+cb.radius+' mi of '+cityLabel+'.</strong> Homeowners are 4× more likely to hire a plumber than renters. Tight radius = lower cost per lead. You can always expand later once you have data.</div>' +
     '</div>' +
 
     (function(){
@@ -2777,7 +2777,7 @@ function renderMetaStep4(){
     '<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:10px; padding:16px 20px; margin-bottom:20px;">' +
     '<div style="font-size:11px; font-weight:600; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Recommended daily budget</div>' +
     '<div style="font-size:36px; font-weight:700; color:var(--orange); margin-bottom:4px;">$'+recDaily+'/day</div>' +
-    '<div class="small" style="color:var(--text-secondary); line-height:1.5;">A conservative start that stays inside your $'+monthly+'/mo budget. When your cost-per-lead is on target we raise the daily spend by 20–30% every 3–4 days, up to — never past — your monthly budget.</div>' +
+    '<div class="small" style="color:var(--text-secondary); line-height:1.5;">A conservative start that stays inside your $'+monthly+'/mo budget. When your cost per lead is on target we raise the daily spend by 20–30% every 3–4 days, up to — never past — your monthly budget.</div>' +
     '</div>' +
 
     '<div style="margin-bottom:20px;">' +
@@ -2876,7 +2876,7 @@ function renderLaunchStep2(){
     { key:'goal',     icon:'🎯', label:'Campaign goal',    value:'Lead generation',
       why:'You want calls and form fills — Lead Gen campaigns optimize exactly for this on Meta. Awareness or traffic campaigns would be cheaper but won\'t get you phone calls.' },
     { key:'audience', icon:'👥', label:'Target audience',   value:'Homeowners ' + cb.ageMin + '–' + cb.ageMax + ', within ' + cb.radius + ' miles of ' + cb.location,
-      why:'Homeowners are 4× more likely to hire a plumber than renters. I kept the radius tight ('+cb.radius+' mi) to lower your cost-per-lead — too wide and you pay for clicks you can\'t service.' },
+      why:'Homeowners are 4× more likely to hire a plumber than renters. I kept the radius tight ('+cb.radius+' mi) to lower your cost per lead — too wide and you pay for clicks you can\'t service.' },
     { key:'budget',   icon:'💰', label:'Daily budget',      value:'$' + cb.budget + '/day  (~$' + (cb.budget*30) + '/month)',
       why:'$'+cb.budget+'/day is the minimum effective spend for local service leads in Toronto. Below $20/day Meta doesn\'t have enough data to optimize. You can adjust after 7 days.' },
     { key:'offer',    icon:'🎁', label:'Offer / USP',       value:'"' + cb.offer + '"',
@@ -5026,7 +5026,7 @@ function openPaywall(what){
   const pct = state.billing.winbackPct;
   openModal(`
     <div class="modal-head"><h3>Reactivate to continue</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <p class="small muted" style="line-height:1.6;">${what || 'This action'} is paused because your free trial ended and your account is read-only. Reactivate — <strong>${pct}% off your first month</strong> — to pick up right where you left off.</p>
+    <p class="small muted" style="line-height:1.6;">Your trial ended, so ${(what||'this').toLowerCase()} is on hold — but everything you've set up is saved. Reactivate with <strong>${pct}% off your first month</strong> to pick up where you left off.</p>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Not now</button><button class="btn primary" onclick="closeModal(); reactivateFlow()">Reactivate ${pct}% off →</button></div>
   `);
 }
@@ -5034,8 +5034,8 @@ function trialEndedBanner(){
   const pct = state.billing.winbackPct;
   return `<div style="background:var(--orange-dim); border:1px solid var(--orange); border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
     <div style="display:flex; gap:12px; align-items:flex-start;"><span style="font-size:18px;">🔒</span><div>
-      <div style="font-weight:700; font-size:14px;">Your free trial has ended — your account is read-only.</div>
-      <div class="small muted">Campaigns are paused and Foxy is on hold. Your data and reports are safe. Reactivate to resume.</div>
+      <div style="font-weight:700; font-size:14px;">Your trial's over — but nothing's lost.</div>
+      <div class="small muted">Your data, leads and reports are safe; campaigns are just paused. Reactivate to pick up where you left off.</div>
     </div></div>
     <button class="btn primary" onclick="reactivateFlow()">Reactivate · ${pct}% off →</button>
   </div>`;
@@ -5228,8 +5228,8 @@ function openCancelModal(){
       }).join('')}
     </div>
     <div class="modal-foot" style="align-items:center;">
-      <button class="link-btn small muted" ${sel?'':'disabled style="opacity:0.45;cursor:not-allowed;"'} onclick="${sel?'cancelOfferModal()':'return false'}">Continue to cancel</button>
-      <button class="btn primary" onclick="closeModal()">Never mind, keep my plan</button>
+      <button class="link-btn small muted" ${sel?'':'disabled style="opacity:0.45;cursor:not-allowed;"'} onclick="${sel?'cancelOfferModal()':'return false'}">Continue cancelling</button>
+      <button class="btn primary" onclick="closeModal()">Keep my plan</button>
     </div>
   `);
 }
@@ -5539,7 +5539,7 @@ function renderAdvertisingAnalytics(){
       <div class="section-head"><div><h2>Google Ads</h2><p>Not connected yet</p></div><span class="badge yellow">Not connected</span></div>
       <div class="card" style="text-align:center; padding:36px 20px;">
         <div style="font-size:30px; margin-bottom:10px;">🔍</div>
-        <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Connect Google Ads to see performance here</div>
+        <div style="font-weight:700; font-size:15px; margin-bottom:6px;">Add Google Ads to see it here</div>
         <p class="small muted" style="max-width:460px; margin:0 auto 16px; line-height:1.55;">Meta and Google run side by side in Foxtly — for many businesses Google is the main channel. Connect your account and Foxy tracks Search & Performance Max automatically.</p>
         <button class="btn primary" onclick="navigateTo('integrations')">Connect Google Ads</button>
       </div>
