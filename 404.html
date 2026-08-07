@@ -5460,10 +5460,10 @@ function renderCampaignDetail(c){
       <div>
         <button class="link-btn muted small mb-8" onclick="state.campaignsView='list'; navigateTo('advertising')">← Back to campaigns</button>
         <h1>${c.name} <span class="badge ${c.status==='Active'?'green':'yellow'}" style="vertical-align:middle;">${c.status}</span></h1>
-      </div>
-      <div class="topbar-right" style="gap:10px;">
-        <button class="btn" style="padding:10px 22px; font-size:14px;" onclick="requestCampaignAction('${c.id}','pause')">${c.status==='Active'?'⏸ Pause':'▶ Resume'}</button>
-        <button class="btn primary" style="padding:10px 22px; font-size:14px;" onclick="openEditCampaignModal('${c.id}')">✎ Edit</button>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn" style="padding:9px 20px; font-size:14px;" onclick="requestCampaignAction('${c.id}','pause')">${c.status==='Active'?'⏸ Pause':'▶ Resume'}</button>
+          <button class="btn primary" style="padding:9px 20px; font-size:14px;" onclick="openEditCampaignModal('${c.id}')">✎ Edit</button>
+        </div>
       </div>
     </div>
 
