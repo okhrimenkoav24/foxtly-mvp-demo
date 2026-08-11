@@ -5559,17 +5559,25 @@ const ANALYTICS_DATA = {
   meta: {
     today:{spend:284,  impr:13200,  clicks:210,  conv:12,  costConv:23.70, calls:5,   forms:7,   contacts:0,  other:[['Website visits',86],['Engagements',120]]},
     '7d': {spend:1940, impr:92400,  clicks:1480, conv:74,  costConv:26.20, calls:29,  forms:45,  contacts:0,  other:[['Website visits',540],['Engagements',820]]},
+    '14d':{spend:3800, impr:182000, clicks:2900, conv:145, costConv:26.21, calls:58,  forms:88,  contacts:0,  other:[['Website visits',1050],['Engagements',1600]]},
     '30d':{spend:7850, impr:392000, clicks:6100, conv:305, costConv:25.74, calls:120, forms:185, contacts:0,  other:[['Website visits',2200],['Engagements',3400]]},
+    '90d':{spend:22500,impr:1120000,clicks:17600,conv:880, costConv:25.57, calls:350, forms:530, contacts:0,  other:[['Website visits',6400],['Engagements',9800]]},
   },
   google: {
     today:{spend:160,  impr:3100,  clicks:61,  conv:6, costConv:26.70,  calls:6, forms:0, contacts:5,  other:[['Directions',9],['Website visits',8],['Engagements',31]]},
-    '7d': {spend:1120, impr:21000, clicks:296, conv:9, costConv:124.40, calls:9, forms:0, contacts:14, other:[['Directions',31],['Website visits',28],['Engagements',110]]},
-    '30d':{spend:1436, impr:41000, clicks:520, conv:9, costConv:159.64, calls:9, forms:0, contacts:32, other:[['Directions',73],['Website visits',70],['Engagements',280]]},
+    '7d': {spend:1120, impr:21000, clicks:296, conv:9,  costConv:124.40, calls:9,  forms:0, contacts:14, other:[['Directions',31],['Website visits',28],['Engagements',110]]},
+    '14d':{spend:2150, impr:40000, clicks:560, conv:9,  costConv:152.00, calls:9,  forms:0, contacts:22, other:[['Directions',55],['Website visits',52],['Engagements',200]]},
+    '30d':{spend:1436, impr:41000, clicks:520, conv:9,  costConv:159.64, calls:9,  forms:0, contacts:32, other:[['Directions',73],['Website visits',70],['Engagements',280]]},
+    '90d':{spend:4200, impr:120000,clicks:1500,conv:24, costConv:175.00, calls:22, forms:2, contacts:88, other:[['Directions',210],['Website visits',190],['Engagements',760]]},
   },
 };
 function renderAdvertisingAnalytics(){
-  const pk = state.period==='7d' ? '7d' : (state.period==='30d' ? '30d' : 'today');
-  const periodLabel = pk==='7d' ? 'last 7 days' : (pk==='30d' ? 'last 30 days' : 'today');
+  const rawPk = state.analyticsPeriod || '7d';
+  const isCustom = rawPk==='custom';
+  const pk = isCustom ? '30d' : (ANALYTICS_DATA.meta[rawPk] ? rawPk : '7d');
+  const periodLabel = isCustom
+    ? (state.customFrom && state.customTo ? state.customFrom+' – '+state.customTo : 'custom range')
+    : (rawPk==='14d'?'last 14 days':rawPk==='30d'?'last 30 days':rawPk==='90d'?'last 90 days':'last 7 days');
   const plat = state.adPlatform || 'all';
   const showMeta = plat==='all' || plat==='meta';
   const showGoogle = plat==='all' || plat==='google';
@@ -5630,11 +5638,7 @@ function renderAdvertisingAnalytics(){
     <div class="topbar">
       <div><h1>Advertising analytics</h1><div class="greeting">Performance across your ad platforms.</div></div>
       <div class="topbar-right">
-        <div class="period-toggle">
-          <button class="${pk==='today'?'active':''}" onclick="setAnalyticsPeriod('today')">Today</button>
-          <button class="${pk==='7d'?'active':''}" onclick="setAnalyticsPeriod('7d')">7 days</button>
-          <button class="${pk==='30d'?'active':''}" onclick="setAnalyticsPeriod('30d')">30 days</button>
-        </div>
+        ${analyticsPeriodToggle()}
         <button class="btn primary" onclick="resetLaunchWizard()">+ New Campaign</button>
       </div>
     </div>
@@ -5643,7 +5647,36 @@ function renderAdvertisingAnalytics(){
     ${showGoogle ? section('google','Google', "Mike's Plumbing — Google Ads #821-440-9912") : ''}
   `;
 }
-function setAnalyticsPeriod(p){ state.period = p; navigateTo('advertising'); }
+function setAnalyticsPeriod(p){ state.analyticsPeriod = p; navigateTo('advertising'); }
+function analyticsPeriodToggle(){
+  const pk = state.analyticsPeriod || '7d';
+  const opts = [['7d','7D'],['14d','14D'],['30d','30D'],['90d','90D']];
+  const seg = (active) => 'border:none; cursor:pointer; padding:7px 15px; border-radius:7px; font-size:13px; font-weight:600; background:'+(active?'var(--orange)':'transparent')+'; color:'+(active?'#1a1206':'var(--text-secondary)')+';';
+  return '<div style="display:inline-flex; background:var(--card-bg-3); border:1px solid var(--border); border-radius:10px; padding:3px; gap:2px;">'+
+    opts.map(o=>'<button style="'+seg(pk===o[0])+'" onclick="setAnalyticsPeriod(\''+o[0]+'\')">'+o[1]+'</button>').join('')+
+    '<button style="'+seg(pk==='custom')+' display:inline-flex; align-items:center; gap:5px;" onclick="openCustomPeriodModal()">📅 Custom</button>'+
+  '</div>';
+}
+function openCustomPeriodModal(){
+  openModal(`
+    <div class="modal-head"><h3>Custom date range</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">From</label><input id="cust-from" type="date" value="${state.customFrom||''}"></div>
+      <div class="field"><label class="field-label">To</label><input id="cust-to" type="date" value="${state.customTo||''}"></div>
+    </div>
+    <div class="small muted" style="margin-top:-4px;">Pick any range — Foxy pulls spend, clicks and conversions for those dates.</div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="applyCustomPeriod()">Apply range →</button></div>
+  `);
+}
+function applyCustomPeriod(){
+  var f = document.getElementById('cust-from'), t = document.getElementById('cust-to');
+  var from = f ? f.value : '', to = t ? t.value : '';
+  if(!from || !to){ showToast('Pick both a start and end date.'); return; }
+  if(from > to){ showToast('Start date must be before the end date.'); return; }
+  state.customFrom = from; state.customTo = to; state.analyticsPeriod = 'custom';
+  closeModal(); navigateTo('advertising');
+  showToast('Showing '+from+' – '+to, {success:true});
+}
 
 function renderAdvertisingCreatives(){
   const allCreatives = CAMPAIGNS.flatMap(c => c.creatives.map((cr,i) => ({...cr, campaign:c.name, platform:c.platform, gradient: CREATIVE_GRADIENTS[(c.id.charCodeAt(1)+i) % CREATIVE_GRADIENTS.length]})));
