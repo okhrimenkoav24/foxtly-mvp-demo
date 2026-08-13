@@ -1667,6 +1667,34 @@ function strategyPlatformState(requires){
   });
   return { allOk: allOk, html: parts.join('') };
 }
+// A recommended strategy can exceed the ad-spend cap of the client's current plan.
+// We don't change Foxy's recommendation — we prompt an upgrade to run that budget.
+function openStrategyUpgradeModal(id, label, budgetText, budgetMax){
+  const curPlan = PLANS.find(p=>p.name===state.billing.plan) || PLANS[0];
+  const reqPlan = PLANS.find(p=>p.adCap==null || p.adCap>=budgetMax) || PLANS[PLANS.length-1];
+  const capTxt = curPlan.adCap!=null ? '$'+curPlan.adCap.toLocaleString()+'/mo' : 'unlimited';
+  const reqCapTxt = reqPlan.adCap!=null ? 'up to $'+reqPlan.adCap.toLocaleString()+'/mo' : 'unlimited';
+  openModal(`
+    <div class="modal-head"><h3>Upgrade to run this budget</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <p class="small muted" style="line-height:1.65;">Your <strong style="color:var(--text);">${curPlan.name}</strong> plan manages <strong style="color:var(--text);">${capTxt}</strong> of ad spend. The <strong style="color:var(--text);">${label}</strong> strategy runs <strong style="color:var(--text);">${budgetText}</strong> — to run it, move up to <strong style="color:var(--text);">${reqPlan.name}</strong>. Foxy's recommendation stays the same; you just need the headroom.</p>
+    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange);">
+      <div style="font-weight:700; font-size:15px;">${reqPlan.name} — $${reqPlan.price}/mo</div>
+      <div class="small muted mt-4">Manages ${reqCapTxt} ad spend, plus everything in ${curPlan.name}.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Stay on ${curPlan.name}</button>
+      <button class="btn primary" onclick="upgradeAndLaunchStrategy('${reqPlan.name}','${id}')">Upgrade to ${reqPlan.name} →</button>
+    </div>
+  `);
+}
+function upgradeAndLaunchStrategy(planName, strategyId){
+  state.billing.plan = planName;
+  state.launchWizard.prefilled = true;
+  state.launchWizard.strategy = strategyId;
+  closeModal();
+  showToast('Upgraded to '+planName+' — this strategy is now unlocked.', {success:true});
+  navigateTo('campaign-launch');
+}
 
 function renderKbStrategy(){
   return `
@@ -1712,6 +1740,7 @@ function renderKbStrategy(){
         platform:'Meta Ads only',
         requires:['meta'],
         budget:'$300 – $500 / mo',
+        budgetMax:500,
         cpl:'$24 – $35',
         leads:'9 – 20 / mo',
         offer:'Free Estimate',
@@ -1727,6 +1756,7 @@ function renderKbStrategy(){
         platform:'Meta → Google (Month 2)',
         requires:['meta'],
         budget:'$800 – $1,200 / mo',
+        budgetMax:1200,
         cpl:'$18 – $28',
         leads:'36 – 55 / mo',
         offer:'Free Estimate + Seasonal Promo',
@@ -1742,6 +1772,7 @@ function renderKbStrategy(){
         platform:'Meta + Google + Retargeting',
         requires:['meta','google'],
         budget:'$2,000+ / mo',
+        budgetMax:2000,
         cpl:'$14 – $22',
         leads:'90 – 140 / mo',
         offer:'Free Estimate + Emergency + Seasonal',
@@ -1780,16 +1811,20 @@ function renderKbStrategy(){
         ${(function(){
           const cs = strategyPlatformState(s.requires);
           const launchOnclick = "state.launchWizard.prefilled=true; state.launchWizard.strategy='"+s.id+"'; navigateTo('campaign-launch'); showToast('Strategy loaded — review and launch')";
+          const curPlan = PLANS.find(p=>p.name===state.billing.plan) || PLANS[0];
+          const overCap = cs.allOk && curPlan.adCap!=null && s.budgetMax > curPlan.adCap;
+          const reqPlan = overCap ? (PLANS.find(p=>p.adCap==null || p.adCap>=s.budgetMax) || PLANS[PLANS.length-1]) : null;
+          const onclickAttr = cs.allOk ? ('onclick="'+(overCap ? ("openStrategyUpgradeModal('"+s.id+"','"+s.label+"','"+s.budget+"',"+s.budgetMax+")") : launchOnclick)+'"') : '';
           return `
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <div style="font-size:12px; color:var(--text-muted);">Offer: <span style="color:var(--text-secondary); font-weight:600;">${s.offer}</span></div>
           <div style="margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-            ${cs.html}
+            ${overCap ? `<span class="small" style="color:var(--orange); font-weight:600;">Needs ${reqPlan.name} plan</span>` : cs.html}
             <button class="btn ${s.highlight && cs.allOk ? 'primary' : ''}" ${cs.allOk ? '' : 'disabled'}
-              title="${cs.allOk ? '' : 'Connect the required ad account to launch this strategy'}"
+              title="${cs.allOk ? (overCap ? 'This budget is above your plan — click to upgrade' : '') : 'Connect the required ad account to launch this strategy'}"
               style="${s.highlight && cs.allOk ? 'padding:9px 20px;' : ''} ${cs.allOk ? '' : 'opacity:0.45; cursor:not-allowed;'}"
-              ${cs.allOk ? 'onclick="'+launchOnclick+'"' : ''}>
-              Select &amp; Launch →
+              ${onclickAttr}>
+              ${overCap ? 'Upgrade to run →' : 'Select &amp; Launch →'}
             </button>
           </div>
         </div>`;
@@ -5037,9 +5072,9 @@ function trialEndedBanner(){
   </div>`;
 }
 const PLANS = [
-  {id:'starter', name:'Starter', price:190, desc:'For owner-operators getting started on one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Foxy re-optimizes every 6 hours','Weekly Foxy report','Email support']},
-  {id:'growth', name:'Growth', price:390, popular:true, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration & lead sync','Daily digest + creative generation','Priority email support']},
-  {id:'pro', name:'Pro', price:590, desc:'For established, multi-location advertisers.', features:['Unlimited ad spend','All platforms','Advanced reporting & exports','Custom safety rails','Dedicated account manager']},
+  {id:'starter', name:'Starter', price:190, adCap:1000, desc:'For owner-operators getting started on one platform.', features:['Manage up to $1,000/mo ad spend','1 ad platform (Meta or Google)','Foxy re-optimizes every 6 hours','Weekly Foxy report','Email support']},
+  {id:'growth', name:'Growth', price:390, adCap:5000, popular:true, desc:'For growing multi-channel campaigns.', features:['Manage up to $5,000/mo ad spend','Meta + Google Ads','CRM integration & lead sync','Daily digest + creative generation','Priority email support']},
+  {id:'pro', name:'Pro', price:590, adCap:null, desc:'For established, multi-location advertisers.', features:['Unlimited ad spend','All platforms','Advanced reporting & exports','Custom safety rails','Dedicated account manager']},
 ];
 // Annual billing = 10× monthly (2 months free). Returns effective /mo, yearly total and savings.
 function planPrice(monthly, cycle){
