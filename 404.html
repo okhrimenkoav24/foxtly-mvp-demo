@@ -798,6 +798,18 @@ const state = {
     leadEmail: 'mike@mikesplumbing.com',
     leadPhone: '(416) 555-0100',
   },
+  leadForm: {
+    name: "Mike's Plumbing — Free Estimate",
+    headline: 'Get your free plumbing estimate',
+    greeting: "Answer a couple of quick questions and we'll call you back within the hour.",
+    fields: { fullName:true, email:true, phone:true },
+    customQ: 'What do you need help with?',
+    privacyUrl: 'https://mikesplumbing.com/privacy',
+    thankYouMsg: "Thanks! We'll call you shortly. Need us urgently? Tap below to call now.",
+    thankYouCta: 'Call now',
+    thankYouAction: 'call',
+    previewScreen: 'form',
+  },
   creativeTokens: 40,
   creatives: {
     uploaded: [],
@@ -1695,6 +1707,32 @@ function upgradeAndLaunchStrategy(planName, strategyId){
   showToast('Upgraded to '+planName+' — this strategy is now unlocked.', {success:true});
   navigateTo('campaign-launch');
 }
+// Same guard on the manual budget input in the launch flow, so a big daily budget can't bypass the plan cap.
+function openBudgetUpgradeModal(daily){
+  const monthly = daily*30;
+  const curPlan = PLANS.find(p=>p.name===state.billing.plan) || PLANS[0];
+  const reqPlan = PLANS.find(p=>p.adCap==null || p.adCap>=monthly) || PLANS[PLANS.length-1];
+  const capTxt = curPlan.adCap!=null ? '$'+curPlan.adCap.toLocaleString()+'/mo' : 'unlimited';
+  const reqCapTxt = reqPlan.adCap!=null ? 'up to $'+reqPlan.adCap.toLocaleString()+'/mo' : 'unlimited';
+  openModal(`
+    <div class="modal-head"><h3>Upgrade to run this budget</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <p class="small muted" style="line-height:1.65;">$${daily}/day is about <strong style="color:var(--text);">$${monthly.toLocaleString()}/mo</strong> in ad spend. Your <strong style="color:var(--text);">${curPlan.name}</strong> plan manages <strong style="color:var(--text);">${capTxt}</strong> — move up to <strong style="color:var(--text);">${reqPlan.name}</strong> to run it, or lower the daily amount.</p>
+    <div class="card tight mb-16" style="background:var(--orange-dim); border-color:var(--orange);">
+      <div style="font-weight:700; font-size:15px;">${reqPlan.name} — $${reqPlan.price}/mo</div>
+      <div class="small muted mt-4">Manages ${reqCapTxt} ad spend, plus everything in ${curPlan.name}.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Lower the budget</button>
+      <button class="btn primary" onclick="upgradeBudgetPlan('${reqPlan.name}')">Upgrade to ${reqPlan.name} →</button>
+    </div>
+  `);
+}
+function upgradeBudgetPlan(planName){
+  state.billing.plan = planName;
+  closeModal();
+  navigateTo('campaign-launch');
+  showToast('Upgraded to '+planName+' — your budget is unlocked.', {success:true});
+}
 
 function renderKbStrategy(){
   return `
@@ -1727,7 +1765,11 @@ function renderKbStrategy(){
 
     <!-- Strategy variants -->
     <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:10px;">🎯 Choose Your Strategy</div>
-    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px; line-height:1.6;">Foxy generated 3 launch strategies based on your budget and goals. Pick one — we'll prefill your campaign and you can launch in minutes.</p>
+    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px; line-height:1.6;">Foxy projected 3 launch strategies from your budget, goals and current market data. Pick one — we'll prefill your campaign and you can launch in minutes.</p>
+    <div class="card tight mb-16" style="background:var(--card-bg-2); display:flex; gap:11px; align-items:flex-start;">
+      <span style="font-size:15px; flex-shrink:0; color:var(--orange); line-height:1.4;">ⓘ</span>
+      <div class="small muted" style="line-height:1.65;"><strong style="color:var(--text-secondary);">These are AI estimates, not a guarantee.</strong> The <strong>*</strong> CPL and lead ranges are projected from current market data for your area — actual results depend on factors we don't fully control: your offer, the creatives you approve, your budget, and how fast you follow up on leads. Strong, on-brand creatives perform far better than a weak or blank image. Foxy tightens every estimate against your real numbers once campaigns run.</div>
+    </div>
 
     ${[
       {
@@ -1796,11 +1838,11 @@ function renderKbStrategy(){
             <div style="font-weight:700; font-size:14px;">${s.budget}</div>
           </div>
           <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
-            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Est. CPL</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Est. CPL<sup style="color:var(--orange);">*</sup></div>
             <div style="font-weight:700; font-size:14px;">${s.cpl}</div>
           </div>
           <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
-            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Leads / mo</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:0.6px;">Est. leads / mo<sup style="color:var(--orange);">*</sup></div>
             <div style="font-weight:700; font-size:14px;">${s.leads}</div>
           </div>
           <div style="background:var(--hairline); border-radius:8px; padding:8px 12px;">
@@ -2366,6 +2408,8 @@ function renderMetaChat(){
   const total = daily * days;
   const impliedMonthly = daily * 30;
   const overBudget = impliedMonthly > monthly;   // warn if the daily rate implies more than their monthly budget
+  const planCap = (PLANS.find(p=>p.name===state.billing.plan) || {}).adCap;   // ad-spend cap of the current plan
+  const overPlanCap = planCap!=null && impliedMonthly > planCap;              // can't run above the plan without upgrading
   if(cb.radius>50) cb.radius=50;        // Meta caps a single radius at 50 mi
   if(cb.ageMax>65) cb.ageMax=65;        // Meta tops out at 65+
   if(cb.ageMin<18) cb.ageMin=18;        // Meta minimum age is 18
@@ -2402,9 +2446,10 @@ function renderMetaChat(){
         '<div class="small muted mb-4">Daily budget</div><div style="display:flex; align-items:center; gap:8px; background:var(--card-bg-3); border:1px solid '+(daily<15?'var(--yellow)':'var(--border)')+'; border-radius:8px; padding:8px 12px; max-width:220px;"><span style="color:var(--text-muted);">$</span><input type="number" min="15" max="1000" value="'+daily+'" onchange="var v=parseInt(this.value)||15; state.campaignBuilder.budget=v; state.campaignBuilder._budgetOverridden=true; navigateTo(\'campaign-launch\')" style="flex:1; background:transparent; border:none; color:var(--text); font-size:16px; font-weight:700; min-width:0;"><span class="small muted">/day</span></div>'+
         '</div>'+
         (daily<15?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ $15/day is the minimum for Meta to deliver enough to learn from.</div>':'')+
-        (overBudget?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ At $'+daily+'/day that runs ~$'+impliedMonthly+'/mo — above the $'+monthly+'/mo in your profile. You can still launch, or lower the daily amount.</div>':'')+
+        (overPlanCap?'<div class="card tight" style="background:var(--orange-dim); border-color:var(--orange); margin-bottom:10px;"><div class="small" style="margin-bottom:8px;">⚠ At $'+daily+'/day that\'s ~$'+impliedMonthly+'/mo — above your <strong>'+((PLANS.find(p=>p.name===state.billing.plan)||{}).name||'current')+'</strong> plan\'s $'+planCap+'/mo ad-spend limit.</div><button class="btn primary small" onclick="openBudgetUpgradeModal('+daily+')">Upgrade to run this budget →</button></div>':'')+
+        (overBudget && !overPlanCap?'<div class="small" style="color:var(--yellow); margin-bottom:8px;">⚠ At $'+daily+'/day that runs ~$'+impliedMonthly+'/mo — above the $'+monthly+'/mo in your profile. You can still launch, or lower the daily amount.</div>':'')+
         '<div style="height:6px;"></div>',
-      cta:'Go with $'+daily+'/day →', valid:daily>=15, summary:'$'+daily+'/day' },
+      cta:'Go with $'+daily+'/day →', valid:daily>=15 && !overPlanCap, summary:'$'+daily+'/day' },
     { msg:'The offer headlines every ad, so it has to make someone act now. Based on your service and what local competitors are running, here’s what I’d lead with — tap one or write your own:',
       control:'<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">'+offerRecs.map(function(o,oi){var sel=cb.offer===o;return '<div onclick="state.campaignBuilder.offer=\''+o.replace(/'/g,"\\'")+'\'; navigateTo(\'campaign-launch\')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; border:1.5px solid '+(sel?'var(--orange)':'var(--border)')+'; background:'+(sel?'var(--orange-dim)':'var(--card-bg-2)')+';">'+(oi===0?'<span style="font-size:10px; background:var(--orange); color:#1a1206; padding:2px 6px; border-radius:4px; font-weight:700; flex-shrink:0;">Foxy’s pick</span>':'<span style="width:16px; flex-shrink:0;"></span>')+'<span style="font-size:13px; font-weight:600; color:'+(sel?'var(--orange)':'var(--text-secondary)')+';">'+o+'</span></div>';}).join('')+'</div>'+
         '<div class="small muted mb-4">Or write your own:</div>'+
@@ -2412,7 +2457,7 @@ function renderMetaChat(){
         (weakOffer?'<div class="ai-bubble" style="margin-bottom:12px;"><div class="av">'+FOXY_MINI+'</div><div class="msg" style="color:var(--yellow);">Heads up — “Free Estimate” is the most common offer in your market, so it rarely stands out, and it tends to pull the priciest, least-committed leads. A specific dollar or % deal converts better. I’d switch it.</div></div>':''),
       cta:'Use this offer →', valid:!!cb.offer, summary:'Offer: “'+(cb.offer||'—')+'”' },
     { msg:'Your ad captures leads with an <strong>Instant Form</strong> — Facebook auto-fills name, email and phone, so people apply in two taps with no landing page (it works for every service business, which is why I default to it). The moment a lead comes in I’ll ping you so you can call back fast — speed wins the job. Where should I send them?',
-      control:[['email','Email',cb.leadEmail],['sms','SMS',(cb.leadPhone||'Add phone')],['crm','CRM / Zapier',(cb.leadDelivery.crm?'Connected':'Optional')]].map(function(r){var on=cb.leadDelivery[r[0]];return '<div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border);"><div onclick="toggleLeadChannel(\''+r[0]+'\')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid '+(on?'var(--orange)':'var(--border-light)')+'; background:'+(on?'var(--orange)':'transparent')+'; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">'+(on?'✓':'')+'</div><div style="flex:1;"><span style="font-size:13px; font-weight:600;">'+r[1]+'</span> <span class="small muted">· '+r[2]+'</span></div></div>';}).join('')+'<div style="height:6px;"></div>',
+      control:[['email','Email',cb.leadEmail],['sms','SMS',(cb.leadPhone||'Add phone')],['crm','CRM / Zapier',(cb.leadDelivery.crm?'Connected':'Optional')]].map(function(r){var on=cb.leadDelivery[r[0]];return '<div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border);"><div onclick="toggleLeadChannel(\''+r[0]+'\')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid '+(on?'var(--orange)':'var(--border-light)')+'; background:'+(on?'var(--orange)':'transparent')+'; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">'+(on?'✓':'')+'</div><div style="flex:1;"><span style="font-size:13px; font-weight:600;">'+r[1]+'</span> <span class="small muted">· '+r[2]+'</span></div></div>';}).join('')+'<div style="margin-top:12px;"><button class="btn small" onclick="navigateTo(\'lead-form\')">Set up &amp; preview your lead form →</button></div><div style="height:6px;"></div>',
       cta:'Notify me there →', valid:true, summary:'Leads → '+(leadCh.join(' + ')||'—') },
     { msg:'When should it go live? I recommend starting <strong>right after Meta approves it</strong> (~24h) and letting it run until you pause — I auto-pause weak ads for you.',
       control:'<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:6px;">'+
@@ -2458,6 +2503,107 @@ function renderMetaChat(){
   }
   return html;
 }
+
+// ===================== LEAD FORM STEP (Meta Instant Form) — for Meta app-review video =====================
+function toggleLeadFormField(k){ state.leadForm.fields[k] = !state.leadForm.fields[k]; navigateTo('lead-form'); }
+function setLeadFormField(k, v){ state.leadForm[k] = v; navigateTo('lead-form'); }
+function saveLeadForm(){ navigateTo('campaign-launch'); showToast('Lead form saved ✓', {success:true}); }
+VIEWS['lead-form'] = function(){
+  const f = state.leadForm;
+  const bizName = (state.onboarding && state.onboarding.businessName) || "Mike's Plumbing";
+  const fieldRow = (key, label) => {
+    const on = f.fields[key];
+    return `<div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);">
+      <div onclick="toggleLeadFormField('${key}')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid ${on?'var(--orange)':'var(--border-light)'}; background:${on?'var(--orange)':'transparent'}; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;">${on?'✓':''}</div>
+      <div style="flex:1;"><span style="font-size:13px; font-weight:600;">${label}</span> <span class="small muted">· auto-filled by Facebook</span></div>
+    </div>`;
+  };
+  const pInput = (label, ph) => `<div style="margin-bottom:10px;"><div style="font-size:10px; color:#65676b; margin-bottom:3px;">${label}</div><div style="border:1px solid #dadde1; border-radius:8px; padding:9px 10px; font-size:12px; color:#8a8d91; background:#f5f6f7;">${ph}</div></div>`;
+  const formScreen = `
+      <div style="height:88px; background:linear-gradient(135deg,#f0883e,#e8590c); display:flex; align-items:flex-end; padding:8px;"><span style="background:rgba(0,0,0,0.35); color:#fff; font-size:9px; padding:2px 6px; border-radius:4px;">Sponsored</span></div>
+      <div style="padding:14px 16px;">
+        <div style="font-weight:800; font-size:15px; color:#050505; margin-bottom:4px;">${f.headline}</div>
+        <div style="font-size:12px; color:#65676b; line-height:1.5; margin-bottom:14px;">${f.greeting}</div>
+        <div style="font-size:11px; font-weight:700; color:#65676b; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:10px;">Contact info</div>
+        ${f.fields.fullName?pInput('Full name','Your name'):''}
+        ${f.fields.email?pInput('Email','name@email.com'):''}
+        ${f.fields.phone?pInput('Phone number','+1 416 •••••'):''}
+        ${f.customQ?`<div style="margin:2px 0 10px;"><div style="font-size:12px; font-weight:600; color:#050505; margin-bottom:4px;">${f.customQ}</div><div style="border:1px solid #dadde1; border-radius:8px; padding:9px 10px; font-size:12px; color:#8a8d91; background:#f5f6f7;">Type your answer…</div></div>`:''}
+        <div style="font-size:10px; color:#8a8d91; line-height:1.5; margin:10px 0 12px;">By tapping Submit, you agree to ${bizName}'s <span style="color:#1877F2;">Privacy Policy</span> and Meta's terms.</div>
+        <button style="width:100%; background:#1877F2; color:#fff; border:none; border-radius:8px; padding:11px; font-size:13px; font-weight:700;">Submit</button>
+      </div>`;
+  const thankScreen = `
+      <div style="padding:40px 20px; text-align:center;">
+        <div style="width:52px; height:52px; border-radius:50%; background:#e7f3ff; color:#1877F2; display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 14px;">✓</div>
+        <div style="font-weight:800; font-size:15px; color:#050505; margin-bottom:8px;">Thank you!</div>
+        <div style="font-size:12px; color:#65676b; line-height:1.5; margin-bottom:18px;">${f.thankYouMsg}</div>
+        <button style="width:100%; background:#1877F2; color:#fff; border:none; border-radius:8px; padding:11px; font-size:13px; font-weight:700;">${f.thankYouAction==='call'?'📞 ':''}${f.thankYouCta}</button>
+      </div>`;
+  return `
+    <div class="topbar"><div>
+      <button class="link-btn muted small mb-8" onclick="navigateTo('campaign-launch')">← Back to campaign</button>
+      <h1>Lead form</h1>
+      <div class="greeting">The Instant Form people fill out on Facebook &amp; Instagram — leads come straight into Foxtly.</div>
+    </div></div>
+    <div style="display:grid; grid-template-columns:1fr 330px; gap:24px; align-items:start;">
+      <div>
+        <div class="card mb-16">
+          <h2 class="mb-8">Form details</h2>
+          <div class="field"><label class="field-label">Form name <span class="small muted">(internal)</span></label><input type="text" value="${(f.name||'').replace(/"/g,'&quot;')}" onchange="setLeadFormField('name', this.value)"></div>
+          <div class="field"><label class="field-label">Headline</label><input type="text" value="${(f.headline||'').replace(/"/g,'&quot;')}" onchange="setLeadFormField('headline', this.value)"></div>
+          <div class="field"><label class="field-label">Greeting</label><textarea rows="2" onchange="setLeadFormField('greeting', this.value)">${f.greeting||''}</textarea></div>
+        </div>
+        <div class="card mb-16">
+          <h2 class="mb-8">What you collect</h2>
+          ${fieldRow('fullName','Full name')}
+          ${fieldRow('email','Email')}
+          ${fieldRow('phone','Phone number')}
+          <div class="field" style="margin-top:16px;"><label class="field-label">Custom question <span class="small muted">(optional)</span></label><input type="text" value="${(f.customQ||'').replace(/"/g,'&quot;')}" onchange="setLeadFormField('customQ', this.value)" placeholder="e.g. What service do you need?"></div>
+        </div>
+        <div class="card mb-16">
+          <h2 class="mb-8">Privacy policy <span class="small" style="color:var(--red);">*</span></h2>
+          <div class="small muted mb-8">Meta requires a privacy-policy URL on every lead form.</div>
+          <div class="field"><input type="text" value="${(f.privacyUrl||'').replace(/"/g,'&quot;')}" onchange="setLeadFormField('privacyUrl', this.value)" placeholder="https://yoursite.com/privacy"></div>
+        </div>
+        <div class="card mb-16">
+          <h2 class="mb-8">Completion screen</h2>
+          <div class="field"><label class="field-label">Thank-you message</label><textarea rows="2" onchange="setLeadFormField('thankYouMsg', this.value)">${f.thankYouMsg||''}</textarea></div>
+          <div class="field-row">
+            <div class="field"><label class="field-label">Button text</label><input type="text" value="${(f.thankYouCta||'').replace(/"/g,'&quot;')}" onchange="setLeadFormField('thankYouCta', this.value)"></div>
+            <div class="field"><label class="field-label">Button action</label>
+              <select onchange="setLeadFormField('thankYouAction', this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13px;">
+                <option value="call" ${f.thankYouAction==='call'?'selected':''}>Call the business</option>
+                <option value="website" ${f.thankYouAction==='website'?'selected':''}>Visit website</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-16">
+          <h2 class="mb-8">Where leads go</h2>
+          <div class="small muted mb-8">Every submitted lead is delivered to you in real time.</div>
+          ${[['email','Email',state.campaignBuilder.leadEmail],['sms','SMS',state.campaignBuilder.leadPhone],['crm','CRM / Zapier',state.campaignBuilder.leadDelivery.crm?'Connected':'Optional']].map(function(r){var on=state.campaignBuilder.leadDelivery[r[0]];return '<div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border);"><div onclick="toggleLeadChannel(\''+r[0]+'\'); navigateTo(\'lead-form\')" style="cursor:pointer; width:20px; height:20px; border-radius:5px; border:1.5px solid '+(on?'var(--orange)':'var(--border-light)')+'; background:'+(on?'var(--orange)':'transparent')+'; color:#1a1206; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">'+(on?'✓':'')+'</div><div style="flex:1;"><span style="font-size:13px; font-weight:600;">'+r[1]+'</span> <span class="small muted">· '+r[2]+'</span></div></div>';}).join('')}
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button class="btn" onclick="navigateTo('campaign-launch')">Cancel</button>
+          <button class="btn primary" onclick="saveLeadForm()">Save lead form →</button>
+        </div>
+      </div>
+      <div>
+        <div style="position:sticky; top:12px;">
+          <div class="small muted mb-8" style="text-align:center;">Live preview</div>
+          <div style="width:300px; margin:0 auto; border:9px solid #111; border-radius:34px; overflow:hidden; background:#fff; box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+            <div style="background:#1877F2; color:#fff; padding:8px 12px; font-size:11px; display:flex; align-items:center; gap:8px;"><div style="width:22px;height:22px;border-radius:50%;background:#fff;color:#1877F2;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">${bizName.charAt(0)}</div><div><div style="font-weight:700;">${bizName}</div><div style="font-size:9px; opacity:0.85;">Sponsored · Instant form</div></div></div>
+            ${f.previewScreen==='thankyou'?thankScreen:formScreen}
+          </div>
+          <div style="display:flex; justify-content:center; gap:8px; margin-top:12px;">
+            <button class="btn small ${f.previewScreen!=='thankyou'?'primary':''}" onclick="setLeadFormField('previewScreen','form')">Form</button>
+            <button class="btn small ${f.previewScreen==='thankyou'?'primary':''}" onclick="setLeadFormField('previewScreen','thankyou')">Thank-you</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
 
 // ---- SHARED: Step 1 Platform ----
 function renderLaunchStep1(){
@@ -6765,6 +6911,7 @@ AUTH_VIEWS['landing'] = function(){
         <div class="card" style="text-align:center;"><div class="kpi-label mb-8">Leads per month</div><div class="kpi-value">↑ 2.1x</div></div>
         <div class="card" style="text-align:center;"><div class="kpi-label mb-8">Hours saved / week</div><div class="kpi-value">~6 hrs</div></div>
       </div>
+      <p class="small muted" style="text-align:center; max-width:640px; margin:16px auto 0; line-height:1.6;">Figures are illustrative averages, not a guarantee. Foxtly is an AI tool — results vary and depend on your market, offer, creatives and budget. No specific outcome is promised.</p>
     </div>
 
     <div class="mkt-section" id="pricing">
