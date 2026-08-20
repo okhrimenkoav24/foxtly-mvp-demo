@@ -842,16 +842,25 @@ const state = {
     gWebsite: '',
     gGeo: ['Toronto, ON'],
     gBidStrategy: 'max_clicks',
+    gMaxCpc: 12,
     gSearchPartners: false,
     gDisplayNetwork: false,
     gKeywords: ['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
     gMatchTypes: ['exact','phrase','broad','broad'],
+    gKeywordBids: ['12','9','8','7'],
     gNegGroups: { free:true, media:true, howto:true, login:true, jobs:true },
     gNegCustom: [],
+    gNegSuggestDismissed: [],
     gBudget: 50,
-    gHeadlines: ['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
+    gHeadlines: ['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service','24/7 Same-Day Plumbers','Water Heater Repair & Install'],
     gDescriptions: ['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
     gSitelinks: true,
+    gSitelinkItems: [
+      { text:'Book a Free Estimate', desc:'Free, no-obligation quote', url:'/free-estimate' },
+      { text:'Our Services', desc:'Drains, heaters, pipes & more', url:'/services' },
+      { text:'Service Areas', desc:'Toronto & the GTA', url:'/service-areas' },
+      { text:'Call Us Now', desc:'24/7 emergency line', url:'/contact' },
+    ],
     gCall: true,
     gLocation: true,
     gCallouts: true,
@@ -3341,7 +3350,7 @@ function buildGoogleSerpMiniPreview(h1,h2,h3,d1,d2,sl,call,loc){
     '<span style="background:#e8f0fe;color:#1558d6;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;letter-spacing:0.3px;">Ad</span>' +
     '<div style="font-size:15px;color:#1558d6;margin:6px 0 5px;line-height:1.35;">'+headline+'</div>' +
     '<div style="font-size:12px;color:#444;line-height:1.6;margin-bottom:10px;">'+desc+'</div>' +
-    (sl!==false?'<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;">'+['Book a Free Estimate','Our Services','Call Us Now','Service Areas'].map(function(s){return '<span style="font-size:11px;color:#1558d6;border-bottom:1px solid #1558d6;">'+s+'</span>';}).join('')+'</div>':'')+
+    (sl!==false?'<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;">'+sitelinkLabels().map(function(s){return '<span style="font-size:11px;color:#1558d6;border-bottom:1px solid #1558d6;">'+s+'</span>';}).join('')+'</div>':'')+
     (call!==false?'<div style="font-size:11px;color:#444;margin-top:2px;">📞 (416) 555-0100</div>':'')+
     (loc!==false?'<div style="font-size:11px;color:#444;margin-top:2px;">📍 123 Main St, Toronto, ON</div>':'')+
     '</div>';
@@ -3541,6 +3550,56 @@ function renderGoogleStep3(){
   // Long-tail keywords tend to have no volume data → Google marks them Low Quality.
   const longTail = w.gKeywords.filter(function(k){ return k.trim().split(/\s+/).length >= 5; });
 
+  // Keyword Planner suggestions — trending search volume (demo data for plumbing / Toronto).
+  const KW_SUGGEST = [
+    { kw:'emergency plumber', vol:'2,400', mt:'phrase' },
+    { kw:'24 hour plumber', vol:'1,000', mt:'phrase' },
+    { kw:'drain cleaning near me', vol:'1,300', mt:'phrase' },
+    { kw:'water heater installation', vol:'880', mt:'phrase' },
+    { kw:'burst pipe repair', vol:'590', mt:'phrase' },
+    { kw:'toilet repair', vol:'720', mt:'phrase' },
+    { kw:'sump pump repair', vol:'480', mt:'phrase' },
+    { kw:'leak detection', vol:'390', mt:'phrase' },
+  ];
+  const suggAvail = KW_SUGGEST.filter(function(s){ return w.gKeywords.indexOf(s.kw) === -1; });
+  const suggHtml = suggAvail.length
+    ? suggAvail.map(function(s){
+        return '<button onclick="addSuggestedKeyword(\''+s.kw+'\',\''+s.mt+'\')" style="display:inline-flex; align-items:center; gap:8px; background:var(--card-bg-2); border:1px dashed var(--border-light); border-radius:8px; padding:7px 12px; font-size:12.5px; color:var(--text); cursor:pointer; margin:0 6px 8px 0;">' +
+          '<span style="color:var(--orange); font-weight:800;">+</span><span>'+s.kw+'</span>' +
+          '<span class="small muted" style="font-weight:600;">'+s.vol+'/mo</span></button>';
+      }).join('')
+    : '<span class="small muted">You\'ve added all the top suggestions — nice.</span>';
+  const suggCard =
+    '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:16px;">' +
+    '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">' +
+    '<span style="font-size:14px;">🔍</span>' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Trending in search · from Keyword Planner</div>' +
+    '</div>' +
+    '<div class="small muted" style="margin-bottom:12px; line-height:1.5;">What people in your area are actually searching, with monthly volume. Tap to add — I default these to <strong>"phrase"</strong>.</div>' +
+    '<div>'+suggHtml+'</div>' +
+    '</div>';
+
+  // Manual CPC — per-keyword max bid table (only when that bid strategy is picked on the budget step).
+  const manualBids = (w.gBidStrategy === 'manual_cpc')
+    ? '<div style="background:var(--card-bg); border:1px solid var(--orange); border-radius:14px; padding:20px 24px; margin-bottom:16px;">' +
+      '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">' +
+      '<span style="font-size:13px;">✎</span>' +
+      '<div style="font-size:12px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px;">Manual CPC · your max bid per keyword</div>' +
+      '</div>' +
+      '<div class="small muted" style="margin-bottom:14px; line-height:1.5;">You picked Manual CPC on the budget step. Set the most you\'ll pay for a click on each keyword, based on how valuable that search is. Typical range for this market: $8–15.</div>' +
+      w.gKeywords.map(function(kw,i){
+        const bid = (w.gKeywordBids && w.gKeywordBids[i] != null && w.gKeywordBids[i] !== '') ? w.gKeywordBids[i] : '10';
+        return '<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--border);">' +
+          '<span style="font-size:13px;">'+kw+'</span>' +
+          '<span style="display:inline-flex; align-items:center; gap:4px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:5px 10px;">' +
+          '<span class="small muted">$</span>' +
+          '<input type="text" value="'+bid+'" onchange="setKeywordBid('+i+',this.value); navigateTo(\'campaign-launch\')" style="width:44px; background:transparent; border:none; color:var(--text); font-size:13px; text-align:right; outline:none;">' +
+          '</span>' +
+        '</div>';
+      }).join('') +
+      '</div>'
+    : '';
+
   const mtLegend = [
     { syn:'[exact]',   hint:'Only this exact search',       ex:'<strong>[plumber toronto]</strong> matches “plumber toronto” — but not “emergency plumber toronto”.' },
     { syn:'"phrase"',  hint:'Your phrase, extra words OK',  ex:'<strong>"drain cleaning"</strong> also matches “affordable drain cleaning toronto”.' },
@@ -3575,6 +3634,9 @@ function renderGoogleStep3(){
       : '') +
     '</div>' +
 
+    suggCard +
+    manualBids +
+
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:28px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Match types</div>' +
     '<div class="small muted" style="margin-bottom:8px;">Click the label on any keyword to switch. From tightest to loosest:</div>' +
@@ -3595,6 +3657,29 @@ const NEG_GROUPS = [
   { key:'login', label:'Logins & accounts',     words:['login','log in','sign in','account','portal'],              why:'People trying to reach an existing account, usually a different company.' },
   { key:'jobs',  label:'Jobs & salaries',       words:['jobs','job','salary','hiring','career','vacancy'],          why:'Job seekers, not customers — a classic budget drain.' },
 ];
+// Foxy-generated, niche-specific negatives (beyond the generic starter groups above).
+const AI_NEG_SUGGEST = [
+  { w:'parts',        why:'Shopping for parts, not hiring a plumber.' },
+  { w:'supply',       why:'Wholesale / supply searches, not homeowners.' },
+  { w:'wholesale',    why:'Trade buyers, not service customers.' },
+  { w:'school',       why:'Looking to train as a plumber.' },
+  { w:'course',       why:'Learning intent, not booking a job.' },
+  { w:'training',     why:'Career searches, not customers.' },
+  { w:'apprentice',   why:'Job seekers, not clients.' },
+  { w:'license',      why:'Want to get licensed themselves.' },
+  { w:'union',        why:'Trade / employment, not a customer.' },
+  { w:'rental',       why:'DIY tool renters won\'t book a pro.' },
+];
+function addNegSuggest(word){
+  if(!state.launchWizard.gNegCustom) state.launchWizard.gNegCustom = [];
+  if(state.launchWizard.gNegCustom.indexOf(word) === -1) state.launchWizard.gNegCustom.push(word);
+  navigateTo('campaign-launch');
+}
+function addAllNegSuggest(){
+  if(!state.launchWizard.gNegCustom) state.launchWizard.gNegCustom = [];
+  AI_NEG_SUGGEST.forEach(function(s){ if(state.launchWizard.gNegCustom.indexOf(s.w) === -1) state.launchWizard.gNegCustom.push(s.w); });
+  navigateTo('campaign-launch');
+}
 function toggleNegGroup(key){
   if(!state.launchWizard.gNegGroups) state.launchWizard.gNegGroups = {};
   state.launchWizard.gNegGroups[key] = !state.launchWizard.gNegGroups[key];
@@ -3618,6 +3703,25 @@ function renderGoogleNegatives(){
   const custom = w.gNegCustom || [];
   let total = custom.length;
   NEG_GROUPS.forEach(function(g){ if(groups[g.key]) total += g.words.length; });
+
+  const aiNegAvail = AI_NEG_SUGGEST.filter(function(s){ return custom.indexOf(s.w) === -1; });
+  const aiNegCard =
+    '<div style="background:var(--card-bg); border:1px solid var(--orange); border-radius:14px; padding:24px; margin-bottom:16px;">' +
+    '<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px;">' +
+    '<div style="display:flex; align-items:center; gap:8px;">' +
+    '<span style="color:var(--orange); font-weight:800;">✦</span>' +
+    '<div style="font-size:12px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:0.5px;">Foxy · extra negatives for plumbing</div>' +
+    '</div>' +
+    (aiNegAvail.length ? '<button class="link-btn" onclick="addAllNegSuggest()" style="color:var(--orange); font-size:12px; font-weight:700;">Add all</button>' : '') +
+    '</div>' +
+    '<div class="small muted" style="margin-bottom:14px; line-height:1.5;">Beyond the generic list, these are specific to <strong>your trade</strong> — searches that look relevant but almost never book a job. Tap to add.</div>' +
+    (aiNegAvail.length
+      ? aiNegAvail.map(function(s){
+          return '<button onclick="addNegSuggest(\''+s.w+'\')" title="'+s.why+'" style="display:inline-flex; align-items:center; gap:7px; background:var(--card-bg-2); border:1px dashed var(--border-light); border-radius:8px; padding:7px 12px; font-size:12.5px; color:var(--text); cursor:pointer; margin:0 6px 8px 0;">' +
+            '<span style="color:var(--orange); font-weight:800;">+</span><span style="color:var(--red);">−</span><span>'+s.w+'</span></button>';
+        }).join('')
+      : '<span class="small muted">All my niche suggestions are already in your list below.</span>') +
+    '</div>';
 
   const rows = NEG_GROUPS.map(function(g){
     const on = !!groups[g.key];
@@ -3653,6 +3757,8 @@ function renderGoogleNegatives(){
     '<div class="small muted" style="margin-bottom:6px;">Recommended for your niche — untick anything that doesn\'t apply.</div>' +
     rows +
     '</div>' +
+
+    aiNegCard +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">' +
     '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Your own negatives</div>' +
@@ -3696,12 +3802,15 @@ function renderGoogleStep4(){
       '<strong>Below $50/day is thin for this market.</strong> At a $15–20 CPC that\'s only 2–3 clicks a day, so results come slowly. Fine if your clicks are cheap — otherwise I\'d push closer to $50.</div>';
   }
 
+  const city = (w.gGeo && w.gGeo[0]) ? w.gGeo[0].split(',')[0] : 'your area';
   const strategies = isPmax
     ? [ {val:'max_conv',       label:'Maximize conversions',       desc:'PMax bids for conversions, not clicks — this is the standard choice.'},
         {val:'max_conv_value', label:'Maximize conversion value',  desc:'Use when different jobs are worth very different amounts.'} ]
     : [ {val:'max_clicks',     label:'Maximize clicks',            desc:'Most visits for your budget. Best for a first Search campaign while you gather data.'},
+        {val:'max_clicks_cap', label:'Maximize clicks — with a max CPC',  desc:'Same, but you cap the most you\'ll pay per click so a few pricey keywords can\'t drain the budget.'},
         {val:'max_conv',       label:'Maximize conversions',       desc:'Needs conversion tracking and some history — switch here once leads come in.'},
-        {val:'target_cpa',     label:'Target CPA',                 desc:'Aim for a set cost per lead. Needs roughly 15–30 conversions a month first.'} ];
+        {val:'target_cpa',     label:'Target CPA',                 desc:'Aim for a set cost per lead. Needs roughly 15–30 conversions a month first.'},
+        {val:'manual_cpc',     label:'Manual CPC',                 desc:'Set your own max bid for each keyword based on the market. Most control, most upkeep.'} ];
 
   const stratRows = strategies.map(function(s){
     const sel = w.gBidStrategy === s.val;
@@ -3710,6 +3819,22 @@ function renderGoogleStep4(){
       '<div class="small muted" style="line-height:1.5;">'+s.desc+'</div>' +
     '</div>';
   }).join('');
+
+  // Extra control shown under the strategy list depending on which one is picked.
+  const bidExtra =
+    (w.gBidStrategy === 'max_clicks_cap')
+      ? '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-top:10px;">' +
+        '<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">' +
+        '<div><div style="font-size:13px; font-weight:700;">Max CPC bid limit</div>' +
+        '<div class="small muted" style="line-height:1.5;">The most you\'ll pay for a single click, across all keywords.</div></div>' +
+        '<span style="display:inline-flex; align-items:center; gap:4px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:7px 12px; flex-shrink:0;">' +
+        '<span class="small muted">$</span>' +
+        '<input type="text" value="'+(w.gMaxCpc!=null?w.gMaxCpc:12)+'" onchange="state.launchWizard.gMaxCpc=this.value.replace(/[^0-9.]/g,\'\'); navigateTo(\'campaign-launch\')" style="width:46px; background:transparent; border:none; color:var(--text); font-size:14px; font-weight:700; text-align:right; outline:none;">' +
+        '</span>' +
+        '</div></div>'
+      : (w.gBidStrategy === 'manual_cpc')
+        ? '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; padding:12px 16px; margin-top:10px; font-size:12.5px; color:var(--text-secondary); line-height:1.55;">You\'ll set a max bid for <strong>each keyword</strong> on the Keywords step — I\'ve pre-filled market-based suggestions you can override.</div>'
+        : '';
 
   const netRow = function(key, label, desc){
     const on = w[key];
@@ -3725,7 +3850,7 @@ function renderGoogleStep4(){
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>I\'d start at $'+w.gBudget+'/day for local search in Toronto.</strong> There\'s no end date — we keep the campaign running and judge it on results, same as Meta. I size the budget from your geo, niche, search volume and average cost per click.</div>' +
+    '<div class="msg"><strong>I\'d start at $'+w.gBudget+'/day for local search in '+city+'.</strong> There\'s no end date — we keep the campaign running and judge it on results, same as Meta. I size the budget from your geo, niche, search volume and average cost per click.</div>' +
     '</div>' +
 
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:28px; margin-bottom:16px;">' +
@@ -3751,7 +3876,7 @@ function renderGoogleStep4(){
     '<div style="border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:22px; font-weight:700; color:var(--green);">'+clicksLow+'–'+clicksHigh+'</div><div class="small muted" style="margin-top:3px;">Clicks / day</div></div>' +
     '<div><div style="font-size:22px; font-weight:700; color:var(--text);">$'+cpcLow+'–'+cpcHigh+'</div><div class="small muted" style="margin-top:3px;">Est. CPC</div></div>' +
     '</div>' +
-    '<div class="small muted mt-10" style="text-align:center; line-height:1.5;">Based on avg. CPC for plumbing in Toronto · I\'ll refine this after the first 7 days of real data</div>' +
+    '<div class="small muted mt-10" style="text-align:center; line-height:1.5;">Based on live CPC benchmarks for plumbing in '+city+' — I re-check this per city so a pricier market doesn\'t inflate your bids · refined after the first 7 days of real data</div>' +
     '</div>' +
 
     // Conversion calculator (advanced, illustrative)
@@ -3773,6 +3898,7 @@ function renderGoogleStep4(){
       ? 'Performance Max only bids on conversions — you pay per conversion, not per click.'
       : 'On Search you pay per click. Start with clicks, then move to conversions once tracking has data.') + '</div>' +
     stratRows +
+    bidExtra +
     '</div>' +
 
     // Networks
@@ -3794,21 +3920,32 @@ function renderGoogleStep4(){
 function renderGoogleStep5(){
   const w = state.launchWizard;
   const inputs = w.gHeadlines.map(function(h,i){
+    const canRemove = w.gHeadlines.length > 3;
     return '<div style="margin-bottom:12px;">' +
-      '<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span class="small muted">Headline '+(i+1)+'</span><span class="small muted" id="g-hcnt'+i+'">'+h.length+' / 30</span></div>' +
-      '<input type="text" id="g-h'+(i+1)+'" value="'+h+'" maxlength="30" oninput="onGHeadlineInput('+i+',this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px;">' +
+      '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">' +
+        '<span class="small muted">Headline '+(i+1)+'</span>' +
+        '<span style="display:flex; align-items:center; gap:10px;">' +
+          '<span class="small muted" id="g-hcnt'+i+'">'+h.length+' / 30</span>' +
+          (canRemove ? '<span onclick="removeGoogleHeadline('+i+')" title="Remove" style="cursor:pointer; color:var(--text-muted); font-size:12px;">✕</span>' : '') +
+        '</span>' +
+      '</div>' +
+      '<input type="text" id="g-h'+(i+1)+'" value="'+h.replace(/"/g,'&quot;')+'" maxlength="30" oninput="onGHeadlineInput('+i+',this.value)" style="width:100%; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:13px;">' +
       '</div>';
   }).join('');
   const preview = buildGoogleSerpMiniPreview(w.gHeadlines[0],w.gHeadlines[1],w.gHeadlines[2],w.gDescriptions[0],w.gDescriptions[1],w.gSitelinks,w.gCall,w.gLocation);
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
-    '<div class="msg"><strong>I wrote 3 headlines for your Responsive Search Ad.</strong> Google shows all three, testing them in different orders — so each one has to make sense on its own. Max 30 characters each. The preview updates as you type.</div>' +
+    '<div class="msg"><strong>I wrote you a set of headlines for your Responsive Search Ad.</strong> Google mixes and matches them, testing different combos — so each one has to stand on its own. You can have up to <strong>10</strong>: add your own or let me generate more. Max 30 characters each; the preview shows one sample combination.</div>' +
     '</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; align-items:start;">' +
     '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:22px;">' +
-    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Headlines</div>' +
+    '<div style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">Headlines <span style="color:'+(w.gHeadlines.length>=10?'var(--green)':'var(--text-muted)')+';">('+w.gHeadlines.length+' / 10)</span></div>' +
     inputs +
+    '<div style="display:flex; gap:8px; margin-top:6px;">' +
+      (w.gHeadlines.length < 10 ? '<button class="btn small" onclick="addGoogleHeadline()" style="flex:1;">+ Add headline</button>' : '') +
+      '<button class="btn small" onclick="generateGoogleHeadlines()" style="flex:1; border-color:var(--orange); color:var(--orange);">✦ Generate with AI</button>' +
+    '</div>' +
     '</div>' +
     '<div>' +
     '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:#34a853;display:inline-block;"></span>Live preview</div>' +
@@ -3866,6 +4003,32 @@ function renderGoogleStep7(){
   ['gCallouts','gSnippets'].forEach(function(k){ if(w[k]===undefined) w[k]=true; });
   if(w.gPromo===undefined) w.gPromo=false;
 
+  const sitelinkItems = w.gSitelinkItems || [];
+  const sitelinkEditor = w.gSitelinks
+    ? '<div style="border-top:1px solid var(--border); margin-top:18px; padding-top:18px;">' +
+      '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">' +
+      '<div style="font-size:12.5px; font-weight:700; color:var(--text);">Sitelink details</div>' +
+      '<span class="small muted">'+sitelinkItems.length+' / 4</span>' +
+      '</div>' +
+      '<div class="small muted" style="margin-bottom:14px; line-height:1.5;">Each sitelink is an extra link under your ad. Give it a short label, an optional description, and the page it opens.</div>' +
+      sitelinkItems.map(function(s,i){
+        return '<div style="background:var(--card-bg-2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px;">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+          '<span class="small muted" style="font-weight:700;">Sitelink '+(i+1)+'</span>' +
+          (sitelinkItems.length > 1 ? '<span onclick="removeSitelink('+i+')" title="Remove" style="cursor:pointer; color:var(--text-muted); font-size:12px;">✕</span>' : '') +
+          '</div>' +
+          '<input type="text" value="'+(s.text||'').replace(/"/g,'&quot;')+'" placeholder="Link text — e.g. Book a Free Estimate" maxlength="25" onchange="setSitelinkField('+i+',\'text\',this.value); navigateTo(\'campaign-launch\')" style="width:100%; box-sizing:border-box; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; margin-bottom:8px;">' +
+          '<input type="text" value="'+(s.desc||'').replace(/"/g,'&quot;')+'" placeholder="Description (optional) — e.g. Free, no-obligation quote" maxlength="35" onchange="setSitelinkField('+i+',\'desc\',this.value); navigateTo(\'campaign-launch\')" style="width:100%; box-sizing:border-box; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-size:13px; margin-bottom:8px;">' +
+          '<div style="display:flex; align-items:center; gap:6px; background:var(--card-bg-3); border:1px solid var(--border); border-radius:8px; padding:0 12px;">' +
+          '<span class="small muted" style="white-space:nowrap;">mikeaplumbing.ca</span>' +
+          '<input type="text" value="'+(s.url||'').replace(/"/g,'&quot;')+'" placeholder="/page" onchange="setSitelinkField('+i+',\'url\',this.value); navigateTo(\'campaign-launch\')" style="flex:1; min-width:0; background:transparent; border:none; padding:9px 0; color:var(--text); font-size:13px; outline:none;">' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+      (sitelinkItems.length < 4 ? '<button class="btn small" onclick="addSitelink()">+ Add sitelink</button>' : '') +
+      '</div>'
+    : '';
+
   return googlePlatformBanner() +
     '<div class="ai-bubble mb-20">' +
     '<div class="av">'+FOXY_MINI+'</div>' +
@@ -3890,6 +4053,7 @@ function renderGoogleStep7(){
         '</div>';
     }).join('') +
     '</div>' +
+    sitelinkEditor +
     '</div>' +
     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
     '<button class="link-btn muted" onclick="setLaunchStep(9)">← Back</button>' +
@@ -3914,7 +4078,7 @@ function renderGoogleStep8(){
     '<div style="background:#e8f0fe; color:#1558d6; font-size:10px; padding:1px 6px; border-radius:3px; display:inline-block; margin-bottom:8px; font-weight:600; letter-spacing:0.3px;">Ad</div>' +
     '<div style="font-size:17px; color:#1558d6; margin-bottom:6px; line-height:1.3;">'+h1+' | '+h2+' | '+h3+'</div>' +
     '<div style="font-size:12px; color:#444; line-height:1.6; margin-bottom:12px;">'+d1+(d2 ? ' '+d2 : '')+'</div>' +
-    (w.gSitelinks ? '<div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:10px;">'+['Book a Free Estimate','Our Services','Service Areas','Call Us Now'].map(function(s){ return '<span style="font-size:12px; color:#1558d6; border-bottom:1px solid #1558d6;">'+s+'</span>'; }).join('')+'</div>' : '') +
+    (w.gSitelinks ? '<div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:10px;">'+sitelinkLabels().map(function(s){ return '<span style="font-size:12px; color:#1558d6; border-bottom:1px solid #1558d6;">'+s+'</span>'; }).join('')+'</div>' : '') +
     (w.gCall ? '<div style="font-size:12px; color:#444; margin-top:4px;">📞 (416) 555-0100</div>' : '') +
     (w.gLocation ? '<div style="font-size:12px; color:#444; margin-top:3px;">📍 123 Main St, Toronto, ON</div>' : '') +
     '</div>';
@@ -3973,16 +4137,25 @@ function resetLaunchWizard(){
     gWebsite:'',
     gGeo:['Toronto, ON'],
     gBidStrategy:'max_clicks',
+    gMaxCpc:12,
     gSearchPartners:false,
     gDisplayNetwork:false,
     gKeywords:['plumber near me','emergency plumbing Toronto','water heater repair','pipe repair service'],
     gMatchTypes:['exact','phrase','broad','broad'],
+    gKeywordBids:['12','9','8','7'],
     gNegGroups:{ free:true, media:true, howto:true, login:true, jobs:true },
     gNegCustom:[],
+    gNegSuggestDismissed:[],
     gBudget:50,
-    gHeadlines:['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service'],
+    gHeadlines:['Fast Plumbing — Free Estimate','Licensed Plumber in Toronto','Emergency Plumbing Service','24/7 Same-Day Plumbers','Water Heater Repair & Install'],
     gDescriptions:['Call us for same-day plumbing repair. Fully licensed & insured. Free estimate.','Serving Toronto & GTA. Water heaters, pipes, drains. Trusted by 1,000+ homeowners.'],
     gSitelinks:true, gCall:true, gLocation:true, gCallouts:true, gSnippets:true, gPromo:false,
+    gSitelinkItems:[
+      { text:'Book a Free Estimate', desc:'Free, no-obligation quote', url:'/free-estimate' },
+      { text:'Our Services', desc:'Drains, heaters, pipes & more', url:'/services' },
+      { text:'Service Areas', desc:'Toronto & the GTA', url:'/service-areas' },
+      { text:'Call Us Now', desc:'24/7 emergency line', url:'/contact' },
+    ],
     gDuration:30,
   };
   state.metaChat = { step:0, done:false };
@@ -4057,14 +4230,31 @@ function updateGoogleBudgetCalc(){
 function addGoogleKeyword(){
   const inp = document.getElementById('lw-kw-input');
   if(!inp || !inp.value.trim()) return;
-  state.launchWizard.gKeywords.push(inp.value.trim());
-  if(!state.launchWizard.gMatchTypes) state.launchWizard.gMatchTypes = [];
-  state.launchWizard.gMatchTypes.push('phrase');
+  pushGoogleKeyword(inp.value.trim(), 'phrase');
   navigateTo('campaign-launch');
+}
+function pushGoogleKeyword(kw, mt){
+  const w = state.launchWizard;
+  w.gKeywords.push(kw);
+  if(!w.gMatchTypes) w.gMatchTypes = [];
+  w.gMatchTypes.push(mt || 'phrase');
+  if(!w.gKeywordBids) w.gKeywordBids = [];
+  // Seed a sensible manual bid = mid-point of the estimated CPC range.
+  w.gKeywordBids.push('10');
+}
+function addSuggestedKeyword(kw, mt){
+  if(state.launchWizard.gKeywords.indexOf(kw) !== -1) return;
+  pushGoogleKeyword(kw, mt || 'phrase');
+  navigateTo('campaign-launch');
+}
+function setKeywordBid(i, val){
+  if(!state.launchWizard.gKeywordBids) state.launchWizard.gKeywordBids = [];
+  state.launchWizard.gKeywordBids[i] = val.replace(/[^0-9.]/g,'');
 }
 function removeGoogleKeyword(i){
   state.launchWizard.gKeywords.splice(i,1);
   if(state.launchWizard.gMatchTypes) state.launchWizard.gMatchTypes.splice(i,1);
+  if(state.launchWizard.gKeywordBids) state.launchWizard.gKeywordBids.splice(i,1);
   navigateTo('campaign-launch');
 }
 function cycleMatchType(i){
@@ -4074,6 +4264,29 @@ function cycleMatchType(i){
   if(!state.launchWizard.gMatchTypes) state.launchWizard.gMatchTypes = state.launchWizard.gKeywords.map(function(){ return 'broad'; });
   state.launchWizard.gMatchTypes[i] = next;
   navigateTo('campaign-launch');
+}
+var G_HEADLINE_POOL = ['Drain Cleaning Experts','Upfront, Honest Pricing','Trusted by 1,000+ Homes','Book a Plumber Online','Burst Pipe? We Come Fast','Fully Licensed & Insured','Serving Toronto & the GTA','Same-Day Appointments','No Call-Out Fees','Free On-Site Estimates'];
+function addGoogleHeadline(){
+  const w = state.launchWizard;
+  if(w.gHeadlines.length >= 10){ showToast('Google allows up to 10 headlines here', {}); return; }
+  w.gHeadlines.push('');
+  navigateTo('campaign-launch');
+}
+function removeGoogleHeadline(i){
+  const w = state.launchWizard;
+  if(w.gHeadlines.length <= 3){ showToast('Keep at least 3 headlines for a Responsive Search Ad', {}); return; }
+  w.gHeadlines.splice(i,1);
+  navigateTo('campaign-launch');
+}
+function generateGoogleHeadlines(){
+  const w = state.launchWizard;
+  let added = 0;
+  for(let k=0; k<G_HEADLINE_POOL.length && w.gHeadlines.length < 10; k++){
+    const cand = G_HEADLINE_POOL[k];
+    if(w.gHeadlines.indexOf(cand) === -1){ w.gHeadlines.push(cand); added++; }
+  }
+  navigateTo('campaign-launch');
+  showToast(added ? ('✦ Foxy added '+added+' headline'+(added===1?'':'s')) : 'You\'re already at 10 headlines', {success:added>0});
 }
 function metaCampaignName(){
   const cb = state.campaignBuilder;
@@ -4113,6 +4326,28 @@ function reuseLastCampaign(){
   const last = CAMPAIGNS.filter(function(c){ return c.platform==='Meta'; })[0];
   if(!last){ showToast('No previous campaign to copy from.'); return; }
   duplicateCampaign(last.id);
+}
+function setSitelinkField(i,key,val){
+  const w = state.launchWizard;
+  if(!w.gSitelinkItems) w.gSitelinkItems = [];
+  if(!w.gSitelinkItems[i]) w.gSitelinkItems[i] = { text:'', desc:'', url:'' };
+  w.gSitelinkItems[i][key] = val;
+}
+function addSitelink(){
+  const w = state.launchWizard;
+  if(!w.gSitelinkItems) w.gSitelinkItems = [];
+  if(w.gSitelinkItems.length >= 4){ showToast('Google shows up to 4 sitelinks', {}); return; }
+  w.gSitelinkItems.push({ text:'', desc:'', url:'' });
+  navigateTo('campaign-launch');
+}
+function removeSitelink(i){
+  const w = state.launchWizard;
+  if(w.gSitelinkItems) w.gSitelinkItems.splice(i,1);
+  navigateTo('campaign-launch');
+}
+function sitelinkLabels(){
+  const items = (state.launchWizard.gSitelinkItems || []).filter(function(s){ return s && s.text && s.text.trim(); });
+  return items.length ? items.map(function(s){ return s.text; }) : ['Book a Free Estimate','Our Services','Service Areas','Call Us Now'];
 }
 function submitGoogleCampaign(){
   setLaunchStep(12);
