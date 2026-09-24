@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Foxtly Managed Campaigns</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f4f4f7;
+    --surface:#ffffff;
+    --surface-2:#fafafc;
+    --sidebar:#ffffff;
+    --border:#e4e4ea;
+    --border-strong:#d2d2dc;
+    --text:#17171f;
+    --text-2:#54545f;
+    --text-3:#7b7b87;
+    --accent:#d9720c;
+    --accent-soft:rgba(217,114,12,0.10);
+    --accent-line:rgba(217,114,12,0.32);
+    --green:#0f9d6b;
+    --green-soft:rgba(15,157,107,0.12);
+    --red:#d4331f;
+    --red-soft:rgba(212,51,31,0.10);
+    --amber:#b45309;
+    --amber-soft:rgba(180,83,9,0.12);
+    --blue:#2563eb;
+    --blue-soft:rgba(37,99,235,0.10);
+    --shadow:0 1px 2px rgba(22,22,40,.06), 0 8px 28px rgba(22,22,40,.08);
+    --shadow-lg:0 24px 70px rgba(22,22,40,.22);
+    --ink-sans:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --ink-mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:#0b0b0f;
+      --surface:#17171d;
+      --surface-2:#131319;
+      --sidebar:#101015;
+      --border:#2a2a33;
+      --border-strong:#3a3a45;
+      --text:#f3f3f5;
+      --text-2:#a3a3af;
+      --text-3:#82828e;
+      --accent:#f0883e;
+      --accent-soft:rgba(240,136,62,0.13);
+      --accent-line:rgba(240,136,62,0.40);
+      --green:#34d399;
+      --green-soft:rgba(52,211,153,0.13);
+      --red:#f87171;
+      --red-soft:rgba(248,113,113,0.13);
+      --amber:#fbbf24;
+      --amber-soft:rgba(251,191,36,0.13);
+      --blue:#60a5fa;
+      --blue-soft:rgba(96,165,250,0.13);
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+      --shadow-lg:0 24px 70px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0b0b0f;
+    --surface:#17171d;
+    --surface-2:#131319;
+    --sidebar:#101015;
+    --border:#2a2a33;
+    --border-strong:#3a3a45;
+    --text:#f3f3f5;
+    --text-2:#a3a3af;
+    --text-3:#82828e;
+    --accent:#f0883e;
+    --accent-soft:rgba(240,136,62,0.13);
+    --accent-line:rgba(240,136,62,0.40);
+    --green:#34d399;
+    --green-soft:rgba(52,211,153,0.13);
+    --red:#f87171;
+    --red-soft:rgba(248,113,113,0.13);
+    --amber:#fbbf24;
+    --amber-soft:rgba(251,191,36,0.13);
+    --blue:#60a5fa;
+    --blue-soft:rgba(96,165,250,0.13);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+    --shadow-lg:0 24px 70px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  [hidden]{ display:none !important; }
+  img{ max-width:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--ink-sans); font-size:14px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; padding-inline:16px; padding-block:26px 64px; }
+  h1,h2,h3{ text-wrap:balance; margin:0; }
+  .eyebrow{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-3); font-weight:600; }
+  .num{ font-family:var(--ink-mono); font-variant-numeric:tabular-nums; }
+
+  /* ---------- page head ---------- */
+  .pagehead{ display:flex; flex-wrap:wrap; gap:16px 24px; align-items:flex-end; justify-content:space-between; margin-bottom:18px; }
+  .pagehead h1{ font-size:26px; font-weight:600; letter-spacing:-.02em; }
+  .pagehead p{ margin:6px 0 0; color:var(--text-2); max-width:62ch; font-size:13.5px; }
+  .meta{ font-size:12px; color:var(--text-3); text-align:right; line-height:1.7; }
+  .meta b{ color:var(--text-2); font-weight:600; }
+
+  /* ---------- scenario strip ---------- */
+  .scenario{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0 0 22px; }
+  .step{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 13px; display:flex; gap:10px; align-items:flex-start; }
+  .step .n{ font-family:var(--ink-mono); font-size:11px; font-weight:600; color:var(--accent);
+    background:var(--accent-soft); border-radius:5px; min-width:20px; height:20px; display:grid; place-items:center; flex:none; margin-top:1px;}
+  .step span{ font-size:12.5px; color:var(--text-2); }
+  .step b{ color:var(--text); font-weight:600; display:block; font-size:12.5px; }
+  @media (max-width:820px){ .scenario{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:480px){ .scenario{ grid-template-columns:1fr; } }
+
+  /* ---------- app shell ---------- */
+  .app{ border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow); }
+  .topbar{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+    padding:12px 16px; background:var(--sidebar); border-bottom:1px solid var(--border); }
+  .brand{ display:flex; align-items:center; gap:9px; font-weight:700; letter-spacing:-.01em; }
+  .brand .dot{ width:22px; height:22px; border-radius:6px; background:var(--accent); display:grid; place-items:center;
+    color:#fff; font-size:13px; font-weight:700; }
+  :root[data-theme="dark"] .brand .dot, .darkdot{ color:#14140f; }
+  .planpick{ display:flex; gap:2px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:3px; }
+  .planpick button{ font-family:inherit; font-size:11.5px; font-weight:600; letter-spacing:.06em; border:none; background:none;
+    color:var(--text-3); padding:5px 11px; border-radius:6px; cursor:pointer; }
+  .planpick button[aria-pressed="true"]{ background:var(--accent); color:#fff; }
+  .counters{ display:flex; gap:9px; flex-wrap:wrap; }
+  .counter{ border:1px solid var(--border); border-radius:9px; padding:7px 12px; min-width:150px; background:var(--surface-2); }
+  .counter .lbl{ font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); font-weight:600; }
+  .counter .val{ font-family:var(--ink-mono); font-size:15px; font-weight:600; margin-top:2px; display:flex; align-items:baseline; gap:6px; }
+  .counter .val small{ font-size:11px; color:var(--text-3); font-weight:400; }
+  .bar{ height:3px; border-radius:2px; background:var(--border); margin-top:6px; overflow:hidden; }
+  .bar i{ display:block; height:100%; background:var(--green); border-radius:2px; transition:width .25s ease; }
+  .bar.warn i{ background:var(--amber); }
+  .bar.full i{ background:var(--red); }
+
+  .banner{ display:flex; gap:11px; align-items:flex-start; padding:12px 16px; font-size:13px;
+    background:var(--amber-soft); border-bottom:1px solid var(--border); color:var(--text); }
+  .banner b{ font-weight:600; }
+  .banner .ico{ flex:none; width:18px; height:18px; border-radius:50%; background:var(--amber); color:#1a1205;
+    display:grid; place-items:center; font-size:12px; font-weight:700; margin-top:1px; }
+
+  .body{ display:grid; grid-template-columns:172px 1fr; }
+  @media (max-width:880px){ .body{ grid-template-columns:1fr; } .nav{ display:none; } }
+  .nav{ background:var(--sidebar); border-right:1px solid var(--border); padding:14px 10px; display:flex; flex-direction:column; gap:1px; }
+  .nav a{ font-size:13px; color:var(--text-2); text-decoration:none; padding:7px 10px; border-radius:7px; }
+  .nav a[aria-current="page"]{ background:var(--accent-soft); color:var(--accent); font-weight:600; }
+  .nav .sep{ height:1px; background:var(--border); margin:9px 4px; }
+  .nav .tag{ margin-top:auto; font-size:11px; color:var(--text-3); padding:8px 10px; line-height:1.5; }
+
+  .main{ padding:16px; display:flex; flex-direction:column; gap:14px; min-width:0; }
+
+  /* ---------- foxy card ---------- */
+  .foxy{ border:1px solid var(--accent-line); background:var(--accent-soft); border-radius:11px; padding:13px 15px; display:flex; gap:12px; }
+  .foxy .av{ flex:none; width:28px; height:28px; border-radius:8px; background:var(--accent); color:#fff; display:grid; place-items:center; font-weight:700; font-size:13px; }
+  .foxy h3{ font-size:13px; font-weight:600; margin-bottom:3px; }
+  .foxy p{ margin:0; font-size:13px; color:var(--text-2); }
+  .foxy .acts{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+
+  /* ---------- buttons ---------- */
+  button{ font-family:inherit; }
+  .btn{ font-size:12.5px; font-weight:600; border-radius:8px; padding:7px 13px; cursor:pointer; border:1px solid transparent;
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .btn.primary{ background:var(--accent); color:#fff; }
+  .btn.primary:hover{ filter:brightness(1.06); }
+  .btn.ghost{ background:var(--surface); border-color:var(--border-strong); color:var(--text); }
+  .btn.ghost:hover{ border-color:var(--text-3); }
+  .btn.quiet{ background:none; color:var(--text-3); padding:6px 4px; }
+  .btn.quiet:hover{ color:var(--text); }
+  .btn.danger{ background:none; border-color:var(--border-strong); color:var(--red); }
+  .btn[disabled]{ opacity:.45; cursor:not-allowed; }
+
+  /* ---------- table ---------- */
+  .tablewrap{ border:1px solid var(--border); border-radius:11px; overflow-x:auto; background:var(--surface); }
+  table{ border-collapse:collapse; width:100%; min-width:840px; }
+  th{ text-align:left; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3);
+    font-weight:600; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface-2); white-space:nowrap; }
+  td{ padding:11px 12px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  td.r{ text-align:right; }
+  .cname{ font-weight:600; font-size:13px; }
+  .csub{ font-size:11.5px; color:var(--text-3); margin-top:2px; display:flex; gap:6px; align-items:center; }
+  .pill{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+  .pill.managed{ background:var(--accent-soft); color:var(--accent); }
+  .pill.free{ background:var(--surface-2); color:var(--text-3); border:1px solid var(--border); }
+  .pill.active{ background:var(--green-soft); color:var(--green); }
+  .pill.paused{ background:var(--blue-soft); color:var(--blue); }
+  .pill.archived{ background:var(--surface-2); color:var(--text-3); }
+  .pill .d{ width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .hot{ color:var(--red); font-weight:600; }
+  .manage-cell{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+  tr.dim td{ opacity:.55; }
+  tr.flash td{ background:var(--accent-soft); transition:background .6s ease; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--text-3); padding:0 2px; }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+
+  /* ---------- modal ---------- */
+  .scrim{ position:fixed; inset:0; background:rgba(8,8,14,.6); backdrop-filter:blur(2px); display:grid; place-items:center;
+    padding:16px; z-index:50; }
+  .modal{ background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-lg);
+    width:min(520px,100%); max-height:86vh; overflow:auto; }
+  .modal header{ padding:18px 20px 0; }
+  .modal h2{ font-size:17px; font-weight:600; letter-spacing:-.01em; }
+  .modal .lead{ margin:8px 0 0; color:var(--text-2); font-size:13.5px; }
+  .modal .content{ padding:16px 20px; display:flex; flex-direction:column; gap:12px; }
+  .modal footer{ padding:14px 20px 18px; display:flex; gap:9px; flex-wrap:wrap; justify-content:flex-end; border-top:1px solid var(--border); }
+  .offer{ border:1px solid var(--accent-line); background:var(--accent-soft); border-radius:10px; padding:12px 14px; }
+  .offer .row{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .offer b{ font-size:14px; }
+  .offer .price{ font-family:var(--ink-mono); font-weight:600; }
+  .offer ul{ margin:8px 0 0; padding-left:17px; color:var(--text-2); font-size:12.5px; }
+  .picklist{ border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .picklist .p{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 12px; border-bottom:1px solid var(--border); font-size:12.5px; }
+  .picklist .p:last-child{ border-bottom:none; }
+  .picklist .p em{ font-style:normal; color:var(--text-3); font-size:11.5px; display:block; }
+  .note{ font-size:12px; color:var(--text-3); }
+
+  /* ---------- spec ---------- */
+  .spec{ margin-top:40px; display:flex; flex-direction:column; gap:16px; }
+  .spec h2{ font-size:19px; font-weight:600; letter-spacing:-.015em; }
+  .rules{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media (max-width:760px){ .rules{ grid-template-columns:1fr; } }
+  .rule{ background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:14px 16px; }
+  .rule h3{ font-size:13px; font-weight:600; margin-bottom:7px; }
+  .rule ul{ margin:0; padding-left:17px; color:var(--text-2); font-size:13px; display:flex; flex-direction:column; gap:4px; }
+  .rule code{ font-family:var(--ink-mono); font-size:11.5px; background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:1px 4px; }
+  .diagram{ background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:16px; overflow-x:auto; }
+  .diagram svg{ display:block; min-width:660px; }
+  footer.foot{ margin-top:34px; padding-top:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-3); display:flex; flex-wrap:wrap; gap:6px 18px; }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="pagehead">
+    <div>
+      <div class="eyebrow">Foxtly · Plans &amp; limitations · PRD companion</div>
+      <h1>Managed campaigns &amp; plan limits</h1>
+      <p>Only campaigns Foxtly actively manages count against the plan cap. Every other campaign in the connected ad account stays visible in analytics and reports, free and uncapped. Click through the demo — it is the real rule set, not a picture of it.</p>
+    </div>
+    <div class="meta">
+      Demo account: <b>Northline HVAC &amp; Plumbing</b><br>
+      Plan: <b id="meta-plan">GROWTH</b> · billing period <b>Sep 1 – Sep 30</b><br>
+      Spec: <b>ClickUp 86bb7vak3</b> · rev. 23 Sep 2026
+    </div>
+  </div>
+
+  <div class="scenario">
+    <div class="step"><span class="n">1</span><span><b>Foxy spots a problem</b>Frequency 4.8 on an unmanaged campaign.</span></div>
+    <div class="step"><span class="n">2</span><span><b>Customer accepts</b>That click is the moment it becomes managed.</span></div>
+    <div class="step"><span class="n">3</span><span><b>Cap is reached</b>The 11th take-over is blocked server-side.</span></div>
+    <div class="step"><span class="n">4</span><span><b>Customer decides</b>Upgrade, or release one campaign to free a slot.</span></div>
+  </div>
+
+  <div class="app">
+    <div class="topbar">
+      <div class="brand"><span class="dot">F</span> Foxtly</div>
+      <div class="planpick" role="group" aria-label="Plan">
+        <button type="button" data-plan="start" aria-pressed="false">START</button>
+        <button type="button" data-plan="growth" aria-pressed="true">GROWTH</button>
+        <button type="button" data-plan="pro" aria-pressed="false">PRO</button>
+      </div>
+      <div class="counters">
+        <div class="counter">
+          <div class="lbl">Managed campaigns</div>
+          <div class="val"><span id="c-camp">9 / 10</span> <small id="c-camp-note">active</small></div>
+          <div class="bar" id="c-camp-bar"><i style="width:90%"></i></div>
+        </div>
+        <div class="counter">
+          <div class="lbl">AI creatives · Sep</div>
+          <div class="val"><span id="c-cre">96 / 100</span> <small>generated</small></div>
+          <div class="bar" id="c-cre-bar"><i style="width:96%"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner" id="over-banner" hidden>
+      <span class="ico">!</span>
+      <span id="over-text"></span>
+    </div>
+
+    <div class="body">
+      <nav class="nav">
+        <a href="#" onclick="return false;">Dashboard</a>
+        <a href="#" aria-current="page" onclick="return false;">Campaigns</a>
+        <a href="#" onclick="return false;">Creatives</a>
+        <a href="#" onclick="return false;">Leads</a>
+        <a href="#" onclick="return false;">Reports</a>
+        <div class="sep"></div>
+        <a href="#" onclick="return false;">Ad accounts</a>
+        <a href="#" onclick="return false;">Billing</a>
+        <div class="tag">Connected: Meta Ads · Google Ads<br>1 of 1 ad account per channel</div>
+      </nav>
+
+      <main class="main">
+        <div class="foxy" id="foxy-card">
+          <div class="av">F</div>
+          <div>
+            <h3 id="foxy-title">Indoor Air Quality is burning out its audience</h3>
+            <p id="foxy-body">Frequency hit <b>4.8</b> over the last 7 days and CPL rose 41% to <b>$88</b>. I can generate three fresh creatives and rebalance the budget. Taking this campaign under management uses one of your managed slots.</p>
+            <div class="acts">
+              <button class="btn primary" id="foxy-accept" type="button">Take under management &amp; fix</button>
+              <button class="btn quiet" type="button" onclick="dismissFoxy()">Not now</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><span class="pill managed">Managed</span> counts against the cap while active</span>
+          <span><span class="pill free">Analytics only</span> free, unlimited, never counted</span>
+          <span>Releasing a campaign does not stop it in Meta or Google</span>
+        </div>
+
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Status</th>
+                <th class="r">Spend 30d</th>
+                <th class="r">Leads</th>
+                <th class="r">CPL</th>
+                <th class="r">Freq</th>
+                <th class="r">Foxtly</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+          <button class="btn ghost" type="button" onclick="generateCreatives(4)">Generate 4 AI creatives</button>
+          <span class="note" id="cre-note">Quota resets Oct 1. Each generation and each edit counts as one.</span>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <section class="spec">
+    <h2>The rule set behind the demo</h2>
+    <div class="rules">
+      <div class="rule">
+        <h3>What makes a campaign managed</h3>
+        <ul>
+          <li>Created inside Foxtly — managed from birth.</li>
+          <li>Customer clicks <b>Take under management</b> on an existing campaign.</li>
+          <li>Customer accepts a Foxy optimization proposal for it.</li>
+          <li>Customer generates AI creatives for it.</li>
+          <li>Stored as <code>campaigns.management_mode</code> = <code>managed</code> with <code>managed_source</code> and <code>managed_at</code>.</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>What counts against the cap</h3>
+        <ul>
+          <li>Only <b>active</b> managed campaigns. Paused and archived are excluded.</li>
+          <li>Everything else in the ad account is read-only analytics: free, unlimited, included on every plan.</li>
+          <li>The customer controls the count: pause or release, and a slot frees immediately.</li>
+          <li>Caps: START 3 · GROWTH 10 · PRO unlimited (<code>active_campaigns_cap = null</code>).</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>Where the block lives</h3>
+        <ul>
+          <li>Server-side, at two transitions: analytics → managed-active, and resume of a paused managed campaign.</li>
+          <li>The UI hides nothing — the button stays visible and opens the upgrade dialog.</li>
+          <li>Campaign launch inside Foxtly is gated at the same check, before the platform call.</li>
+          <li>Reads and reports are never gated.</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>Downgrade and over-limit</h3>
+        <ul>
+          <li>Nothing is auto-paused on downgrade. Ads keep running.</li>
+          <li>7-day grace period with a persistent banner to pick which campaigns stay managed.</li>
+          <li>After the grace period Foxtly releases the excess, lowest 30-day spend first, and notifies by email.</li>
+          <li>Released means Foxtly stops optimizing — the campaign keeps running in the ad account.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 680 232" role="img" aria-label="State machine: analytics-only, managed active and managed paused, with the transitions between them">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="var(--text-3)"></path>
+          </marker>
+        </defs>
+        <rect x="8" y="76" width="176" height="62" rx="10" fill="var(--surface-2)" stroke="var(--border-strong)"></rect>
+        <text x="96" y="101" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="600" fill="var(--text)">Analytics only</text>
+        <text x="96" y="120" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--text-3)">free · not counted</text>
+
+        <rect x="262" y="24" width="176" height="62" rx="10" fill="var(--accent-soft)" stroke="var(--accent-line)"></rect>
+        <text x="350" y="49" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="600" fill="var(--text)">Managed · active</text>
+        <text x="350" y="68" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">counts against cap</text>
+
+        <rect x="262" y="146" width="176" height="62" rx="10" fill="var(--surface-2)" stroke="var(--border-strong)"></rect>
+        <text x="350" y="171" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="600" fill="var(--text)">Managed · paused</text>
+        <text x="350" y="190" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--text-3)">not counted</text>
+
+        <rect x="516" y="24" width="156" height="62" rx="10" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-dasharray="4 3"></rect>
+        <text x="594" y="49" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="600" fill="var(--text)">Blocked</text>
+        <text x="594" y="68" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--text-3)">upgrade dialog</text>
+
+        <path d="M184 96 L200 96 Q212 96 212 84 L212 62 Q212 55 224 55 L256 55" fill="none" stroke="var(--text-3)" stroke-width="1.4" marker-end="url(#ar)"></path>
+        <text x="228" y="44" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="10.5" fill="var(--text-2)">take over</text>
+
+        <path d="M256 74 L224 74 Q212 74 212 86 L212 108 Q212 118 200 118 L184 118" fill="none" stroke="var(--text-3)" stroke-width="1.4" marker-end="url(#ar)"></path>
+        <text x="216" y="136" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="10.5" fill="var(--text-2)">release</text>
+
+        <path d="M332 86 L332 146" fill="none" stroke="var(--text-3)" stroke-width="1.4" marker-end="url(#ar)"></path>
+        <text x="300" y="120" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="10.5" fill="var(--text-2)">pause</text>
+
+        <path d="M372 146 L372 86" fill="none" stroke="var(--text-3)" stroke-width="1.4" marker-end="url(#ar)"></path>
+        <text x="410" y="120" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="10.5" fill="var(--text-2)">resume · re-checked</text>
+
+        <path d="M438 55 L510 55" fill="none" stroke="var(--text-3)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"></path>
+        <text x="474" y="44" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="10.5" fill="var(--text-2)">at cap</text>
+      </svg>
+    </div>
+
+    <div class="rule">
+      <h3>Open decisions this demo assumes</h3>
+      <ul>
+        <li><b>Grace period on downgrade: 7 days</b>, then automatic release by lowest spend. Alternative considered: block the downgrade until the customer reduces usage. Rejected — it traps the customer in a higher price.</li>
+        <li><b>AI creative overage sells a pack</b> (+$39 / 30 creatives) before it offers an upgrade, because the quota resets monthly and a plan change is the heavier commitment.</li>
+        <li><b>The campaign cap is not enforced on PRO</b> — <code>null</code>, not a large number, so a future PRO ceiling is a data change rather than a code change.</li>
+        <li><b>Trial (GROWTH, 10 days) uses GROWTH caps unchanged.</b> No separate trial limits.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Plan matrix per Foxtly-Plans-2026_1.pdf, confirmed 28 Aug 2026</span>
+    <span>Caps served from <code style="font-family:var(--ink-mono)">billing_plans</code></span>
+    <span>Prototype — upgrade buttons only change local state</span>
+  </footer>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PLANS = {
+    start:  { id:'start',  name:'START',  price:90,  list:167, adAccounts:1, spendCap:1500,  campaignCap:3,    creativeCap:20,  sla:48, trial:null },
+    growth: { id:'growth', name:'GROWTH', price:190, list:388, adAccounts:1, spendCap:7000,  campaignCap:10,   creativeCap:100, sla:12, trial:10 },
+    pro:    { id:'pro',    name:'PRO',    price:590, list:590, adAccounts:3, spendCap:50000, campaignCap:null, creativeCap:300, sla:4,  trial:null }
+  };
+  var ORDER = ['start','growth','pro'];
+
+  var state = {
+    plan: 'growth',
+    creativesUsed: 96,
+    packs: 0,
+    graceUntil: null,
+    campaigns: [
+      { id:1,  name:'HVAC — Emergency Repair',        ch:'Meta',   status:'active',   managed:true,  src:'created_in_foxtly',    spend:2140, leads:38, cpl:56, freq:2.1 },
+      { id:2,  name:'AC Install — Summer Promo',      ch:'Meta',   status:'active',   managed:true,  src:'created_in_foxtly',    spend:1460, leads:21, cpl:70, freq:1.8 },
+      { id:3,  name:'Furnace Tune-Up',                ch:'Meta',   status:'active',   managed:true,  src:'manual_takeover',      spend:620,  leads:11, cpl:56, freq:1.4 },
+      { id:4,  name:'Duct Cleaning — Retargeting',    ch:'Meta',   status:'active',   managed:true,  src:'optimization_accepted',spend:310,  leads:5,  cpl:62, freq:3.4 },
+      { id:5,  name:'Water Heater Replacement',       ch:'Google', status:'active',   managed:true,  src:'created_in_foxtly',    spend:910,  leads:14, cpl:65, freq:null },
+      { id:6,  name:'Drain &amp; Sewer — Local',          ch:'Google', status:'active',   managed:true,  src:'manual_takeover',      spend:745,  leads:18, cpl:41, freq:null },
+      { id:7,  name:'Brand Search',                   ch:'Google', status:'active',   managed:true,  src:'manual_takeover',      spend:260,  leads:9,  cpl:29, freq:null },
+      { id:8,  name:'Maintenance Plan — Subscribers', ch:'Meta',   status:'active',   managed:true,  src:'creative_generated',   spend:480,  leads:8,  cpl:60, freq:2.6 },
+      { id:9,  name:'Thermostat Upgrade',             ch:'Meta',   status:'active',   managed:true,  src:'optimization_accepted',spend:395,  leads:6,  cpl:66, freq:2.2 },
+      { id:10, name:'Spring Promo — Lookalike',       ch:'Meta',   status:'paused',   managed:true,  src:'created_in_foxtly',    spend:0,    leads:0,  cpl:null, freq:null },
+      { id:11, name:'Indoor Air Quality',             ch:'Meta',   status:'active',   managed:false, src:null, spend:640,  leads:7,  cpl:88, freq:4.8 },
+      { id:12, name:'Commercial HVAC — Contracts',    ch:'Google', status:'active',   managed:false, src:null, spend:1180, leads:12, cpl:98, freq:null },
+      { id:13, name:'Summer Sale 2025',               ch:'Meta',   status:'archived', managed:false, src:null, spend:0,    leads:0,  cpl:null, freq:null }
+    ],
+    foxyDismissed: false,
+    flash: null
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  function plan(){ return PLANS[state.plan]; }
+  function managedActive(){ return state.campaigns.filter(function(c){ return c.managed && c.status==='active'; }); }
+  function creativeCap(){ return plan().creativeCap + state.packs*30; }
+  function money(n){ return '$' + n.toLocaleString('en-US'); }
+  function nextPlan(){ var i = ORDER.indexOf(state.plan); return i < ORDER.length-1 ? PLANS[ORDER[i+1]] : null; }
+
+  /* ---------------- rendering ---------------- */
+
+  function render(){
+    var p = plan();
+    var used = managedActive().length;
+    var cap = p.campaignCap;
+
+    $('meta-plan').textContent = p.name;
+    Array.prototype.forEach.call(document.querySelectorAll('.planpick button'), function(b){
+      b.setAttribute('aria-pressed', String(b.dataset.plan === state.plan));
+    });
+
+    $('c-camp').textContent = cap === null ? used + ' / ∞' : used + ' / ' + cap;
+    $('c-camp-note').textContent = cap === null ? 'unlimited on PRO' : 'active';
+    setBar($('c-camp-bar'), cap === null ? 0.25 : used/cap, cap !== null && used >= cap);
+
+    $('c-cre').textContent = state.creativesUsed + ' / ' + creativeCap();
+    setBar($('c-cre-bar'), state.creativesUsed/creativeCap(), state.creativesUsed >= creativeCap());
+
+    // over-limit banner (downgrade case)
+    var over = cap !== null && used > cap;
+    $('over-banner').hidden = !over;
+    if(over){
+      var excess = used - cap;
+      $('over-text').innerHTML = '<b>You are managing ' + used + ' campaigns on ' + p.name + ', which includes ' + cap + '.</b> ' +
+        'Nothing was paused and your ads keep running. Choose which ' + cap + ' stay managed before <b>Sep 30</b> — after that Foxtly releases the ' +
+        excess + ' lowest-spending ' + (excess===1?'campaign':'campaigns') + ' and emails you the list. Released campaigns keep running in your ad account, without Foxtly optimizing them.';
+    }
+
+    // foxy card
+    var target = byId(11);
+    var showFoxy = !state.foxyDismissed && !target.managed;
+    $('foxy-card').hidden = !showFoxy;
+
+    renderRows();
+    var quotaLeft = creativeCap() - state.creativesUsed;
+    $('cre-note').textContent = quotaLeft > 0
+      ? quotaLeft + ' creatives left this period. Quota resets Oct 1. Each generation and each edit counts as one.'
+      : 'Quota used up. Buy a pack of 30 for $39/mo, or wait for the Oct 1 reset.';
+  }
+
+  function setBar(el, ratio, full){
+    var pct = Math.max(0, Math.min(1, ratio))*100;
+    el.className = 'bar' + (full ? ' full' : (ratio >= 0.8 ? ' warn' : ''));
+    el.firstElementChild.style.width = pct.toFixed(0) + '%';
+  }
+
+  function byId(id){
+    for(var i=0;i<state.campaigns.length;i++){ if(state.campaigns[i].id===id) return state.campaigns[i]; }
+    return null;
+  }
+
+  function renderRows(){
+    var tb = $('rows');
+    tb.innerHTML = '';
+    state.campaigns.forEach(function(c){
+      var tr = document.createElement('tr');
+      if(c.status==='archived') tr.className = 'dim';
+      if(state.flash === c.id) tr.classList.add('flash');
+
+      var statusPill = '<span class="pill ' + c.status + '"><span class="d"></span>' +
+        c.status.charAt(0).toUpperCase() + c.status.slice(1) + '</span>';
+
+      var freq = c.freq === null ? '—' : '<span class="num' + (c.freq >= 3.5 ? ' hot' : '') + '">' + c.freq.toFixed(1) + '</span>';
+      var cpl = c.cpl === null ? '—' : '<span class="num">' + money(c.cpl) + '</span>';
+
+      var manage;
+      if(c.status === 'archived'){
+        manage = '<span class="pill free">Archived</span>';
+      } else if(c.managed){
+        manage = '<span class="pill managed">Managed</span>' +
+          (c.status === 'active'
+            ? '<button class="btn quiet" type="button" data-act="pause" data-id="' + c.id + '">Pause</button>'
+            : '<button class="btn quiet" type="button" data-act="resume" data-id="' + c.id + '">Resume</button>') +
+          '<button class="btn quiet" type="button" data-act="release" data-id="' + c.id + '">Release</button>';
+      } else {
+        manage = '<span class="pill free">Analytics only</span>' +
+          '<button class="btn ghost" type="button" data-act="take" data-id="' + c.id + '">Take under management</button>';
+      }
+
+      tr.innerHTML =
+        '<td><div class="cname">' + c.name + '</div><div class="csub">' + c.ch + ' Ads' +
+          (c.managed && c.src ? ' · managed since Sep' : '') + '</div></td>' +
+        '<td>' + statusPill + '</td>' +
+        '<td class="r"><span class="num">' + (c.spend ? money(c.spend) : '—') + '</span></td>' +
+        '<td class="r"><span class="num">' + (c.leads || '—') + '</span></td>' +
+        '<td class="r">' + cpl + '</td>' +
+        '<td class="r">' + freq + '</td>' +
+        '<td class="r"><div class="manage-cell">' + manage + '</div></td>';
+      tb.appendChild(tr);
+    });
+    if(state.flash){
+      var id = state.flash;
+      setTimeout(function(){ if(state.flash===id){ state.flash=null; renderRows(); } }, 900);
+    }
+  }
+
+  /* ---------------- actions ---------------- */
+
+  function capReached(){
+    var cap = plan().campaignCap;
+    return cap !== null && managedActive().length >= cap;
+  }
+
+  function takeOver(id){
+    var c = byId(id);
+    if(!c) return;
+    if(c.status === 'active' && capReached()){ openCapModal(c, 'take'); return; }
+    c.managed = true; c.src = 'manual_takeover';
+    state.flash = id;
+    render();
+  }
+
+  function release(id){
+    var c = byId(id);
+    c.managed = false; c.src = null;
+    state.flash = id;
+    closeModal();
+    render();
+  }
+
+  function pause(id){ byId(id).status = 'paused'; state.flash = id; closeModal(); render(); }
+
+  function resume(id){
+    var c = byId(id);
+    if(capReached()){ openCapModal(c, 'resume'); return; }
+    c.status = 'active'; state.flash = id; render();
+  }
+
+  window.dismissFoxy = function(){ state.foxyDismissed = true; render(); };
+
+  window.generateCreatives = function(n){
+    if(state.creativesUsed + n > creativeCap()){ openCreativeModal(n); return; }
+    state.creativesUsed += n;
+    render();
+  };
+
+  /* ---------------- modals ---------------- */
+
+  function closeModal(){ $('modal-root').innerHTML = ''; document.removeEventListener('keydown', onEsc); }
+  function onEsc(e){ if(e.key === 'Escape') closeModal(); }
+
+  function mount(html){
+    $('modal-root').innerHTML = '<div class="scrim" data-scrim="1"><div class="modal" role="dialog" aria-modal="true">' + html + '</div></div>';
+    document.addEventListener('keydown', onEsc);
+    var f = $('modal-root').querySelector('.btn.primary');
+    if(f) f.focus();
+  }
+
+  function openCapModal(c, trigger){
+    var p = plan(), np = nextPlan();
+    var list = managedActive().sort(function(a,b){ return a.spend - b.spend; });
+    var rows = list.map(function(m){
+      return '<div class="p"><div><b>' + m.name + '</b><em>' + m.ch + ' · ' + money(m.spend) + ' / 30d · CPL ' +
+        (m.cpl ? money(m.cpl) : '—') + '</em></div>' +
+        '<div style="display:flex;gap:6px"><button class="btn quiet" data-act="pause" data-id="' + m.id + '">Pause</button>' +
+        '<button class="btn danger" data-act="release" data-id="' + m.id + '">Release</button></div></div>';
+    }).join('');
+
+    var lead = trigger === 'resume'
+      ? 'Resuming <b>' + c.name + '</b> would put you at ' + (p.campaignCap + 1) + ' active managed campaigns. ' + p.name + ' includes ' + p.campaignCap + '.'
+      : 'Taking <b>' + c.name + '</b> under management would put you at ' + (p.campaignCap + 1) + ' active managed campaigns. ' + p.name + ' includes ' + p.campaignCap + '.';
+
+    var offer = np
+      ? '<div class="offer"><div class="row"><b>Move to ' + np.name + '</b><span class="price">' + money(np.price) + ' / mo</span></div>' +
+        '<ul><li>' + (np.campaignCap === null ? 'Unlimited managed campaigns' : np.campaignCap + ' managed campaigns') + '</li>' +
+        '<li>Up to ' + money(np.spendCap) + ' / mo managed ad spend</li>' +
+        '<li>' + np.creativeCap + ' AI creatives / mo · ' + np.sla + 'h support response</li></ul>' +
+        '<div style="margin-top:11px"><button class="btn primary" data-act="upgrade" data-plan="' + np.id + '">Upgrade to ' + np.name + ' and continue</button></div></div>'
+      : '';
+
+    mount(
+      '<header><h2>You are at your managed campaign limit</h2><p class="lead">' + lead + '</p></header>' +
+      '<div class="content">' + offer +
+      '<div><div class="eyebrow" style="margin-bottom:7px">Or free a slot</div>' +
+      '<div class="picklist">' + rows + '</div>' +
+      '<p class="note" style="margin:8px 0 0">Pausing or releasing frees a slot immediately. A released campaign keeps running in your ad account — Foxtly just stops optimizing it, and it stays in your analytics and reports for free.</p></div>' +
+      '</div>' +
+      '<footer><button class="btn ghost" data-act="close">Keep it analytics-only</button></footer>'
+    );
+  }
+
+  function openCreativeModal(n){
+    var p = plan(), np = nextPlan();
+    var left = creativeCap() - state.creativesUsed;
+    mount(
+      '<header><h2>Not enough AI creatives left this period</h2>' +
+      '<p class="lead">You asked for ' + n + ' creatives and have <b>' + left + '</b> left of ' + creativeCap() + ' on ' + p.name +
+      '. The quota resets on <b>Oct 1</b>.</p></header>' +
+      '<div class="content">' +
+      '<div class="offer"><div class="row"><b>Add 30 creatives</b><span class="price">$39 / mo</span></div>' +
+      '<ul><li>Applies to the current period immediately</li><li>Renews monthly, cancel any time</li></ul>' +
+      '<div style="margin-top:11px"><button class="btn primary" data-act="buypack">Add a pack and generate</button></div></div>' +
+      (np ? '<div class="note">Generating more every month? ' + np.name + ' includes ' + np.creativeCap +
+            ' creatives for ' + money(np.price) + ' / mo. <button class="btn quiet" data-act="upgrade" data-plan="' + np.id + '">See ' + np.name + '</button></div>' : '') +
+      '</div>' +
+      '<footer><button class="btn ghost" data-act="close">Wait for the reset</button></footer>'
+    );
+  }
+
+  /* ---------------- events ---------------- */
+
+  document.addEventListener('click', function(e){
+    var scrim = e.target.closest ? e.target.closest('.scrim') : null;
+    if(e.target.dataset && e.target.dataset.scrim){ closeModal(); return; }
+
+    var btn = e.target.closest ? e.target.closest('button[data-act]') : null;
+    if(!btn) return;
+    var act = btn.dataset.act, id = btn.dataset.id ? parseInt(btn.dataset.id, 10) : null;
+
+    if(act === 'take')    takeOver(id);
+    if(act === 'release') release(id);
+    if(act === 'pause')   pause(id);
+    if(act === 'resume')  resume(id);
+    if(act === 'close')   closeModal();
+    if(act === 'buypack'){ state.packs += 1; state.creativesUsed += 4; closeModal(); render(); }
+    if(act === 'upgrade'){
+      state.plan = btn.dataset.plan;
+      closeModal();
+      render();
+    }
+    if(scrim && act === 'upgrade'){ /* handled above */ }
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.planpick button'), function(b){
+    b.addEventListener('click', function(){ state.plan = b.dataset.plan; render(); });
+  });
+
+  $('foxy-accept').addEventListener('click', function(){ takeOver(11); });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
