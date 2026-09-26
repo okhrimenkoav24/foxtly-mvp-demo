@@ -641,7 +641,8 @@
 
   function openCapModal(c, trigger){
     var p = plan(), np = nextPlan();
-    var list = managedActive().sort(function(a,b){ return a.spend - b.spend; });
+    var all = managedActive().sort(function(a,b){ return a.spend - b.spend; });
+    var list = all.slice(0, 5);
     var rows = list.map(function(m){
       return '<div class="p"><div><b>' + m.name + '</b><em>' + m.ch + ' · ' + money(m.spend) + ' / 30d · CPL ' +
         (m.cpl ? money(m.cpl) : '—') + '</em></div>' +
@@ -664,7 +665,7 @@
     mount(
       '<header><h2>You are at your managed campaign limit</h2><p class="lead">' + lead + '</p></header>' +
       '<div class="content">' + offer +
-      '<div><div class="eyebrow" style="margin-bottom:7px">Or free a slot</div>' +
+      '<div><div class="eyebrow" style="margin-bottom:7px">Or free a slot · ' + all.length + ' managed, lowest spend first</div>' +
       '<div class="picklist">' + rows + '</div>' +
       '<p class="note" style="margin:8px 0 0">Pausing or releasing frees a slot immediately. A released campaign keeps running in your ad account — Foxtly just stops optimizing it, and it stays in your analytics and reports for free.</p></div>' +
       '</div>' +
